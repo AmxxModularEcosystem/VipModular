@@ -34,6 +34,8 @@ public plugin_natives() {
     }
 }
 
+// TODO: AddParamsEx
+// TODO: Move to core plugin
 public VipM_Limits_OnInited() {
     register_plugin(PluginName, PluginVersion, PluginAuthor);
 

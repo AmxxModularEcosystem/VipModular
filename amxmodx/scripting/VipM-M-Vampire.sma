@@ -18,16 +18,16 @@ public VipM_Modules_OnInited() {
     register_plugin(PluginName, PluginVersion, PluginAuthor);
     register_dictionary("VipM-Vampire.ini");
 
-    VipM_Modules_Register(MODULE_NAME, true);
-    VipM_Modules_AddParams(MODULE_NAME,
-        "MaxHealth", ptInteger, false,
-        "ByKill", ptInteger, false,
-        "ByHead", ptInteger, false,
-        "ByKnife", ptInteger, false,
-        "ByGrenade", ptInteger, false
+    VipM_Modules_Register(MODULE_NAME);
+    VipM_Modules_AddParamsEx(MODULE_NAME,
+        "MaxHealth", "Integer", false,
+        "ByKill", "Integer", false,
+        "ByHead", "Integer", false,
+        "ByKnife", "Integer", false,
+        "ByGrenade", "Integer", false
     );
-    VipM_Modules_AddParams(MODULE_NAME,
-        "Limits", ptLimits, false
+    VipM_Modules_AddParamsEx(MODULE_NAME,
+        "Limits", "VipM-Limits", false
     );
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@Event_ModuleActivate");
 }

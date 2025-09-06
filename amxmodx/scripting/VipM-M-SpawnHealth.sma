@@ -19,20 +19,20 @@ new const MODULE_NAME[] = "SpawnHealth";
 public VipM_Modules_OnInited() {
     register_plugin(PluginName, PluginVersion, PluginAuthor);
 
-    VipM_Modules_Register(MODULE_NAME, true);
-    VipM_Modules_AddParams(MODULE_NAME,
-        "Health", ptInteger, false,
-        "SetHealth", ptBoolean, false,
-        "MaxHealth", ptInteger, false
+    VipM_Modules_Register(MODULE_NAME);
+    VipM_Modules_AddParamsEx(MODULE_NAME,
+        "Health", "Integer", false,
+        "SetHealth", "Boolean", false,
+        "MaxHealth", "Integer", false
     );
-    VipM_Modules_AddParams(MODULE_NAME,
-        "Armor", ptInteger, false,
-        "SetArmor", ptBoolean, false,
-        "MaxArmor", ptInteger, false
+    VipM_Modules_AddParamsEx(MODULE_NAME,
+        "Armor", "Integer", false,
+        "SetArmor", "Boolean", false,
+        "MaxArmor", "Integer", false
     );
-    VipM_Modules_AddParams(MODULE_NAME,
-        "Helmet", ptBoolean, false,
-        "Limits", ptLimits, false
+    VipM_Modules_AddParamsEx(MODULE_NAME,
+        "Helmet", "Boolean", false,
+        "Limits", "VipM-Limits", false
     );
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@Event_ModuleActivate");
 }

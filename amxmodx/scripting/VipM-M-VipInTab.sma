@@ -23,10 +23,10 @@ new bool:gHasTag[MAX_PLAYERS + 1][E_ModuleParams];
 public VipM_Modules_OnInited() {
     register_plugin(PluginName, PluginVersion, PluginAuthor);
 
-    VipM_Modules_Register(MODULE_NAME, true);
-    VipM_Modules_AddParams(MODULE_NAME,
-        "Enabled", ptBoolean, true,
-        "Override", ptBoolean, false
+    VipM_Modules_Register(MODULE_NAME);
+    VipM_Modules_AddParamsEx(MODULE_NAME,
+        "Enabled", "Boolean", true,
+        "Override", "Boolean", false
     );
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@OnModuleActivate");
 }

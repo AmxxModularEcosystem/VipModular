@@ -1,6 +1,7 @@
 #include <amxmodx>
 #include <reapi>
 #include <VipModular>
+#include <ParamsController>
 #include "VipM/Utils"
 #include "VipM/DebugMode"
 
@@ -35,24 +36,22 @@ public VipM_Modules_OnInited() {
     register_dictionary("VipM-WeaponMenu.ini");
     IC_Init();
 
-    VipM_Modules_Register(MODULE_NAME, true);
-    VipM_Modules_AddParams(MODULE_NAME,
-        "MainMenuTitle", ptString, false,
-        "Menus", ptCustom, true,
-        "Count", ptInteger, false
+    VipM_Modules_Register(MODULE_NAME);
+    VipM_Modules_AddParamsEx(MODULE_NAME,
+        // TODO Read "Menus" as param
+        "MainMenuTitle", "String", false,
+        "Count", "Integer", false,
+        "Limits", "VipM-Limits", false
     );
-    VipM_Modules_AddParams(MODULE_NAME,
-        "Limits", ptLimits, false
+    VipM_Modules_AddParamsEx(MODULE_NAME,
+        "AutoopenLimits", "VipM-Limits", false,
+        "AutoopenDelay", "Float", false,
+        "AutoopenCloseDelay", "Float", false,
+        "AutoopenMenuNum", "Integer", false
     );
-    VipM_Modules_AddParams(MODULE_NAME,
-        "AutoopenLimits", ptLimits, false,
-        "AutoopenDelay", ptFloat, false,
-        "AutoopenCloseDelay", ptFloat, false,
-        "AutoopenMenuNum", ptInteger, false
-    );
-    VipM_Modules_AddParams(MODULE_NAME,
-        "StayOpen", ptBoolean, false,
-        "StayOpen_CheckCounter", ptBoolean, false
+    VipM_Modules_AddParamsEx(MODULE_NAME,
+        "StayOpen", "Boolean", false,
+        "StayOpen_CheckCounter", "Boolean", false
     );
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@OnModuleActivate");
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnRead, "@OnReadConfig");

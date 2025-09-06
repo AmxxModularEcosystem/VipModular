@@ -21,19 +21,12 @@ public VipM_Modules_OnInited() {
     register_plugin(PluginName, PluginVersion, PluginAuthor);
     IC_Init();
     
-    VipM_Modules_Register(MODULE_NAME, true);
-    VipM_Modules_AddParams(MODULE_NAME,
-        "Items", ptCustom, false,
-        "Limits", ptLimits, false
+    VipM_Modules_Register(MODULE_NAME);
+    VipM_Modules_AddParamsEx(MODULE_NAME,
+        "Items", "IC-Items", true,
+        "Limits", "VipM-Limits", false
     );
-    VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnRead, "@OnReadConfig");
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@OnModuleActivate");
-}
-
-@OnReadConfig(const JSON:jCfg, Trie:Params) {
-    TrieSetCell(Params, "Items", PCSingle_ObjIcItems(jCfg, "Items", .orFail = true));
-
-    return VIPM_CONTINUE;
 }
 
 @OnModuleActivate() {
