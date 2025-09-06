@@ -14,7 +14,7 @@
 
 enum _:S_ModuleType {
     ModuleType_Name[VIPM_MODULES_TYPE_NAME_MAX_LEN],
-    Array:ModuleType_Params, // S_CfgParam[]
+    Array:ModuleType_Params,
 
     bool:ModuleType_Used,
     bool:ModuleType_Active,
@@ -56,7 +56,7 @@ T_ModuleType:ModuleType_Construct(const sName[]) {
     new ModuleType[S_ModuleType];
 
     copy(ModuleType[ModuleType_Name], charsmax(ModuleType[ModuleType_Name]), sName);
-    ModuleType[ModuleType_Params] = Invalid_Array;
+    ModuleType[ModuleType_Params] = ArrayCreate(1, 1);
 
     ModuleType[ModuleType_Used] = false;
     ModuleType[ModuleType_Active] = false;
@@ -78,7 +78,7 @@ static ModuleType__Get(const T_ModuleType:iModuleType, ModuleType[S_ModuleType])
     ArrayMapGetArray(g_amModuleTypes, _:iModuleType, ModuleType);
 }
 
-static ModuleType__Set(const ModuleType[S_ModuleType]) {
+static ModuleType__Save(const ModuleType[S_ModuleType]) {
     ArrayMapSetArrayByKey(g_amModuleTypes, ModuleType[ModuleType_Name], ModuleType);
 }
 
@@ -107,103 +107,109 @@ bool:ModuleType_IsActive(const T_ModuleType:iModuleType) {
     return ModuleType__GetValue(iModuleType, ModuleType_Active);
 }
 
-Trie:ModuleType_ReadParams(const T_ModuleType:iModuleType, const JSON:jParams) {
-    new ModuleType[S_ModuleType];
-    ModuleType__Get(iModuleType, ModuleType);
+Trie:ModuleType_ReadParams(const T_ModuleType:type, const JSON:paramsJson) {
+    new typeObject[S_ModuleType];
+    ModuleType__Get(type, typeObject);
+    
+    new E_ParamsReadErrorType:errType, errParam[PARAM_KEY_MAX_LEN];
+    new Trie:params = ParamsController_Param_ReadList(
+        typeObject[ModuleType_Params], paramsJson,
+        .iErrType = errType,
+        .sErrParamName = errParam,
+        .iErrParamNameLen = charsmax(errParam)
+    );
 
-    new Trie:tParams = TrieCreate();
+    if (errType != ParamsReadError_None) {
+        TrieDestroy(params);
 
-    new sErrParam[VIPM_PARAM_NAME_MAX_LEN];
-    if (!CfgParam_ReadList(jParams, tParams, ModuleType[ModuleType_Params], sErrParam, charsmax(sErrParam))) {
-        PCJson_ErrorForFile(jParams, "Param '%s' required for '%s' module.", sErrParam, ModuleType[ModuleType_Name]);
-        TrieDestroy(tParams);
+        switch (errType) {
+            case ParamsReadError_RequiredParamNotPresented: {
+                PCJson_ErrorForFile(paramsJson, "Param '%s' required for '%s' module.", errParam, typeObject[ModuleType_Name]);
+            }
+            case ParamsReadError_ParamValueIsInvalid: {
+                PCJson_ErrorForFile(paramsJson, "Param '%s' has invalid value.", errParam);
+            }
+        }
+        
         return Invalid_Trie;
     }
 
-    if (ModuleType[ModuleType_Events][Module_OnRead] >= 0) {
+    if (typeObject[ModuleType_Events][Module_OnRead] >= 0) {
         new iRet = VIPM_STOP;
-        ExecuteForward(ModuleType[ModuleType_Events][Module_OnRead], iRet, jParams, tParams);
+        ExecuteForward(typeObject[ModuleType_Events][Module_OnRead], iRet, paramsJson, params);
 
         if (iRet == VIPM_STOP) {
-            TrieDestroy(tParams);
+            TrieDestroy(params);
             return Invalid_Trie;
         }
     }
     
-    return tParams;
+    return params;
 }
 
-Array:ModuleType_GetParams(const T_ModuleType:iModuleType) {
-    new ModuleType[S_ModuleType];
-    ModuleType__Get(iModuleType, ModuleType);
-
-    if (ModuleType[ModuleType_Params] == Invalid_Array) {
-        return Invalid_Array;
+ModuleType_AddParams(const T_ModuleType:module, const Array:params) {
+    if (params == Invalid_Array) {
+        return;
     }
 
-    return ArrayClone(ModuleType[ModuleType_Params]);
-}
-
-ModuleType_MergeParamsList(const T_ModuleType:iModuleType, const Array:aParams) {
-    new ModuleType[S_ModuleType];
-    ModuleType__Get(iModuleType, ModuleType);
-
-    ModuleType[ModuleType_Params] = CfgParam_Merge(ModuleType[ModuleType_Params], aParams);
-
-    ModuleType__Set(ModuleType);
+    new Array:currentParams = ModuleType__GetValue(module, ModuleType_Params);
+    
+    for (new i = 0, ii = ArraySize(params); i < ii; ++i) {
+        ArrayPushCell(currentParams, ArrayGetCell(params, i));
+    }
 }
 
 ModuleType_SetEventListener(
-    const T_ModuleType:iModuleType,
-    const E_ModuleEvent:iEvent,
-    const PluginId,
-    const sFuncName[]
+    const T_ModuleType:type,
+    const E_ModuleEvent:event,
+    const pluginIndex,
+    const func[]
 ) {
-    new ModuleType[S_ModuleType];
-    ModuleType__Get(iModuleType, ModuleType);
+    new typeObject[S_ModuleType];
+    ModuleType__Get(type, typeObject);
 
-    if (iEvent == Module_OnCompareParams) {
+    if (event == Module_OnCompareParams) {
         log_amx("[WARNING] Event 'Module_OnCompareParams' is deprecated and will not be fired.");
         return;
     }
 
-    if (ModuleType[ModuleType_Events][iEvent] >= 0) {
-        DestroyForward(ModuleType[ModuleType_Events][iEvent]);
+    if (typeObject[ModuleType_Events][event] >= 0) {
+        DestroyForward(typeObject[ModuleType_Events][event]);
     }
     
-    ModuleType[ModuleType_Events][iEvent] = ModuleType__MakeEventForward(iEvent, PluginId, sFuncName);
+    typeObject[ModuleType_Events][event] = ModuleType__MakeEventForward(event, pluginIndex, func);
 
-    if (ModuleType[ModuleType_Events][iEvent] < 0) {
-        abort(AMX_ERR_PARAMS, "[ERROR] Can't create forward for func '%s' in plugin #%d.", sFuncName, PluginId);
+    if (typeObject[ModuleType_Events][event] < 0) {
+        abort(AMX_ERR_PARAMS, "[ERROR] Can't create forward for func '%s' in plugin #%d.", func, pluginIndex);
         return;
     }
 
-    ModuleType__Set(ModuleType);
+    ModuleType__Save(typeObject);
 }
 
-static ModuleType__MakeEventForward(const E_ModuleEvent:iEvent, const PluginId, const sFuncName[]) {
-    switch (iEvent) {
+static ModuleType__MakeEventForward(const E_ModuleEvent:event, const pluginIndex, const func[]) {
+    switch (event) {
         case Module_OnRead: // (const JSON:jCfg, Trie:Params)
-            return CreateOneForward(PluginId, sFuncName, FP_CELL, FP_CELL);
+            return CreateOneForward(pluginIndex, func, FP_CELL, FP_CELL);
 
         case Module_OnActivated: // ()
-            return CreateOneForward(PluginId, sFuncName);
+            return CreateOneForward(pluginIndex, func);
 
         case Module_OnMergeParams: // (const Trie:tParams1, const Trie:tParams2)
-            return CreateOneForward(PluginId, sFuncName, FP_CELL, FP_CELL);
+            return CreateOneForward(pluginIndex, func, FP_CELL, FP_CELL);
     }
 
-    abort(AMX_ERR_GENERAL, "[ERROR] Invalid event index (%d).", iEvent);
+    abort(AMX_ERR_GENERAL, "[ERROR] Invalid event index (%d).", event);
     return -1;
 }
 
-ModuleType_MarkAsUsed(const T_ModuleType:iModuleType, const bool:bState = true) {
-    ModuleType__SetValue(iModuleType, ModuleType_Used, bState);
+ModuleType_MarkAsUsed(const T_ModuleType:type, const bool:bState = true) {
+    ModuleType__SetValue(type, ModuleType_Used, bState);
 }
 
-bool:ModuleType_Activate(const T_ModuleType:iModuleType) {
+bool:ModuleType_Activate(const T_ModuleType:type) {
     new ModuleType[S_ModuleType];
-    ModuleType__Get(iModuleType, ModuleType);
+    ModuleType__Get(type, ModuleType);
 
     if (!ModuleType[ModuleType_Active]) {
         Forwards_DefaultReturn(VIPM_CONTINUE);
@@ -217,23 +223,23 @@ bool:ModuleType_Activate(const T_ModuleType:iModuleType) {
             ExecuteForward(ModuleType[ModuleType_Events][Module_OnActivated]);
         }
 
-        ModuleType__Set(ModuleType);
+        ModuleType__Save(ModuleType);
     }
 
     return ModuleType[ModuleType_Active];
 }
 
 ModuleType_ActivateUsed() {
-    ArrayMapForeachArray (g_amModuleTypes: iModuleType => ModuleType[S_ModuleType]) {
+    ArrayMapForeachArray (g_amModuleTypes: type => ModuleType[S_ModuleType]) {
         if (ModuleType[ModuleType_Used]) {
-            ModuleType_Activate(iModuleType);
+            ModuleType_Activate(type);
         }
     }
 }
 
-Trie:ModuleType_MergeParams(const T_ModuleType:iModuleType, const Trie:tParams1, const Trie:tParams2) {
+Trie:ModuleType_MergeParams(const T_ModuleType:type, const Trie:tParams1, const Trie:tParams2) {
     new ModuleType[S_ModuleType];
-    ModuleType__Get(iModuleType, ModuleType);
+    ModuleType__Get(type, ModuleType);
 
     new Trie:tRes = tParams1;
     if (ModuleType[ModuleType_Events][Module_OnMergeParams] >= 0) {

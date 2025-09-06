@@ -54,6 +54,17 @@ enum E_ItemTypeEvent{
      * Примечание: Если возвращено IC_RET_GIVE_FAIL, предмет не будет считаться выданным (Натив IC_Item_Give вернёт false).
      */
     ItemType_OnGive,
+
+    /*
+     * Описание:    Вызывается, при освобождении хендлера предмета.
+     * Возв. тип:   void
+     * Параметры:   (const T_IC_Item:item, const Trie:p):
+     *      item - Хендлер предмета.
+     *      p - key-value хранилище параметров.
+     * 
+     * // TODO
+     */
+    ItemType_OnFree,
 }
 
 /**

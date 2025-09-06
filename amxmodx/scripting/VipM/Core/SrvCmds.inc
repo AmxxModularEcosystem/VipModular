@@ -24,10 +24,8 @@ SrvCmds_Init() {
     register_srvcmd("vipm_info", "@SrvCmd_Info");
     
     register_srvcmd("vipm_modules", "@SrvCmd_Modules");
-    register_srvcmd("vipm_module_params", "@SrvCmd_ModuleParams");
 
     register_srvcmd("vipm_limits", "@SrvCmd_Limits");
-    register_srvcmd("vipm_limit_params", "@SrvCmd_LimitParams");
 }
 
 @SrvCmd_Info() {
@@ -79,23 +77,6 @@ SrvCmds_Init() {
     return PLUGIN_HANDLED;
 }
 
-@SrvCmd_ModuleParams() {
-    new sModuleTypeName[VIPM_MODULES_TYPE_NAME_MAX_LEN];
-    read_argv(1, sModuleTypeName, charsmax(sModuleTypeName));
-
-    new T_ModuleType:iModuleType = ModuleType_Find(sModuleTypeName);
-    if (iModuleType == Invalid_ModuleType) {
-        server_print("Module type '%s' not found.", sModuleTypeName);
-        return PLUGIN_HANDLED;
-    }
-    
-    new Array:aParams = ModuleType_GetParams(iModuleType);
-    PrintConfigParams(aParams);
-    ArrayDestroy(aParams);
-
-    return PLUGIN_HANDLED;
-}
-
 @SrvCmd_Limits() {
     server_print("╔═════╤══════════════════════════════════╤════════╤════════╤════════════╗");
     server_print("║  #  │ Limit name                       │ Params │ Static │ For player ║");
@@ -117,41 +98,4 @@ SrvCmds_Init() {
     server_print("╚═══════════════════════════════════════════════════════════════════════╝");
 
     return PLUGIN_HANDLED;
-}
-
-@SrvCmd_LimitParams() {
-    enum {Arg_sLimitTypeName = 1}
-
-    new sLimitTypeName[VIPM_LIMITS_TYPE_NAME_MAX_LEN];
-    read_argv(Arg_sLimitTypeName, sLimitTypeName, charsmax(sLimitTypeName));
-
-    new T_LimitType:iLimitType = LimitType_Find(sLimitTypeName);
-    if (iLimitType == Invalid_LimitType) {
-        server_print("Limit type '%s' not found.", sLimitTypeName);
-        return PLUGIN_HANDLED;
-    }
-
-    new Array:aLimitTypeParams = LimitType_GetParams(iLimitType);
-    PrintConfigParams(aLimitTypeParams);
-    ArrayDestroy(aLimitTypeParams);
-
-    return PLUGIN_HANDLED;
-}
-
-static PrintConfigParams(const Array:aParams) {
-    server_print("╔═════╤══════════════════════════════════╤══════════╤══════════╗");
-    server_print("║  #  │ Param name                       │ Type     │ Required ║");
-    server_print("╟─────┼──────────────────────────────────┼──────────┼──────────╢");
-
-    ArrayForeachArray2 (aParams: i => Param[S_CfgParam]) {
-        server_print("║ %3d │ %-32s │ %-8s │ %-8s ║",
-            i + 1, Param[CfgParam_Name],
-            VIPM_PARAM_TYPE_NAMES[Param[CfgParam_Type]],
-            Param[CfgParam_Required] ? "Yes" : "No"
-        );
-    }
-    
-    server_print("╟─────┴──────────────────────────────────┴──────────┴──────────╢");
-    server_print("║ Total: %-5d                                                 ║", ArraySizeSafe(aParams));
-    server_print("╚══════════════════════════════════════════════════════════════╝");
 }

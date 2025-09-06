@@ -13,7 +13,7 @@
 
 enum _:S_LimitType {
     LimitType_Name[VIPM_LIMITS_TYPE_NAME_MAX_LEN],
-    Array:LimitType_Params, // S_CfgParam[]
+    Array:LimitType_Params,
 
     bool:LimitType_Static,
     LimitType_StaticValue,
@@ -55,7 +55,7 @@ T_LimitType:LimitType_Construct(const sName[], const bool:bForPlayer = false, co
     new LimitType[S_LimitType];
 
     copy(LimitType[LimitType_Name], charsmax(LimitType[LimitType_Name]), sName);
-    LimitType[LimitType_Params] = Invalid_Array;
+    LimitType[LimitType_Params] = ArrayCreate(1, 1);
 
     LimitType[LimitType_Static] = bStatic;
     LimitType[LimitType_StaticValue] = 0;
@@ -75,73 +75,80 @@ T_LimitType:LimitType_Find(const sName[]) {
     }
 }
 
-static LimitType__Get(const T_LimitType:iLimitType, LimitType[S_LimitType]) {
-    ArrayMapGetArray(g_amLimitTypes, _:iLimitType, LimitType);
+static LimitType__Get(const T_LimitType:type, LimitType[S_LimitType]) {
+    ArrayMapGetArray(g_amLimitTypes, _:type, LimitType);
 }
 
 static LimitType__Set(const LimitType[S_LimitType]) {
     ArrayMapSetArrayByKey(g_amLimitTypes, LimitType[LimitType_Name], LimitType);
 }
 
-Array:LimitType_GetParams(const T_LimitType:iLimitType) {
-    new LimitType[S_LimitType];
-    LimitType__Get(iLimitType, LimitType);
-
-    if (LimitType[LimitType_Params] == Invalid_Array) {
-        return Invalid_Array;
+LimitType_AddParams(const T_LimitType:type, const Array:params) {
+    if (params == Invalid_Array) {
+        return;
     }
 
-    return ArrayClone(LimitType[LimitType_Params]);
+    new typeObject[S_LimitType];
+    LimitType__Get(type, typeObject);
+    
+    for (new i = 0, ii = ArraySize(params); i < ii; ++i) {
+        ArrayPushCell(typeObject[LimitType_Params], ArrayGetCell(params, i));
+    }
 }
 
-LimitType_MergeParamsList(const T_LimitType:iLimitType, const Array:aParams) {
-    new LimitType[S_LimitType];
-    LimitType__Get(iLimitType, LimitType);
-
-    LimitType[LimitType_Params] = CfgParam_Merge(LimitType[LimitType_Params], aParams);
-
-    LimitType__Set(LimitType);
-}
-
-Trie:LimitType_ReadParams(const T_LimitType:iLimitType, const JSON:jParams) {
-    new LimitType[S_LimitType];
-    LimitType__Get(iLimitType, LimitType);
-
-    new Trie:tParams = TrieCreate();
+Trie:LimitType_ReadParams(const T_LimitType:type, const JSON:paramsJson) {
+    new typeObject[S_LimitType];
+    LimitType__Get(type, typeObject);
 
     // У статических лимитов не может быть параметров
-    if (LimitType[LimitType_Static]) {
-        return tParams;
+    if (typeObject[LimitType_Static]) {
+        return Invalid_Trie;
     }
+    
+    new E_ParamsReadErrorType:errType, errParam[PARAM_KEY_MAX_LEN];
+    new Trie:params = ParamsController_Param_ReadList(
+        typeObject[LimitType_Params], paramsJson,
+        .iErrType = errType,
+        .sErrParamName = errParam,
+        .iErrParamNameLen = charsmax(errParam)
+    );
 
-    new sErrParam[VIPM_PARAM_NAME_MAX_LEN];
-    if (!CfgParam_ReadList(jParams, tParams, LimitType[LimitType_Params], sErrParam, charsmax(sErrParam))) {
-        PCJson_ErrorForFile(jParams, "Param '%s' required for '%s' limit.", sErrParam, LimitType[LimitType_Name]);
-        TrieDestroy(tParams);
+    if (errType != ParamsReadError_None) {
+        TrieDestroy(params);
+
+        switch (errType) {
+            case ParamsReadError_RequiredParamNotPresented: {
+                PCJson_ErrorForFile(paramsJson, "Param '%s' required for '%s' limit.", errParam, typeObject[LimitType_Name]);
+            }
+            case ParamsReadError_ParamValueIsInvalid: {
+                PCJson_ErrorForFile(paramsJson, "Param '%s' has invalid value.", errParam);
+            }
+        }
+        
         return Invalid_Trie;
     }
 
-    if (LimitType[LimitType_Events][Limit_OnRead] >= 0) {
-        new iRet = VIPM_STOP;
-        ExecuteForward(LimitType[LimitType_Events][Limit_OnRead], iRet, jParams, tParams);
+    if (typeObject[LimitType_Events][Limit_OnRead] >= 0) {
+        new ret = VIPM_STOP;
+        ExecuteForward(typeObject[LimitType_Events][Limit_OnRead], ret, paramsJson, params);
 
-        if (iRet == VIPM_STOP) {
-            TrieDestroy(tParams);
+        if (ret == VIPM_STOP) {
+            TrieDestroy(params);
             return Invalid_Trie;
         }
     }
     
-    return tParams;
+    return params;
 }
 
 LimitType_SetEventListener(
-    const T_LimitType:iLimitType,
+    const T_LimitType:type,
     const E_LimitEvent:iEvent,
     const PluginId,
     const sFuncName[]
 ) {
     new LimitType[S_LimitType];
-    LimitType__Get(iLimitType, LimitType);
+    LimitType__Get(type, LimitType);
 
     if (LimitType[LimitType_Events][iEvent] >= 0) {
         DestroyForward(LimitType[LimitType_Events][iEvent]);
@@ -169,9 +176,9 @@ static LimitType__MakeEventForward(const E_LimitEvent:iEvent, const PluginId, co
     return -1;
 }
 
-LimitType_SetStaticValue(const T_LimitType:iLimitType, const bool:bValue, const UserId = 0) {
+LimitType_SetStaticValue(const T_LimitType:type, const bool:bValue, const UserId = 0) {
     new LimitType[S_LimitType];
-    LimitType__Get(iLimitType, LimitType);
+    LimitType__Get(type, LimitType);
     
     if (!LimitType[LimitType_Static]) {
         abort(AMX_ERR_PARAMS, "Trying to set static value for a non-static limit.");
@@ -187,9 +194,9 @@ LimitType_SetStaticValue(const T_LimitType:iLimitType, const bool:bValue, const 
     LimitType__Set(LimitType);
 }
 
-bool:LimitType_Execute(const T_LimitType:iLimitType, const Trie:tParams, const UserId = 0) {
+bool:LimitType_Execute(const T_LimitType:type, const Trie:tParams, const UserId = 0) {
     new LimitType[S_LimitType];
-    LimitType__Get(iLimitType, LimitType);
+    LimitType__Get(type, LimitType);
     
     new bool:bRes = false;
     if (LimitType[LimitType_Static]) {

@@ -44,12 +44,12 @@ enum E_ModuleEvent{
      * 
      * Примечание: Результат обьединения должен быть возвращён обработчиком события.
      * 
-     * УСТАРЕЛО! Позже будет добавлен другой механизм подобный этому.
+     * УСТАРЕЛО! Используйте Module_OnMergeParams. 
      */
     Module_OnCompareParams,
 
     /*
-     * Описание:    Вызывается при добавлении игроку второго модуля того же типа.
+     * Описание:    Вызывается при добавлении игроку второго и последующих модулей одного типа.
      * Возв. тип:   Trie
      * Параметры:   (const Trie:tParams1, const Trie:tParams2):
      *      tParams1 - Первый набор параметров.
@@ -58,7 +58,7 @@ enum E_ModuleEvent{
      * Примечание: Если обработчик для этого события не зарегистрирован,
      *             всегда будет выбираться tParams1 (модуль, добавленный первым) без изменений.
      * 
-     * Примечание: Очищение пришедших в параметрах Trie вызовет ошибки в работе модулей.
+     * Примечание: Очищение/изменение пришедших в параметрах Trie вызовет ошибки в работе модулей.
      * 
      * Примечание: Обработчик может вернуть один из полученных Trie или создать новый.
      *             При содании нового Trie ядро само позаботится о его очищении в будущем.
@@ -67,18 +67,9 @@ enum E_ModuleEvent{
 }
 
 /**
- * Вызывается .
- *
- * @param moduleName    Название модуля.
- *
- * @return VIPM_CONTINUE - модуль будет активирован, VIPM_STOP
- */
-forward VipM_Modules_OnActivate(const moduleName[]);
-
-/**
  * Вызывается перед активацией модуля.
  *
- * @param moduleName    Название модуля.
+ * @param moduleName Название модуля.
  *
  * @return VIPM_CONTINUE - модуль будет активирован, VIPM_STOP - активация модуля будет прервана.
  */
@@ -87,29 +78,29 @@ forward VipM_Modules_OnActivate(const moduleName[]);
 /**
  * Регистрирует новый модуль.
  *
- * @param Module    Название модуля.
- * @param Once      Обьединять ли параметры элементов модуля. true - Нет, false - Да. Подразумевает использование события OnCompareParams.
+ * @param moduleName Название модуля.
+ * @param Once       Обьединять ли параметры элементов модуля. true - Нет, false - Да. Подразумевает использование события OnCompareParams.
  *
  * @noreturn
  */
-native VipM_Modules_Register(const Module[], const bool:Once = true);
+native VipM_Modules_Register(const moduleName[], const bool:Once = true);
 
 /**
  * Регистрирует обработчик события для указанного модуля.
  *
- * @param Module    Название модуля.
- * @param Event     Событие.
- * @param Func      Название функции-обработчика.
+ * @param moduleName Название модуля.
+ * @param event      Событие.
+ * @param func       Название функции-обработчика.
  *
  * @return  Вернёт true, если обработчик успешно зарегистрирован.
  */
-native bool:VipM_Modules_RegisterEvent(const Module[], const E_ModuleEvent:Event, const Func[]);
+native bool:VipM_Modules_RegisterEvent(const moduleName[], const E_ModuleEvent:event, const func[]);
 
 /**
  * Добавляет набор параметров для указанного модуля.
  *
- * @param Module    Название модуля.
- * @param any:...   Перечисление параметров.
+ * @param moduleName Название модуля.
+ * @param any:...    Перечисление параметров.
  *
  * @note    Формат указания параметров: VipM_Modules_AddParams(..., const ParamName[], const E_ParamType:ParamType, const bool:ParamRequired, ...);
  * @note    ParamName - Название параметра / ParamType - Тип параметра / ParamRequired - Обязателен ли параметр.
@@ -117,7 +108,31 @@ native bool:VipM_Modules_RegisterEvent(const Module[], const E_ModuleEvent:Event
  *
  * @noreturn
  */
-native VipM_Modules_AddParams(const Module[], const any:...);
+native VipM_Modules_AddParams(const moduleName[], const any:...);
+
+/**
+ * Добавляет параметры для модуля.
+ *
+ * @param moduleName Название модуля.
+ * @param any:...    Перечисление параметров.
+ * 
+ * @note            Формат перечисления параметров:
+ *                      VipM_Modules_AddParamsEx(..., const paramName[], const paramType[], const bool:paramRequired, ...);
+ * 
+ *                  Где:
+ *                  - paramName - Название параметра;
+ *                  - paramType - Название типа параметра;
+ *                  - paramRequired - Обязателен ли параметр.
+ * 
+ *                  Пример:
+ *                      VipM_Modules_AddParamsEx(module,
+ *                          "Param1", "String", true,
+ *                          "Param2", "Integer", false
+ *                      );
+ * 
+ * @noreturn
+ */
+native VipM_Modules_AddParamsEx(const moduleName[], const any:...);
 
 /**
  * Активен ли указанный модуль.

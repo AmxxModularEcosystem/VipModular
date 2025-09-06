@@ -1,13 +1,18 @@
 #include <amxmodx>
+#include <ParamsController>
+
 #include "VipM/DebugMode"
 #include "VipM/Core/Objects/Param"
 
 API_Modules_Init(){
     register_native("VipM_Modules_Register", "@_Modules_Register");
     register_native("VipM_Modules_AddParams", "@_Modules_AddParams");
+    register_native("VipM_Modules_AddParamsEx", "@VipM_Modules_AddParamsEx");
     register_native("VipM_Modules_RegisterEvent", "@_Modules_RegisterEvent");
+
     register_native("VipM_Modules_IsActive", "@_Modules_IsActive");
     register_native("VipM_Modules_GetParams", "@_Modules_GetParams");
+
 }
 
 T_ModuleType:@_Modules_Register(const PluginId) {
@@ -42,7 +47,24 @@ T_ModuleType:@_Modules_Register(const PluginId) {
         return;
     }
 
-    ModuleType_MergeParamsList(iModuleType, aParams);
+    ModuleType_AddParams(iModuleType, aParams);
+}
+
+@VipM_Modules_AddParamsEx(const pluginIndex, const paramsCount) {
+    enum {Arg_ModuleName = 1, Arg_Params}
+
+    new modelName[VIPM_MODULES_TYPE_NAME_MAX_LEN];
+    get_string(Arg_ModuleName, modelName, charsmax(modelName));
+
+    new T_ModuleType:module = ModuleType_Find(modelName);
+    if (module == Invalid_ModuleType) {
+        log_error(0, "Module type '%s' not found.", modelName);
+        return;
+    }
+
+    new Array:params = ParamsController_Param_ListFromNativeParams(Arg_Params, paramsCount);
+    ModuleType_AddParams(module, params);
+    ArrayDestroy(params);
 }
 
 bool:@_Modules_RegisterEvent(const PluginId) {
