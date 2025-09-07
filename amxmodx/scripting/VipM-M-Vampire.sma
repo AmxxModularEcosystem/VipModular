@@ -20,13 +20,13 @@ public VipM_Modules_OnInited() {
 
     VipM_Modules_Register(MODULE_NAME);
     VipM_Modules_AddParamsEx(MODULE_NAME,
-        "MaxHealth", "Integer", false,
         "ByKill", "Integer", false,
         "ByHead", "Integer", false,
         "ByKnife", "Integer", false,
         "ByGrenade", "Integer", false
     );
     VipM_Modules_AddParamsEx(MODULE_NAME,
+        "MaxHealth", "Integer", false,
         "Limits", "VipM-Limits", false
     );
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@Event_ModuleActivate");
