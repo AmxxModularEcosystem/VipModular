@@ -1,18 +1,14 @@
 #include <amxmodx>
-#include <json>
+#include <reapi>
+#include <hamsandwich>
 #include <VipModular>
 #include <ItemsController>
 #include <ParamsController>
-#include "VipM/Utils"
 
-public stock const PluginName[] = "[IC-I] Limits";
-public stock const PluginVersion[] = IC_VERSION;
-public stock const PluginAuthor[] = "ArKaNeMaN";
-public stock const PluginURL[] = "https://github.com/ArKaNeMaN/amxx-VipModular-pub";
-public stock const PluginDescription[] = "[ItemsController-Item] Items using limits.";
-
-public IC_ItemType_OnInited() {
-    register_plugin(PluginName, PluginVersion, PluginAuthor);
+DefaultObjects_ItemType_If_Register() {
+    if (!LibraryExists(VIPM_LIBRARY, LibType_Library)) {
+        return;
+    }
 
     new T_IC_ItemType:type = IC_ItemType_SimpleRegister(
         .name = "If",
@@ -31,4 +27,12 @@ public IC_ItemType_OnInited() {
     }
 
     return PCGet_IcItemsGive(p, "Items", playerIndex) ? IC_RET_GIVE_SUCCESS : IC_RET_GIVE_FAIL;
+}
+
+bool:DefaultObjects_ItemType_If_NativeFilter(const name[]) {
+    if (equal(name, "VipM_Limits_ExecuteList")) {
+        return true;
+    }
+
+    return false;
 }

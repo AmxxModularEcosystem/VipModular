@@ -49,7 +49,7 @@ public plugin_natives() {
 }
 
 @NativeFilter(const name[], index, trap) {
-    if (DefaultObjects_ItemType_CustomWeapon_NativeFilter(name, trap)) {
+    if (DefaultObjects_HandleNativeFilter(name, trap)) {
         return PLUGIN_HANDLED;
     }
 

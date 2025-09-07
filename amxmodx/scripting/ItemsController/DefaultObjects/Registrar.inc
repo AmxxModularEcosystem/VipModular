@@ -1,5 +1,19 @@
 #include <ItemsController>
 
+DefaultObjects_HandleNativeFilter(const name[], const trap) {
+    new ret = false;
+    
+    if (DefaultObjects_ItemType_CustomWeapon_NativeFilter(name, trap)) {
+        ret = true;
+    }
+
+    if (DefaultObjects_ItemType_If_NativeFilter(name)) {
+        ret = true;
+    }
+
+    return ret;
+}
+
 #include "ItemsController/DefaultObjects/ItemType/Armor"
 #include "ItemsController/DefaultObjects/ItemType/Command"
 #include "ItemsController/DefaultObjects/ItemType/DamageMult"
@@ -15,6 +29,7 @@
 #include "ItemsController/DefaultObjects/ItemType/Weapon"
 #include "ItemsController/DefaultObjects/ItemType/CustomWeapon"
 #include "ItemsController/DefaultObjects/ItemType/Function"
+#include "ItemsController/DefaultObjects/ItemType/If"
 
 public IC_ItemType_OnInited() {
     // Затычка для тех мест, где при отсутствии предметов вылезает ошибка/варн
@@ -35,6 +50,7 @@ public IC_ItemType_OnInited() {
     DefaultObjects_ItemType_Weapon_Register();
     DefaultObjects_ItemType_CustomWeapon_Register();
     DefaultObjects_ItemType_Function_Register();
+    DefaultObjects_ItemType_If_Register();
 }
 
 #include "ItemsController/DefaultObjects/ParamType/Item"
