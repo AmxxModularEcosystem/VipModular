@@ -176,6 +176,13 @@ static LimitType__MakeEventForward(const E_LimitEvent:iEvent, const PluginId, co
     return -1;
 }
 
+bool:LimitType_IsStatic(const T_LimitType:type) {
+    new LimitType[S_LimitType];
+    LimitType__Get(type, LimitType);
+    
+    return LimitType[LimitType_Static];
+}
+
 LimitType_SetStaticValue(const T_LimitType:type, const bool:bValue, const UserId = 0) {
     new LimitType[S_LimitType];
     LimitType__Get(type, LimitType);

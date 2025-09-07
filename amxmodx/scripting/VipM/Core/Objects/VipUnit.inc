@@ -53,33 +53,21 @@ static T_VipUnit:VipUnit__Construct(
     return T_VipUnit:ArrayPushArray(g_aVipUnits, VipUnit);
 }
 
-// static VipUnit__Get(const T_LimitUnit:iVipUnit, VipUnit[S_VipUnit], const bool:bOrFail = true) {
-//     if (_:iVipUnit < 0 || _:iVipUnit >= VipUnit_GetCount()) {
-//         if (bOrFail) {
-//            abort(0, "Invalid vip unit index (%d).", iVipUnit);
-//         }
-        
-//         return false;
-//     }
-
-//     ArrayGetArray(g_aVipUnits, _:iVipUnit, VipUnit);
-//     return true;
-// }
-
 static any:VipUnit__GetValue(const T_VipUnit:iVipUnit, const iCell) {
     return ArrayGetCell(g_aVipUnits, _:iVipUnit, iCell);
 }
 
-VipUnit_CheckUserAccess(const T_VipUnit:iVipUnit, const UserId) {
-    return LimitUnit_ExecuteList(
-        VipUnit__GetValue(iVipUnit, VipUnit_Access),
-        UserId,
-        Limit_Exec_OR
-    );
+VipUnit_CheckUserAccess(const T_VipUnit:vip, const playerIndex) {
+    Dbg_Log("VipUnit_CheckUserAccess(%d, %n) start", vip, playerIndex);
+
+    new Array:limits = VipUnit__GetValue(vip, VipUnit_Access);
+    Dbg_Log("VipUnit_CheckUserAccess(%d, %n) limits = %d (side: %d)", vip, playerIndex, limits, ArraySizeSafe(limits));
+
+    return VipM_Limits_ExecuteList(limits, playerIndex, Limit_Exec_OR);
 }
 
-Array:VipUnit_GetModules(const T_VipUnit:iVipUnit) {
-    return VipUnit__GetValue(iVipUnit, VipUnit_Modules);
+Array:VipUnit_GetModules(const T_VipUnit:vip) {
+    return VipUnit__GetValue(vip, VipUnit_Modules);
 }
 
 T_VipUnit:VipUnit_Read(const JSON:valueJson) {
@@ -91,7 +79,7 @@ T_VipUnit:VipUnit_Read(const JSON:valueJson) {
         return cached;
     }
     
-    new Array:aAccess = JsonObject_GetLimitUnits(linked, "Access");
+    new Array:aAccess = PCSingle_VipmLimits(linked, "Access");
     if (aAccess == Invalid_Array) {
         PCJson_ErrorForFile(linked, "Field 'Access' is required in vip object.");
         PCJson_FreeLinked(linked);

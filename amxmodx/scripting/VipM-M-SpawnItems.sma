@@ -34,15 +34,18 @@ public VipM_Modules_OnInited() {
 }
 
 @OnPlayerSpawned(const UserId) {
+    Dbg_Log("@OnPlayerSpawned(%n) Spawned, request frame", UserId);
     RequestFrame("@GivePlayerItems", UserId);
 }
 
 @GivePlayerItems(const UserId) {
     if (!is_user_alive(UserId)) {
+        Dbg_Log("@GivePlayerItems(%n) Dead", UserId);
         return;
     }
     
     if (!VipM_Modules_HasModule(MODULE_NAME, UserId)) {
+        Dbg_Log("@GivePlayerItems(%n) Has not module", UserId);
         return;
     }
     

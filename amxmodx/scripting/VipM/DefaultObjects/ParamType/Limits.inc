@@ -8,19 +8,15 @@ DefaultObjects_ParamType_Limits_Register() {
 }
 
 @OnLimitsParamTypeRead(const JSON:valueJson) {
-    new Array:limits = VipM_Limits_ReadListFromJson(valueJson);
-
-    if (limits == Invalid_Array) {
+    if (json_is_array(valueJson) && json_array_get_count(valueJson) < 1) {
+        PCJson_LogForFile(valueJson, "WARNING", "Limits array is empty.");
         return false;
     }
 
-    if (
-        (
-            json_is_object(valueJson)
-            || (json_is_array(valueJson) && json_array_get_count(valueJson) == 0)
-        ) && ArraySize(limits) < 1
-    ) {
+    new Array:limits = VipM_Limits_ReadListFromJson(valueJson);
+    if (limits == Invalid_Array || ArraySize(limits) < 1) {
         PCJson_LogForFile(valueJson, "WARNING", "All limits are invalid.");
+        ArrayDestroy(limits);
         return false;
     }
 

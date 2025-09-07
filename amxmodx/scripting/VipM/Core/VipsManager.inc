@@ -71,36 +71,46 @@ bool:VipsManager_LoadFromFolder(sFolderPath[]) {
     return true;
 }
 
-VipsManager_UserReload(const UserId) {
-    VipsManager_UserReset(UserId);
+VipsManager_UserReload(const playerIndex) {
+    VipsManager_UserReset(playerIndex);
+    
+    Dbg_Log("VipsManager_UserReload(%n) start", playerIndex);
 
-    g_tUserModules[UserId] = TrieCreate();
+    g_tUserModules[playerIndex] = TrieCreate();
     for (new i = 0, ii = ArraySize(g_aVips); i < ii; ++i) {
-        new T_VipUnit:iVipUnit = ArrayGetCell(g_aVips, i);
-        if (!VipUnit_CheckUserAccess(iVipUnit, UserId)) {
+        Dbg_Log("VipsManager_UserReload(%n) - vip #%d", playerIndex, i);
+
+        new T_VipUnit:vip = ArrayGetCell(g_aVips, i);
+        if (!VipUnit_CheckUserAccess(vip, playerIndex)) {
+            Dbg_Log("VipsManager_UserReload(%n) - - no access", playerIndex);
             continue;
         }
+        Dbg_Log("VipsManager_UserReload(%n) - - has access", playerIndex);
 
-        new Array:aModuleUnits = VipUnit_GetModules(iVipUnit);
-        for (new j = 0, jj = ArraySize(aModuleUnits); j < jj; ++j) {
-            new T_ModuleUnit:iModuleUnit = ArrayGetCell(aModuleUnits, j);
+        new Array:modules = VipUnit_GetModules(vip);
+        for (new j = 0, jj = ArraySize(modules); j < jj; ++j) {
+            new T_ModuleUnit:module = ArrayGetCell(modules, j);
 
-            new sModuleName[VIPM_MODULES_TYPE_NAME_MAX_LEN]; // TODO: Посмотреть можно ли юзать просто хендлер
-            ModuleUnit_GetTypeName(iModuleUnit, sModuleName, charsmax(sModuleName));
+            new moduleName[VIPM_MODULES_TYPE_NAME_MAX_LEN]; // TODO: Посмотреть можно ли юзать просто хендлер
+            ModuleUnit_GetTypeName(module, moduleName, charsmax(moduleName));
+            
+            Dbg_Log("VipsManager_UserReload(%n) - - - module %s (#%d)", playerIndex, moduleName, j);
 
-            new Trie:tParams = ModuleUnit_GetParams(iModuleUnit);
-            if (TrieKeyExists(g_tUserModules[UserId], sModuleName)) {
-                new Trie:tOldParams;
-                TrieGetCell(g_tUserModules[UserId], sModuleName, tOldParams);
+            new Trie:params = ModuleUnit_GetParams(module);
+            if (TrieKeyExists(g_tUserModules[playerIndex], moduleName)) {
+                Dbg_Log("VipsManager_UserReload(%n) - - - - merge", playerIndex);
+                new Trie:oldParams;
+                TrieGetCell(g_tUserModules[playerIndex], moduleName, oldParams);
 
-                TrieSetCell(g_tUserModules[UserId], sModuleName, ModuleUnit_Merge(iModuleUnit, tOldParams, tParams));
+                TrieSetCell(g_tUserModules[playerIndex], moduleName, ModuleUnit_Merge(module, oldParams, params));
             } else {
-                TrieSetCell(g_tUserModules[UserId], sModuleName, tParams);
+                Dbg_Log("VipsManager_UserReload(%n) - - - - add", playerIndex);
+                TrieSetCell(g_tUserModules[playerIndex], moduleName, params);
             }
         }
     }
 
-    Forwards_CallP("VipM_OnUserUpdated", UserId);
+    Forwards_CallP("VipM_OnUserUpdated", playerIndex);
 }
 
 VipsManager_UserReset(const UserId) {

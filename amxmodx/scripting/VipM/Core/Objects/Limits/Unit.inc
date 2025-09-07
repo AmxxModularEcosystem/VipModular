@@ -35,7 +35,7 @@ LimitUnit_GetCount() {
     return ArraySizeSafe(g_aLimitUnits);
 }
 
-static T_LimitUnit:LimitUnit__Construct(const T_LimitType:iLimitType, const Trie:tParams) {
+static T_LimitUnit:LimitUnit__Construct(const T_LimitType:iLimitType, const Trie:params) {
     if (g_aLimitUnits == Invalid_Array) {
         abort(AMX_ERR_GENERAL, "Attempt to create limit unit before init.");
         return Invalid_LimitUnit;
@@ -44,7 +44,7 @@ static T_LimitUnit:LimitUnit__Construct(const T_LimitType:iLimitType, const Trie
     new LimitUnit[S_LimitUnit];
 
     LimitUnit[LimitUnit_Type] = iLimitType;
-    LimitUnit[LimitUnit_Params] = tParams;
+    LimitUnit[LimitUnit_Params] = params;
 
     return T_LimitUnit:ArrayPushArray(g_aLimitUnits, LimitUnit);
 }
@@ -62,24 +62,24 @@ static bool:LimitUnit__Get(const T_LimitUnit:iLimitUnit, LimitUnit[S_LimitUnit],
     return true;
 }
 
-static T_LimitType:LimitUnit__ReadType(const JSON:jLimitUnit) {
-    new sLimitTypeName[VIPM_LIMITS_TYPE_NAME_MAX_LEN];
-    PCSingle_ObjString(jLimitUnit, "Limit", sLimitTypeName, charsmax(sLimitTypeName));
-    trim(sLimitTypeName);
+static T_LimitType:LimitUnit__ReadType(const JSON:limitJson) {
+    new typeName[VIPM_LIMITS_TYPE_NAME_MAX_LEN];
+    PCSingle_ObjString(limitJson, "Limit", typeName, charsmax(typeName));
+    trim(typeName);
 
-    if (!sLimitTypeName[0]) {
-        PCJson_ErrorForFile(jLimitUnit, "Limit type name not specified.");
+    if (!typeName[0]) {
+        PCJson_ErrorForFile(limitJson, "Limit type name not specified.");
         return Invalid_LimitType;
     }
 
-    new T_LimitType:iLimitType = LimitType_Find(sLimitTypeName);
+    new T_LimitType:type = LimitType_Find(typeName);
 
-    if (iLimitType == Invalid_LimitType) {
-        PCJson_ErrorForFile(jLimitUnit, "Limit type '%s' not found.", sLimitTypeName);
+    if (type == Invalid_LimitType) {
+        PCJson_ErrorForFile(limitJson, "Limit type '%s' not found.", typeName);
         return Invalid_LimitType;
     }
 
-    return iLimitType;
+    return type;
 }
 
 T_LimitUnit:LimitUnit_Read(const JSON:valueJson) {
@@ -97,13 +97,16 @@ T_LimitUnit:LimitUnit_Read(const JSON:valueJson) {
         return Invalid_LimitUnit;
     }
 
-    new Trie:p = LimitType_ReadParams(type, linked);
-    if (p == Invalid_Trie) {
-        PCJson_FreeLinked(linked);
-        return Invalid_LimitUnit;
+    new Trie:params = Invalid_Trie;
+    if (!LimitType_IsStatic(type)) {
+        params = LimitType_ReadParams(type, linked);
+        if (params == Invalid_Trie) {
+            PCJson_FreeLinked(linked);
+            return Invalid_LimitUnit;
+        }
     }
 
-    cached = LimitUnit__Construct(type, p);
+    cached = LimitUnit__Construct(type, params);
     if (linkPath[0] != EOS && cached != Invalid_LimitUnit) {
         TrieSetCell(cache, linkPath, cached);
     }
@@ -112,39 +115,29 @@ T_LimitUnit:LimitUnit_Read(const JSON:valueJson) {
     return cached;
 }
 
-Array:LimitUnit_ReadList(const JSON:jLimitUnits, &Array:aLimitUnits = Invalid_Array) {
-    ArrayCreateIfNotCreated(aLimitUnits);
+Array:LimitUnit_ReadList(const JSON:limitsJson, &Array:limits = Invalid_Array) {
+    if (limits == Invalid_Array) {
+        limits = ArrayCreate(1, 1);
+    }
 
-    if (!json_is_array(jLimitUnits)) {
-        new T_LimitUnit:iLimitUnit = LimitUnit_Read(jLimitUnits);
-        if (iLimitUnit != Invalid_LimitUnit) {
-            ArrayPushCell(aLimitUnits, iLimitUnit);    
+    if (!json_is_array(limitsJson)) {
+        new T_LimitUnit:limit = LimitUnit_Read(limitsJson);
+        if (limit != Invalid_LimitUnit) {
+            ArrayPushCell(limits, limit);    
         }
     } else {
-        json_array_foreach_value (jLimitUnits: i => jLimitUnit) {
-            aLimitUnits = LimitUnit_ReadList(jLimitUnit, aLimitUnits);
-            json_free(jLimitUnit);
+        json_array_foreach_value (limitsJson: i => limitJson) {
+            limits = LimitUnit_ReadList(limitJson, limits);
+            json_free(limitJson);
         }
     }
 
-    return aLimitUnits;
+    return limits;
 }
 
-Array:JsonObject_GetLimitUnits(const JSON:jObj, const sKey[], const bool:bDotNot = false, &Array:aLimitUnits = Invalid_Array) {
-    if (!json_object_has_value(jObj, sKey, .dot_not = bDotNot)) {
-        return aLimitUnits;
-    }
-
-    new JSON:jLimitUnits = json_object_get_value(jObj, sKey, bDotNot);
-    aLimitUnits = LimitUnit_ReadList(jLimitUnits, aLimitUnits);
-    json_free(jLimitUnits);
-
-    return aLimitUnits;
-}
-
-bool:LimitUnit_Execute(const T_LimitUnit:iLimitUnit, const UserId = 0) {
+bool:LimitUnit_Execute(const T_LimitUnit:limit, const UserId = 0) {
     new LimitUnit[S_LimitUnit];
-    LimitUnit__Get(iLimitUnit, LimitUnit);
+    LimitUnit__Get(limit, LimitUnit);
 
     return LimitType_Execute(LimitUnit[LimitUnit_Type], LimitUnit[LimitUnit_Params], UserId);
 }
@@ -157,8 +150,8 @@ bool:LimitUnit_ExecuteList(
     new bool:bXor = false;
 
     for (new i = 0, ii = ArraySizeSafe(aLimitUnits); i < ii; ++i) {
-        new T_LimitUnit:iLimitUnit = T_LimitUnit:ArrayGetCell(aLimitUnits, i);
-        new bool:bRes = LimitUnit_Execute(iLimitUnit, UserId);
+        new T_LimitUnit:limit = T_LimitUnit:ArrayGetCell(aLimitUnits, i);
+        new bool:bRes = LimitUnit_Execute(limit, UserId);
 
         switch (iOperator) {
             case Limit_Exec_OR: {
