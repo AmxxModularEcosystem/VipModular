@@ -7,7 +7,6 @@
 #include <json>
 #include <VipModular>
 #include <ParamsController>
-#include "VipM/JsonUtils"
 
 #include "VipM/WeaponMenu/Objects/MenuItem"
 
@@ -30,7 +29,7 @@ enum _:S_WeaponMenu {
 bool:WeaponMenu_Read(const JSON:menuJson, Menu[S_WeaponMenu]) {
     PCSingle_ObjString(menuJson, "Name", Menu[WeaponMenu_Name], charsmax(Menu[WeaponMenu_Name]));
 
-    if (Json_Object_GetColoredChatMessage(
+    if (PCSingle_ObjChatMessage(
         menuJson, "FakeMessage",
         Menu[WeaponMenu_FakeMessage], charsmax(Menu[WeaponMenu_FakeMessage])
     )) {

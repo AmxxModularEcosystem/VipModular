@@ -7,7 +7,6 @@
 #include <regex>
 #include "VipM/Forwards"
 #include "VipM/ArrayTrieUtils"
-#include "VipM/JsonUtils"
 #include "VipM/Core/Objects/VipUnit"
 
 static Array:g_aVips = Invalid_Array; // T_VipUnit[]

@@ -6,7 +6,6 @@
 #include <amxmodx>
 #include <VipModular>
 #include <ParamsController>
-#include "VipM/JsonUtils"
 
 enum MenuItemType {
     MenuItemType_Default = 0,

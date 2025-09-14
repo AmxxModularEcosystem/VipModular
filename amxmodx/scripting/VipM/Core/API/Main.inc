@@ -1,6 +1,5 @@
 #include <amxmodx>
 #include "VipM/Utils"
-#include "VipM/JsonUtils"
 #include "VipM/Core/VipsManager"
 
 API_Main_Init() {
