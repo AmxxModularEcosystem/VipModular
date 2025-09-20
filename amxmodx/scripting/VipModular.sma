@@ -5,8 +5,6 @@
 #include "VipM/ArrayTrieUtils"
 #include "VipM/Utils"
 #include "VipM/Forwards"
-#include "VipM/Core/Objects/Modules/Type"
-#include "VipM/Core/Objects/Limits/Type"
 
 public stock const PluginName[] = "Vip Modular";
 public stock const PluginVersion[] = _VIPM_VERSION;
@@ -15,6 +13,7 @@ public stock const PluginURL[] = _VIPM_PLUGIN_URL;
 public stock const PluginDescription[] = "Modular vip system";
 
 #include "VipM/Core/Objects/Modules/Type"
+#include "VipM/Core/Objects/Limits/Type"
 #include "VipM/Core/VipsManager"
 #include "VipM/Core/SrvCmds"
 #include "VipM/DefaultObjects/Registrar"
@@ -42,8 +41,8 @@ public plugin_precache() {
     Dbg_PrintServer("Vip Modular run in debug mode!");
 }
 
-public client_disconnected(UserId) {
-    VipsManager_UserReset(UserId);
+public client_authorized(playerIndex, const steamId[]) {
+    DefaultObjects_OnClientAuth(playerIndex, steamId);
 }
 
 public client_putinserver(UserId) {
@@ -60,6 +59,10 @@ public client_putinserver(UserId) {
     }
 }
 
+public client_disconnected(UserId) {
+    VipsManager_UserReset(UserId);
+}
+
 #include "VipM/Core/API/Main"
 #include "VipM/Core/API/Limits"
 #include "VipM/Core/API/Modules"
@@ -67,4 +70,16 @@ public plugin_natives() {
     API_Main_Init();
     API_Limits_Init();
     API_Modules_Init();
+
+    set_native_filter("@NativeFilter");
+}
+
+@NativeFilter(const name[], const index, const trap) {
+    new ret = PLUGIN_CONTINUE;
+
+    if (DefaultObjects_NativeFilter(name, !!trap)) {
+        ret = PLUGIN_HANDLED;
+    }
+
+    return ret;
 }

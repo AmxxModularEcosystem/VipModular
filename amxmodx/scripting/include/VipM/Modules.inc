@@ -125,7 +125,7 @@ native VipM_Modules_AddParams(const moduleName[], const any:...);
  *                  - paramRequired - Обязателен ли параметр.
  * 
  *                  Пример:
- *                      VipM_Modules_AddParamsEx(module,
+ *                      VipM_Modules_AddParamsEx(moduleName,
  *                          "Param1", "String", true,
  *                          "Param2", "Integer", false
  *                      );

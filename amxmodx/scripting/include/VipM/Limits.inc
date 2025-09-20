@@ -19,14 +19,14 @@ enum T_LimitUnit {Invalid_LimitUnit = -1}
 
 enum E_LimitEvent{
     /*
-     * Описание:    Вызывается после прочтения параметров условного элемента.
+     * Описание:    Вызывается после прочтения параметров лимита.
      * Возв. тип:   VipM_FwdReturn
      * Параметры:   (const JSON:jUnit, Trie:tParams):
      *      jUnit - JSON-обьект с параметрами.
      *      tParams - Хэш-карта с прочитанными параметрами. Может быть изменена.
      * 
      * Примечание: Вызывается в plugin_precache
-     * Примечание: Если возвращено VIPM_STOP, условный элемент будет пропущен.
+     * Примечание: Если возвращено VIPM_STOP, лимит будет пропущен.
      */
     Limit_OnRead,
 
@@ -35,10 +35,10 @@ enum E_LimitEvent{
      * Возв. тип:   bool
      * Параметры:   (const Trie:tParams, const UserId):
      *      tParams - Хэш-карта с параметрами. Для извлечения отдельных значений можно использовать стоковые функции VipM_Params_*.
-     *      UserId - Индекс игрока. 0, если условный элемент не зависит от игрока.
+     *      UserId - Индекс игрока. 0, если лимит не зависит от игрока.
      * 
      * Примечание: Если возвращено true, условие выполняется.
-     * Примечание: Не вызывается для статических условных элементов.
+     * Примечание: Не вызывается для статических лимитов.
      */
     Limit_OnCheck,
 }
@@ -78,7 +78,7 @@ forward VipM_OnInitLimits();
 forward VipM_Limits_OnInited();
 
 /**
- * Регистрирует в системе тип условного элемента.
+ * Регистрирует в системе тип лимита.
  *
  * @param jUnit     Название регистрируемого типа.
  * @param tParams   Относится ли регистрируемый тип к игрокам.
@@ -93,7 +93,7 @@ forward VipM_Limits_OnInited();
 native VipM_Limits_RegisterType(const sName[], const bool:bForPlayer = true, const bool:bStatic = false);
 
 /**
- * Регистрирует обработчик события для указанного типа условного элемента.
+ * Регистрирует обработчик события для указанного типа лимита.
  *
  * @param sName     Название типа.
  * @param iEvent    Событие.
@@ -104,7 +104,7 @@ native VipM_Limits_RegisterType(const sName[], const bool:bForPlayer = true, con
 native VipM_Limits_RegisterTypeEvent(const sName[], const E_LimitEvent:iEvent, const sFunc[]);
 
 /**
- * Добавляет параметр(ы) для типа условного элемента.
+ * Добавляет параметр(ы) для типа лимита.
  *
  * @param sName     Название типа.
  * @param any:...   Перечисление параметров.
@@ -118,18 +118,42 @@ native VipM_Limits_RegisterTypeEvent(const sName[], const E_LimitEvent:iEvent, c
 native VipM_Limits_AddTypeParams(const sName[], any:...);
 
 /**
- * Читает условный элемент из JSON-обьекта.
+ * Добавляет параметры для лимита.
+ *
+ * @param moduleName Название лимита.
+ * @param any:...    Перечисление параметров.
+ * 
+ * @note            Формат перечисления параметров:
+ *                      VipM_Modules_AddParamsEx(..., const paramName[], const paramType[], const bool:paramRequired, ...);
+ * 
+ *                  Где:
+ *                  - paramName - Название параметра;
+ *                  - paramType - Название типа параметра;
+ *                  - paramRequired - Обязателен ли параметр.
+ * 
+ *                  Пример:
+ *                      VipM_Limits_AddParamsEx(limitName,
+ *                          "Param1", "String", true,
+ *                          "Param2", "Integer", false
+ *                      );
+ * 
+ * @noreturn
+ */
+native VipM_Limits_AddParamsEx(const limitName[], const any:...);
+
+/**
+ * Читает лимит из JSON-обьекта.
  *
  * @param jLimit    JSON-обьект.
  *
  * @note            После вызова натива, JSON-обьект не очищается.
  *
- * @return          Индекс прочтённого условного элемента. Invalid_LimitUnit, если что-то пошло не так.
+ * @return          Индекс прочтённого лимита. Invalid_LimitUnit, если что-то пошло не так.
  */
 native T_LimitUnit:VipM_Limits_ReadFromJson(const JSON:jLimit);
 
 /**
- * Читает список условных элементов из JSON-обьекта.
+ * Читает список лимитов из JSON-значения.
  *
  * @param jLimits   JSON-обьект.
  * @param aLimits   Динамический массив, в который надо добавить прочтённые элементы, либо Invalid_Array, если надо создать новый.
@@ -137,12 +161,12 @@ native T_LimitUnit:VipM_Limits_ReadFromJson(const JSON:jLimit);
  * @note            После вызова натива, JSON-обьект не очищается.
  * @note            При передаче параметра aLimits, функция вернёт этот же массив с новыми элементами.
  *
- * @return          Динамический массив с индексами прочтённых условных элементов. Invalid_Array, если не было прочтено ни одного элемента.
+ * @return          Динамический массив с хендлерами прочтённых лимитов. Invalid_Array, если не было прочтено ни одного элемента.
  */
 native Array:VipM_Limits_ReadListFromJson(const JSON:jLimits, Array:aLimits = Invalid_Array);
 
 /**
- * Устанавливает значение для статического типа условного элемента.
+ * Устанавливает значение для статического лимита.
  *
  * @param sName     Название типа.
  * @param bNewValue Новое значение.
@@ -155,12 +179,12 @@ native Array:VipM_Limits_ReadListFromJson(const JSON:jLimits, Array:aLimits = In
 native VipM_Limits_SetStaticValue(const sName[], const bool:bNewValue, const UserId = 0);
 
 /**
- * Выполняет проверку условного элемента.
+ * Выполняет проверку лимита.
  *
- * @param iLimit    Индекс условного элемента.
+ * @param iLimit    Индекс лимита.
  * @param UserId    Индекс игрока.
  *
- * @note            Если индекс игрока не передан, попытка использовать относящийся к игроку условный оператор вызовет ошибку.
+ * @note            Если индекс игрока не передан, попытка использовать относящийся к игроку лимит вызовет ошибку.
  *                  Но это уже ошибка конфигурации.
  *
  * @return          true, если условие выполняется, иначе false.
@@ -168,13 +192,13 @@ native VipM_Limits_SetStaticValue(const sName[], const bool:bNewValue, const Use
 native bool:VipM_Limits_Execute(const T_LimitUnit:iLimit, const UserId = 0);
 
 /**
- * Выполняет проверку списка условных элементов.
+ * Выполняет проверку списка лимитов.
  *
- * @param aLimits   Динамический массив условных элементов.
+ * @param aLimits   Динамический массив хендлеров лимитов.
  * @param UserId    Индекс игрока.
  * @param iType     Логический оператор. См. перечисление E_LimitsExecType.
  *
- * @note            Если индекс игрока не передан, попытка использовать относящийся к игроку условный оператор вызовет ошибку.
+ * @note            Если индекс игрока не передан, попытка использовать относящийся к игроку лимит вызовет ошибку.
  *                  Но это уже ошибка конфигурации.
  *
  * @return          true, если условие выполняется, иначе false.
