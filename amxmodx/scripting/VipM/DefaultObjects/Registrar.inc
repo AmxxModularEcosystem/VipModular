@@ -2,10 +2,12 @@
 
 #include "VipM/DefaultObjects/ParamType/Limit"
 #include "VipM/DefaultObjects/ParamType/Limits"
+#include "VipM/DefaultObjects/ParamType/CounterType"
 
 public ParamsController_OnRegisterTypes() {
     DefaultObjects_ParamType_Limit_Register();
     DefaultObjects_ParamType_Limits_Register();
+    DefaultObjects_ParamType_CounterType_Register();
 }
 
 #include <VipModular>
@@ -24,6 +26,7 @@ public ParamsController_OnRegisterTypes() {
 #include "VipM/DefaultObjects/Limit/SteamId"
 #include "VipM/DefaultObjects/Limit/Time"
 #include "VipM/DefaultObjects/Limit/WeekDay"
+#include "VipM/DefaultObjects/Limit/Counter"
 
 public VipM_Limits_OnInited() {
     DefaultObjects_Limit_Always_Register();
@@ -40,6 +43,7 @@ public VipM_Limits_OnInited() {
     DefaultObjects_Limit_SteamId_Register();
     DefaultObjects_Limit_Time_Register();
     DefaultObjects_Limit_WeekDay_Register();
+    DefaultObjects_Limit_Counter_Register();
 }
 
 bool:DefaultObjects_NativeFilter(const name[], const bool:trap) {
@@ -56,4 +60,12 @@ DefaultObjects_OnClientAuth(const playerIndex, const steamId[]) {
     DefaultObjects_Limit_SteamId_OnClientAuth(playerIndex, steamId);
     DefaultObjects_Limit_Ip_OnClientAuth(playerIndex);
     DefaultObjects_Limit_Steam_OnClientAuth(playerIndex);
+}
+
+DefaultObjects_OnClientPutInServer(const playerIndex) {
+    DefaultObjects_Limit_Counter_OnClientPutInServer(playerIndex);
+}
+
+DefaultObjects_RegsiterNatives() {
+    DefaultObjects_Limit_Counter_RegsiterNatives();
 }

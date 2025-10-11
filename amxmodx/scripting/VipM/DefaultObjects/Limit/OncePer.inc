@@ -20,8 +20,6 @@ DefaultObjects_Limit_OncePer_Register() {
 
     VipM_Limits_RegisterType("OncePerGame", true, false);
     VipM_Limits_RegisterTypeEvent("OncePerGame", Limit_OnCheck, "@DefaultObjects_Limit_OncePer_OnOncePerGameCheck");
-
-    // TODO: Универсальный лимит "RateLimited"
 }
 
 @DefaultObjects_Limit_OncePer_OnRestartRound() {

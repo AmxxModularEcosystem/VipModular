@@ -4,10 +4,10 @@
 #include <VipModular>
 
 DefaultObjects_ParamType_Limit_Register() {
-    ParamsController_RegSimpleType(VIPM_PARAM_TYPE_LIMIT_NAME, "@OnLimitParamTypeRead");
+    ParamsController_RegSimpleType(VIPM_PARAM_TYPE_LIMIT_NAME, "@DefaultObjects_ParamType_Limit_OnRead");
 }
 
-bool:@OnLimitParamTypeRead(const JSON:valueJson) {
+bool:@DefaultObjects_ParamType_Limit_OnRead(const JSON:valueJson) {
     new T_LimitUnit:limit = VipM_Limits_ReadFromJson(valueJson);
 
     if (limit == Invalid_LimitUnit) {

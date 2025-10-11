@@ -45,22 +45,19 @@ public client_authorized(playerIndex, const steamId[]) {
     DefaultObjects_OnClientAuth(playerIndex, steamId);
 }
 
-public client_putinserver(UserId) {
-    if (is_user_bot(UserId)) {
-        return;
-    }
-
-    RequestFrame("@CallUserUpdate", UserId);
+public client_putinserver(playerIndex) {
+    DefaultObjects_OnClientPutInServer(playerIndex);
+    RequestFrame("@CallUserUpdate", playerIndex);
 }
 
-@CallUserUpdate(UserId) {
-    if (is_user_connected(UserId)) {
-        VipsManager_UserReload(UserId);
+@CallUserUpdate(const playerIndex) {
+    if (is_user_connected(playerIndex)) {
+        VipsManager_UserReload(playerIndex);
     }
 }
 
-public client_disconnected(UserId) {
-    VipsManager_UserReset(UserId);
+public client_disconnected(playerIndex) {
+    VipsManager_UserReset(playerIndex);
 }
 
 #include "VipM/Core/API/Main"
@@ -70,6 +67,8 @@ public plugin_natives() {
     API_Main_Init();
     API_Limits_Init();
     API_Modules_Init();
+
+    DefaultObjects_RegsiterNatives();
 
     set_native_filter("@NativeFilter");
 }
