@@ -15,7 +15,6 @@ DefaultObjects_Limit_Counter_Register() {
     );
 
     RegisterHookChain(RG_CBasePlayer_Spawn, "@DefaultObjects_Limit_Counter_OnPlayerSpawn", false);
-    RegisterHookChain(RG_CBasePlayer_Spawn, "@DefaultObjects_Limit_Counter_OnR", false);
     RegisterHookChain(RG_CSGameRules_RestartRound, "@DefaultObjects_Limit_Counter_OnRestartRound", false);
 }
 
