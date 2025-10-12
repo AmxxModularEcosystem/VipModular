@@ -2,7 +2,7 @@
 #include <ParamsController>
 #include <VipModular>
 
-new playerIps[MAX_PLAYERS + 1][MAX_IP_LENGTH];
+static PlayerIps[MAX_PLAYERS + 1][MAX_IP_LENGTH];
 
 DefaultObjects_Limit_Ip_Register() {
     VipM_Limits_RegisterType("Ip", true, false);
@@ -13,12 +13,12 @@ DefaultObjects_Limit_Ip_Register() {
 }
 
 DefaultObjects_Limit_Ip_OnClientAuth(const playerIndex) {
-    get_user_ip(playerIndex, playerIps[playerIndex], charsmax(playerIps[]), true);
+    get_user_ip(playerIndex, PlayerIps[playerIndex], charsmax(PlayerIps[]), true);
 }
 
 @DefaultObjects_Limit_Ip_OnCheck(const Trie:p, const playerIndex) {
     static ip[MAX_IP_LENGTH];
     PCGet_Str(p, "SteamId", ip, charsmax(ip));
 
-    return equali(playerIps[playerIndex], ip);
+    return equali(PlayerIps[playerIndex], ip);
 }

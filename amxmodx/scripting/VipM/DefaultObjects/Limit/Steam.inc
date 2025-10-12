@@ -2,7 +2,7 @@
 #include <ParamsController>
 #include <VipModular>
 
-new bool:IsSteamLimitAvailable = false;
+static bool:IsSteamLimitAvailable = false;
 
 DefaultObjects_Limit_Steam_Register() {
     VipM_Limits_RegisterType("Steam", true, true);

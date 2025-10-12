@@ -27,6 +27,14 @@ public ParamsController_OnRegisterTypes() {
 #include "VipM/DefaultObjects/Limit/Time"
 #include "VipM/DefaultObjects/Limit/WeekDay"
 #include "VipM/DefaultObjects/Limit/Counter"
+#include "VipM/DefaultObjects/Limit/Alive"
+#include "VipM/DefaultObjects/Limit/LifeTime"
+#include "VipM/DefaultObjects/Limit/Bot"
+#include "VipM/DefaultObjects/Limit/Flags"
+#include "VipM/DefaultObjects/Limit/Frags"
+#include "VipM/DefaultObjects/Limit/InBuyZone"
+#include "VipM/DefaultObjects/Limit/HasPrimaryWeapon"
+#include "VipM/DefaultObjects/Limit/Map"
 
 public VipM_Limits_OnInited() {
     DefaultObjects_Limit_Always_Register();
@@ -44,6 +52,14 @@ public VipM_Limits_OnInited() {
     DefaultObjects_Limit_Time_Register();
     DefaultObjects_Limit_WeekDay_Register();
     DefaultObjects_Limit_Counter_Register();
+    DefaultObjects_Limit_Alive_Register();
+    DefaultObjects_Limit_LifeTime_Register();
+    DefaultObjects_Limit_Bot_Register();
+    DefaultObjects_Limit_Flags_Register();
+    DefaultObjects_Limit_Frags_Register();
+    DefaultObjects_Limit_InBuyZone_Register();
+    DefaultObjects_Limit_HasPrimaryWeapon_Register();
+    DefaultObjects_Limit_Map_Register();
 }
 
 bool:DefaultObjects_NativeFilter(const name[], const bool:trap) {
@@ -60,10 +76,12 @@ DefaultObjects_OnClientAuth(const playerIndex, const steamId[]) {
     DefaultObjects_Limit_SteamId_OnClientAuth(playerIndex, steamId);
     DefaultObjects_Limit_Ip_OnClientAuth(playerIndex);
     DefaultObjects_Limit_Steam_OnClientAuth(playerIndex);
+    DefaultObjects_Limit_Bot_OnClientAuth(playerIndex);
 }
 
 DefaultObjects_OnClientPutInServer(const playerIndex) {
     DefaultObjects_Limit_Counter_OnClientPutInServer(playerIndex);
+    DefaultObjects_Limit_Alive_OnClientPutInServer(playerIndex);
 }
 
 DefaultObjects_RegsiterNatives() {

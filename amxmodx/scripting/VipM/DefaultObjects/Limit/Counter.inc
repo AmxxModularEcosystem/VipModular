@@ -19,7 +19,7 @@ DefaultObjects_Limit_Counter_Register() {
     RegisterHookChain(RG_CSGameRules_RestartRound, "@DefaultObjects_Limit_Counter_OnRestartRound", false);
 }
 
-DefaultObjects_Limit_Counter_ResetCounters(const VipM_L_Counter_Type:type) {
+static DefaultObjects_Limit_Counter_ResetCounters(const VipM_L_Counter_Type:type) {
     if (CounterTypes[type] == Invalid_Trie) {
         return;
     }
@@ -37,7 +37,7 @@ DefaultObjects_Limit_Counter_ResetCounters(const VipM_L_Counter_Type:type) {
     TrieDestroy(CounterTypes[type]);
 }
 
-DefaultObjects_Limit_Counter_ResetCountersForPlayer(const VipM_L_Counter_Type:type, const playerIndex) {
+static DefaultObjects_Limit_Counter_ResetCountersForPlayer(const VipM_L_Counter_Type:type, const playerIndex) {
     if (CounterTypes[type] == Invalid_Trie) {
         return;
     }
@@ -53,7 +53,7 @@ DefaultObjects_Limit_Counter_ResetCountersForPlayer(const VipM_L_Counter_Type:ty
     TrieIterDestroy(iter);
 }
 
-Trie:DefaultObjects_Limit_Counter_PrepareKey(const VipM_L_Counter_Type:type, const key[]) {
+static Trie:DefaultObjects_Limit_Counter_PrepareKey(const VipM_L_Counter_Type:type, const key[]) {
     if (CounterTypes[type] == Invalid_Trie) {
         CounterTypes[type] = TrieCreate();
     }
@@ -67,7 +67,7 @@ Trie:DefaultObjects_Limit_Counter_PrepareKey(const VipM_L_Counter_Type:type, con
     return countersByKey;
 }
 
-DefaultObjects_Limit_Counter_GetPlayerKey(const playerIndex) {
+static DefaultObjects_Limit_Counter_GetPlayerKey(const playerIndex) {
     new str[MAX_AUTHID_LENGTH];
     get_user_authid(playerIndex, str, charsmax(str));
     return str;

@@ -2,7 +2,7 @@
 #include <ParamsController>
 #include <VipModular>
 
-new playerSteamIds[MAX_PLAYERS + 1][MAX_AUTHID_LENGTH];
+static PlayerSteamIds[MAX_PLAYERS + 1][MAX_AUTHID_LENGTH];
 
 DefaultObjects_Limit_SteamId_Register() {
     VipM_Limits_RegisterType("SteamId", true, false);
@@ -13,12 +13,12 @@ DefaultObjects_Limit_SteamId_Register() {
 }
 
 DefaultObjects_Limit_SteamId_OnClientAuth(const playerIndex, const steamId[]) {
-    copy(playerSteamIds[playerIndex], charsmax(playerSteamIds[]), steamId);
+    copy(PlayerSteamIds[playerIndex], charsmax(PlayerSteamIds[]), steamId);
 }
 
 @DefaultObjects_Limit_SteamId_OnCheck(const Trie:p, const playerIndex) {
     static steamId[MAX_AUTHID_LENGTH];
     PCGet_Str(p, "SteamId", steamId, charsmax(steamId));
 
-    return equali(playerSteamIds[playerIndex], steamId);
+    return equali(PlayerSteamIds[playerIndex], steamId);
 }
