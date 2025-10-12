@@ -50,7 +50,8 @@ public VipM_OnInitModules() {
     VipM_Modules_AddParams(MODULE_NAME,
         "MainMenuTitle", ptString, false,
         "Menus", ptCustom, true,
-        "Count", ptInteger, false
+        "Count", ptInteger, false,
+        "ResetCountOnSpawn", ptBoolean, false
     );
     VipM_Modules_AddParams(MODULE_NAME,
         "Limits", ptLimits, false
@@ -130,15 +131,15 @@ public client_disconnected(UserId) {
         return;
     }
 
-    if (gUserShouldResetCounters[UserId]) {
+    new Trie:Params = VipM_Modules_GetParams(MODULE_NAME, UserId);
+
+    if (gUserShouldResetCounters[UserId] || VipM_Params_GetBool(Params, "ResetCountOnSpawn", false)) {
         ResetUserMenuCounters(UserId);
     } else {
         Dbg_Log("@OnPlayerSpawn(%n): Shouldn't reset counter", UserId);
     }
 
     // TODO: Добавить квар для отключения авто-открытия
-
-    new Trie:Params = VipM_Modules_GetParams(MODULE_NAME, UserId);
 
     if (!gUserAutoOpen[UserId]) {
         return;
