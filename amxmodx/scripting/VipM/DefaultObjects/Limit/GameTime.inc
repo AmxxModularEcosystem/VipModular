@@ -3,9 +3,9 @@
 #include <VipModular>
 
 DefaultObjects_Limit_GameTime_Register() {
-    VipM_Limits_RegisterType("GameTime", true, false);
+    VipM_Limits_RegisterType("GameTime", false, false);
     VipM_Limits_AddTypeParams("GameTime",
-        "Min", DEFAULT_PARAMS_TIME_INTERVAL_NAME, false, // TODO: Добавить типы "Time" в контроллер параметров
+        "Min", DEFAULT_PARAMS_TIME_INTERVAL_NAME, false,
         "Max", DEFAULT_PARAMS_TIME_INTERVAL_NAME, false
     );
     VipM_Limits_RegisterTypeEvent("GameTime", Limit_OnCheck, "@DefaultObjects_Limit_GameTime_OnCheck");
