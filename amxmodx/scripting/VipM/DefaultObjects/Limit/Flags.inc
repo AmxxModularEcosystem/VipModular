@@ -2,12 +2,10 @@
 #include <ParamsController>
 #include <VipModular>
 
-new playerSteamIds[MAX_PLAYERS + 1][MAX_AUTHID_LENGTH];
-
 DefaultObjects_Limit_Flags_Register() {
     VipM_Limits_RegisterType("Flags", true, false);
     VipM_Limits_AddParamsEx("Flags",
-        "Flags", DEFAULT_PARAMS_FLAGS_NAME, true
+        "Flags", DEFAULT_PARAMS_FLAGS_NAME, true,
         "Strict", DEFAULT_PARAMS_BOOL_NAME, false
     );
     VipM_Limits_RegisterTypeEvent("Flags", Limit_OnCheck, "@DefaultObjects_Limit_Flags_OnCheck");

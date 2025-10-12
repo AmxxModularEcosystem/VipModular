@@ -6,5 +6,5 @@ DefaultObjects_Limit_Bot_Register() {
 }
 
 DefaultObjects_Limit_Bot_OnClientAuth(const playerIndex) {
-    VipM_Limits_SetStaticValue("Bot", is_user_bot(playerIndex), playerIndex);
+    VipM_Limits_SetStaticValue("Bot", !!is_user_bot(playerIndex), playerIndex);
 }

@@ -10,8 +10,8 @@ DefaultObjects_Limit_Counter_Register() {
     VipM_Limits_RegisterType("Counter", true, false);
     VipM_Limits_AddParamsEx("Counter",
         "Type", VIPM_L_COUNTER_PARAM_TYPE, true,
-        "Key", "ShortString", true,
-        "Max", "Integer", false
+        "Key", DEFAULT_PARAMS_SHORT_STR_NAME, true,
+        "Max", DEFAULT_PARAMS_INT_NAME, false
     );
 
     RegisterHookChain(RG_CBasePlayer_Spawn, "@DefaultObjects_Limit_Counter_OnPlayerSpawn", false);

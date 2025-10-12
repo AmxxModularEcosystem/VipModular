@@ -6,23 +6,11 @@
 DefaultObjects_Limit_Time_Register() {
     VipM_Limits_RegisterType("Time", false, false);
     VipM_Limits_AddTypeParams("Time",
-        "Before", ptString, false, // TODO: Добавить тип "DayTime" в контроллер параметров
-        "After", ptString, false
+        "Before", DEFAULT_PARAMS_TIME_NAME, false,
+        "After", DEFAULT_PARAMS_TIME_NAME, false
     );
     VipM_Limits_RegisterTypeEvent("Time", Limit_OnRead, "@DefaultObjects_Limit_Time_OnRead");
     VipM_Limits_RegisterTypeEvent("Time", Limit_OnCheck, "@DefaultObjects_Limit_Time_OnCheck");
-}
-
-@DefaultObjects_Limit_Time_OnRead(const JSON:valueJson, const Trie:p) {
-    new sTime[8];
-    
-    TrieGetString(p, "Before", sTime, charsmax(sTime));
-    TrieSetCell(p, "Before", ParseColonTime(sTime), .replace = true);
-
-    TrieGetString(p, "After", sTime, charsmax(sTime));
-    TrieSetCell(p, "After", ParseColonTime(sTime), .replace = true);
-
-    return VIPM_CONTINUE;
 }
 
 @DefaultObjects_Limit_Time_OnCheck(const Trie:p) {
