@@ -1,4 +1,5 @@
 #include <amxmodx>
+#include <ParamsController>
 #include <ItemsController>
 #include "VipM/Utils"
 #include "VipM/Forwards"
@@ -21,7 +22,7 @@ PluginInit() {
 
     register_plugin(PluginName, PluginVersion, PluginAuthor);
     register_library(IC_LIBRARY);
-    CreateConstCvar(IC_VERSION_CVAR, IC_VERSION);
+    PCCvar_Const(IC_VERSION_CVAR, IC_VERSION);
     ParamsController_Init();
     Forwards_Init();
     

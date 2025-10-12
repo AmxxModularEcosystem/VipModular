@@ -13,16 +13,11 @@
 
 stock const __SLANG_TEMPLATE_STR[] = "%l";
 stock const __CLANG_TEMPLATE_STR[] = "%L";
-stock const __JSON_FILE_TEMPLATE_STR[] = "%s.json";
 stock const __LANG_MSG_LAYOUT_KEY[] = "MSG_LAYOUT";
 
 stock const bool:__CompositeMacros_AlwaysFalse = false;
 #define CompositeMacros(%1) \
     do { %1 } while(__CompositeMacros_AlwaysFalse)
-
-stock GetCurrentRoundNum() {
-    return get_member_game(m_iTotalRoundsPlayed) + 1;
-}
 
 stock IntToStr(const int) {
     new str[11];
@@ -63,10 +58,6 @@ stock IsPlayerAlive(const playerIndex) {
 
 #define ChatPrintLIf(%3,%1,%2) \
     ((%3) && ChatPrint(%1, __CLANG_TEMPLATE_STR, %1, %2))
-
-#define json_array_foreach(%1:%2) \
-    if (json_is_array(%1)) \
-        for (new %2 = 0; %2 < json_array_get_count(%1); %2++)
 
 #define json_array_foreach_vars(%1:%2,[%3]) \
     if (json_is_array(%1)) \
@@ -125,55 +116,6 @@ stock Array:json_object_get_strings_list(
 #define BitIs(%1,%2) \
     (bool:(%1 & (1 << %2)))
 
-stock bool:HasUserFlagsStr(const UserId, const sFlags[], const bool:bStrict = false) {
-    return HasUserFlags(UserId, read_flags(sFlags), bStrict);
-}
-
-stock bool:HasUserFlags(const UserId, const bitFlags, const bool:bStrict = false) {
-    return HasBits(get_user_flags(UserId), bitFlags, bStrict);
-}
-
-stock bool:HasBits(const bits, const bitSearch, const bool:bStrict = false) {
-    new bitRes = bits & bitSearch;
-    return bStrict
-        ? bitRes == bitSearch
-        : bitRes != 0
-}
-
-stock GetUserName(const playerIndex) {
-    new name[32];
-    get_user_name(playerIndex, name, charsmax(name));
-    return name;
-}
-
-stock IsEqualUserName(const playerIndex, const name[]) {
-    return equal(GetUserName(playerIndex), name);
-}
-
-stock GetWeekDayIdByName(const sWeekDayName[]) {
-    if (equali("Вс", sWeekDayName) || equali("Воскресенье", sWeekDayName) || equali("Sun", sWeekDayName) || equali("Sunday", sWeekDayName)) {
-        return 0;
-    } else if (equali("Пн", sWeekDayName) || equali("Понедельник", sWeekDayName) || equali("Mon", sWeekDayName) || equali("Monday", sWeekDayName)) {
-        return 1;
-    } else if (equali("Вт", sWeekDayName) || equali("Вторник", sWeekDayName) || equali("Tue", sWeekDayName) || equali("Tuesday", sWeekDayName)) {
-        return 2;
-    } else if (equali("Ср", sWeekDayName) || equali("Среда", sWeekDayName) || equali("Wed", sWeekDayName) || equali("Wednesday", sWeekDayName)) {
-        return 3;
-    } else if (equali("Чт", sWeekDayName) || equali("Четверг", sWeekDayName) || equali("Thu", sWeekDayName) || equali("Thursday", sWeekDayName)) {
-        return 4;
-    } else if (equali("Пт", sWeekDayName) || equali("Пятница", sWeekDayName) || equali("Fri", sWeekDayName) || equali("Friday", sWeekDayName)) {
-        return 5;
-    } else if (equali("Сб", sWeekDayName) || equali("Суббота", sWeekDayName) || equali("Sat", sWeekDayName) || equali("Saturday", sWeekDayName)) {
-        return 6;
-    } else {
-        return -1;
-    }
-}
-
-stock CreateConstCvar(const sCvarName[], const sCvarValue[], const iFlags = FCVAR_SERVER) {
-    set_pcvar_string(create_cvar(sCvarName, sCvarValue, iFlags), sCvarValue);
-}
-
 #define CallOnce() CompositeMacros( \
     static bool:__CallOnce_bCalled; \
     if (__CallOnce_bCalled) return; \
@@ -214,25 +156,8 @@ stock InstantReloadActiveWeapon(const UserId) {
     }
 }
 
-stock bool:StrEqualEx(const str1[], const str2[], const checkLength = 0, const bool:ignoreCase = false) {
-    return ignoreCase
-        ? equali(str1, str2, checkLength)
-        : equal(str1, str2, checkLength);
-}
-
 stock bool:IsUserInBuyZone(const UserId) {
     new Signal[UnifiedSignals];
     get_member(UserId, m_signals, Signal);
     return ((SignalState:Signal[US_State] & SIGNAL_BUY) == SIGNAL_BUY);
-}
-
-stock ParseColonTime(const sTime[], const sColon[] = ":") {
-    new sHours[3], sMinutes[3];
-    split(sTime, sHours, charsmax(sHours), sMinutes, charsmax(sMinutes), sColon);
-
-    return ((clamp(str_to_num(sHours), 0, 23) * 60) + clamp(str_to_num(sMinutes), 0, 59)) * 60;
-}
-
-stock GetDayTimeInSeconds() {
-    return get_systime() % (24 * 60 * 60);
 }

@@ -9,6 +9,11 @@ DefaultObjects_ParamType_CounterType_Register() {
 }
 
 bool:@DefaultObjects_ParamType_CounterType_OnRead(const JSON:valueJson) {
+    if (!json_is_string(valueJson)) {
+        PCJson_LogForFile(valueJson, "WARNING", "Counter type must be a string (PerRound, PerLife, PerSession, PerGame, PerMap).");
+        return false;
+    }
+
     new str[VIPM_L_COUNTER_KEY_MAX_LEN];
     json_get_string(valueJson, str, charsmax(str));
 
@@ -24,7 +29,6 @@ bool:@DefaultObjects_ParamType_CounterType_OnRead(const JSON:valueJson) {
         return ParamsController_SetCell(VipM_L_Counter_PerMap);
     }
 
-    PCJson_LogForFile(valueJson, "WARNING", "Counter type `%s` is not defined.", str);
-
+    PCJson_LogForFile(valueJson, "WARNING", "Counter type `%s` is not defined. Available types: PerRound, PerLife, PerSession, PerGame, PerMap.", str);
     return false;
 }

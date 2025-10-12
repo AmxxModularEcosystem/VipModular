@@ -12,5 +12,8 @@ DefaultObjects_Limit_Name_Register() {
 }
 
 @DefaultObjects_Limit_Name_OnCheck(const Trie:p, const playerIndex) {
-    return IsEqualUserName(playerIndex, PCGet_iStr(p, "Name"));
+    static name[MAX_NAME_LENGTH];
+    get_user_name(playerIndex, name, charsmax(name));
+
+    return equal(name, PCGet_iStr(p, "Name"));
 }

@@ -21,7 +21,7 @@ public stock const PluginDescription[] = "Modular vip system";
 public plugin_precache() {
     register_plugin(PluginName, PluginVersion, PluginAuthor);
     register_library(VIPM_LIBRARY);
-    CreateConstCvar("vipm_version", PluginVersion);
+    PCCvar_Const("vipm_version", PluginVersion);
 
     Forwards_Init();
 

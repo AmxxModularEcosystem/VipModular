@@ -1,7 +1,6 @@
 #include <amxmodx>
 #include <ParamsController>
 #include <VipModular>
-#include "VipM/Utils"
 
 DefaultObjects_Limit_Time_Register() {
     VipM_Limits_RegisterType("Time", false, false);
@@ -14,42 +13,38 @@ DefaultObjects_Limit_Time_Register() {
 }
 
 @DefaultObjects_Limit_Time_OnCheck(const Trie:p) {
-    new iBefore = PCGet_Int(p, "Before", 0);
-    new iAfter = PCGet_Int(p, "After", 0);
-    new iCurrent = GetDayTimeInSeconds();
+    new before = PCGet_Int(p, "Before", 0);
+    new after = PCGet_Int(p, "After", 0);
 
-    Dbg_Log("@OnTimeCheck(%d):", p);
-    Dbg_Log("  iBefore = %d", iBefore);
-    Dbg_Log("  iAfter = %d", iAfter);
-    Dbg_Log("  iCurrent = %d", iCurrent);
-
-    if (!iBefore && !iAfter) {
+    if (!before && !after) {
         return true;
     }
+    
+    new currentTime = get_systime() % (24 * 60 * 60);
 
-    if (!iBefore) {
-        return iCurrent > iAfter;
+    if (!before) {
+        return currentTime > after;
     }
 
-    if (!iAfter) {
-        return iCurrent < iBefore;
+    if (!after) {
+        return currentTime < before;
     }
 
-    if (iBefore == iAfter) {
-        return iBefore == iCurrent;
+    if (before == after) {
+        return before == currentTime;
     }
 
-    if (iAfter < iBefore) {
+    if (after < before) {
         return (
-            iCurrent > iAfter
-            && iCurrent < iBefore
+            currentTime > after
+            && currentTime < before
         );
     }
 
-    if (iAfter > iBefore) {
+    if (after > before) {
         return (
-            iCurrent > iAfter
-            || iCurrent < iBefore
+            currentTime > after
+            || currentTime < before
         );
     }
     
