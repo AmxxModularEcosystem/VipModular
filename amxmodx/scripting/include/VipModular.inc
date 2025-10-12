@@ -7,7 +7,7 @@
 #include json
 
 stock const VIPM_LIBRARY[] = "VipModular";
-#define _VIPM_VERSION "5.0.0-b12"
+#define _VIPM_VERSION "5.0.0-b13"
 stock const VIPM_VERSION[] = _VIPM_VERSION;
 stock const VIPM_CFG_PATH[] = "plugins/VipModular";
 #define _VIPM_PLUGIN_URL "https://github.com/ArKaNeMaN/amxx-VipModular-pub"
