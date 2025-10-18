@@ -39,19 +39,20 @@ public VipM_Modules_OnInited() {
     VipM_Modules_Register(MODULE_NAME);
     VipM_Modules_AddParamsEx(MODULE_NAME,
         // TODO Read "Menus" as param
-        "MainMenuTitle", "String", false,
-        "Count", "Integer", false,
-        "Limits", "VipM-Limits", false
+        "MainMenuTitle", DEFAULT_PARAMS_STR_NAME, false,
+        "Count", DEFAULT_PARAMS_INT_NAME, false,
+        "Limits", VIPM_PARAM_TYPE_LIMITS_NAME, false,
+        "ResetCountOnSpawn", DEFAULT_PARAMS_BOOL_NAME, false
     );
     VipM_Modules_AddParamsEx(MODULE_NAME,
-        "AutoopenLimits", "VipM-Limits", false,
-        "AutoopenDelay", "Float", false,
-        "AutoopenCloseDelay", "Float", false,
-        "AutoopenMenuNum", "Integer", false
+        "AutoopenLimits", VIPM_PARAM_TYPE_LIMITS_NAME, false,
+        "AutoopenDelay", DEFAULT_PARAMS_FLOAT_NAME, false,
+        "AutoopenCloseDelay", DEFAULT_PARAMS_FLOAT_NAME, false,
+        "AutoopenMenuNum", DEFAULT_PARAMS_INT_NAME, false
     );
     VipM_Modules_AddParamsEx(MODULE_NAME,
-        "StayOpen", "Boolean", false,
-        "StayOpen_CheckCounter", "Boolean", false
+        "StayOpen", DEFAULT_PARAMS_BOOL_NAME, false,
+        "StayOpen_CheckCounter", DEFAULT_PARAMS_BOOL_NAME, false
     );
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@OnModuleActivate");
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnRead, "@OnReadConfig");
@@ -81,148 +82,148 @@ public VipM_Modules_OnInited() {
     register_clcmd(VIPM_M_WEAPONMENU_CMD_AUTOOPEN_TOGGLE, "@Cmd_SwitchAutoOpen");
 }
 
-ResetUserMenuCounters(const UserId) {
-    new Trie:Params = VipM_Modules_GetParams(MODULE_NAME, UserId);
+ResetUserMenuCounters(const playerIndex) {
+    new Trie:Params = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
 
-    gUserLeftItems[UserId] = PCGet_Int(Params, "Count", -1);
-    g_tUserMenuItemsCounter[UserId] = KeyValueCounter_Reset(g_tUserMenuItemsCounter[UserId]);
+    gUserLeftItems[playerIndex] = PCGet_Int(Params, "Count", -1);
+    g_tUserMenuItemsCounter[playerIndex] = KeyValueCounter_Reset(g_tUserMenuItemsCounter[playerIndex]);
 
-    gUserShouldResetCounters[UserId] = false;
+    gUserShouldResetCounters[playerIndex] = false;
 
-    Dbg_Log("ResetUserMenuCounters(%n): gUserLeftItems[UserId] = %d", UserId, gUserLeftItems[UserId]);
+    Dbg_Log("ResetUserMenuCounters(%n): gUserLeftItems[playerIndex] = %d", playerIndex, gUserLeftItems[playerIndex]);
 }
 
-public client_putinserver(UserId) {
-    gUserShouldResetCounters[UserId] = true;
-    gUserExpireStatus[UserId][0] = 0;
+public client_putinserver(playerIndex) {
+    gUserShouldResetCounters[playerIndex] = true;
+    gUserExpireStatus[playerIndex][0] = 0;
 }
 
-public client_disconnected(UserId) {
-    AbortAutoCloseMenu(UserId);
+public client_disconnected(playerIndex) {
+    AbortAutoCloseMenu(playerIndex);
 }
 
 @OnRestartRound() {
-    for (new UserId = 1; UserId <= MAX_PLAYERS; UserId++) {
-        gUserShouldResetCounters[UserId] = true;
+    for (new playerIndex = 1; playerIndex <= MAX_PLAYERS; playerIndex++) {
+        gUserShouldResetCounters[playerIndex] = true;
     }
     Dbg_Log("@OnRestartRound(): Should reset all counters.");
 }
 
-@OnPlayerSpawn(const UserId) {
-    if (!IsPlayerAlive(UserId)) {
-        Dbg_Log("@OnPlayerSpawn(%n): Invalid (or dead) player", UserId);
+@OnPlayerSpawn(const playerIndex) {
+    if (!IsPlayerAlive(playerIndex)) {
+        Dbg_Log("@OnPlayerSpawn(%n): Invalid (or dead) player", playerIndex);
         return;
     }
 
-    if (gUserShouldResetCounters[UserId]) {
-        ResetUserMenuCounters(UserId);
+    new Trie:p = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
+
+    if (gUserShouldResetCounters[playerIndex] || PCGet_Bool(p, "ResetCountOnSpawn", false)) {
+        ResetUserMenuCounters(playerIndex);
     } else {
-        Dbg_Log("@OnPlayerSpawn(%n): Shouldn't reset counter", UserId);
+        Dbg_Log("@OnPlayerSpawn(%n): Shouldn't reset counter", playerIndex);
     }
 
     // TODO: Добавить квар для отключения авто-открытия
 
-    new Trie:Params = VipM_Modules_GetParams(MODULE_NAME, UserId);
-
-    if (!gUserAutoOpen[UserId]) {
+    if (!gUserAutoOpen[playerIndex]) {
         return;
     }
 
-    if (VipM_Params_GetArr(Params, "Menus") == Invalid_Array) {
+    if (VipM_Params_GetArr(p, "Menus") == Invalid_Array) {
         return;
     }
 
-    if (!PCGet_VipmLimitsCheck(Params, "AutoopenLimits", UserId, Limit_Exec_AND)) {
+    if (!PCGet_VipmLimitsCheck(p, "AutoopenLimits", playerIndex, Limit_Exec_AND)) {
         return;
     }
 
-    set_task(PCGet_Float(Params, "AutoopenDelay", 0.0), "@Task_AutoOpen", TASK_OFFSET_AUTO_OPEN + UserId);
+    set_task(PCGet_Float(p, "AutoopenDelay", 0.0), "@Task_AutoOpen", TASK_OFFSET_AUTO_OPEN + playerIndex);
 }
 
-@Task_AutoOpen(UserId) {
-    UserId -= TASK_OFFSET_AUTO_OPEN;
+@Task_AutoOpen(playerIndex) {
+    playerIndex -= TASK_OFFSET_AUTO_OPEN;
 
-    new Trie:tParams = VipM_Modules_GetParams(MODULE_NAME, UserId);
+    new Trie:tParams = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
     new Float:fAutoCloseDelay = PCGet_Float(tParams, "AutoopenCloseDelay", 0.0);
     new iMenuNum = PCGet_Int(tParams, "AutoopenMenuNum", -1);
 
     if (iMenuNum > 0) {
-        client_cmd(UserId, "%s %d", VIPM_M_WEAPONMENU_CMD_MENU_SILENT, iMenuNum - 1);
+        client_cmd(playerIndex, "%s %d", VIPM_M_WEAPONMENU_CMD_MENU_SILENT, iMenuNum - 1);
     } else {
-        client_cmd(UserId, VIPM_M_WEAPONMENU_CMD_MENU_SILENT);
+        client_cmd(playerIndex, VIPM_M_WEAPONMENU_CMD_MENU_SILENT);
     }
     
-    Dbg_Log("@Task_AutoOpen(%d): fAutoCloseDelay = %.2f", UserId, fAutoCloseDelay);
+    Dbg_Log("@Task_AutoOpen(%d): fAutoCloseDelay = %.2f", playerIndex, fAutoCloseDelay);
     if (fAutoCloseDelay > 0.0) {
-        Dbg_Log("@Task_AutoOpen(%d): Start auto close task", UserId);
-        set_task(fAutoCloseDelay, "@Task_AutoClose", TASK_OFFSET_AUTO_CLOSE + UserId);
+        Dbg_Log("@Task_AutoOpen(%d): Start auto close task", playerIndex);
+        set_task(fAutoCloseDelay, "@Task_AutoClose", TASK_OFFSET_AUTO_CLOSE + playerIndex);
     }
 }
 
-@Task_AutoClose(UserId) {
-    Dbg_Log("@Task_AutoClose(%d)", UserId);
-    UserId -= TASK_OFFSET_AUTO_CLOSE;
-    menu_cancel(UserId);
-    show_menu(UserId, 0, "");
+@Task_AutoClose(playerIndex) {
+    Dbg_Log("@Task_AutoClose(%d)", playerIndex);
+    playerIndex -= TASK_OFFSET_AUTO_CLOSE;
+    menu_cancel(playerIndex);
+    show_menu(playerIndex, 0, "");
 }
 
-AbortAutoCloseMenu(const UserId) {
-    remove_task(TASK_OFFSET_AUTO_CLOSE + UserId);
+AbortAutoCloseMenu(const playerIndex) {
+    remove_task(TASK_OFFSET_AUTO_CLOSE + playerIndex);
 }
 
-@Cmd_SwitchAutoOpen(const UserId) {
-    gUserAutoOpen[UserId] = !gUserAutoOpen[UserId];
-    ChatPrintL(UserId, gUserAutoOpen[UserId] ? "MSG_AUTOOPEN_TURNED_ON" : "MSG_AUTOOPEN_TURNED_OFF");
+@Cmd_SwitchAutoOpen(const playerIndex) {
+    gUserAutoOpen[playerIndex] = !gUserAutoOpen[playerIndex];
+    ChatPrintL(playerIndex, gUserAutoOpen[playerIndex] ? "MSG_AUTOOPEN_TURNED_ON" : "MSG_AUTOOPEN_TURNED_OFF");
     return PLUGIN_HANDLED;
 }
 
-@Cmd_Menu(const UserId) {
-    _Cmd_Menu(UserId);
+@Cmd_Menu(const playerIndex) {
+    _Cmd_Menu(playerIndex);
     return PLUGIN_HANDLED;
 }
 
-@Cmd_MenuSilent(const UserId) {
-    _Cmd_Menu(UserId, true);
+@Cmd_MenuSilent(const playerIndex) {
+    _Cmd_Menu(playerIndex, true);
     return PLUGIN_HANDLED;
 }
 
-_Cmd_Menu(const UserId, const bool:bSilent = false) {
-    if (!IsPlayerValid(UserId)) {
-        Dbg_Log("_Cmd_Menu(%d, %s): Invalid player", UserId, bSilent ? "true" : "false");
+_Cmd_Menu(const playerIndex, const bool:bSilent = false) {
+    if (!IsPlayerValid(playerIndex)) {
+        Dbg_Log("_Cmd_Menu(%d, %s): Invalid player", playerIndex, bSilent ? "true" : "false");
         return;
     }
 
-    if (!is_user_alive(UserId)) {
-        ChatPrintLIf(!bSilent, UserId, "MSG_YOU_DEAD");
+    if (!is_user_alive(playerIndex)) {
+        ChatPrintLIf(!bSilent, playerIndex, "MSG_YOU_DEAD");
 
-        Dbg_Log("_Cmd_Menu(%n, %s): Player is dead", UserId, bSilent ? "true" : "false");
+        Dbg_Log("_Cmd_Menu(%n, %s): Player is dead", playerIndex, bSilent ? "true" : "false");
         return;
     }
 
-    new Trie:Params = VipM_Modules_GetParams(MODULE_NAME, UserId);
+    new Trie:Params = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
     new Array:aMenus = VipM_Params_GetArr(Params, "Menus");
 
     if (ArraySizeSafe(aMenus) < 1) {
-        ChatPrintLIf(!bSilent, UserId, "MSG_NO_ACCESS");
+        ChatPrintLIf(!bSilent, playerIndex, "MSG_NO_ACCESS");
 
-        Dbg_Log("_Cmd_Menu(%n, %s): No access", UserId, bSilent ? "true" : "false");
+        Dbg_Log("_Cmd_Menu(%n, %s): No access", playerIndex, bSilent ? "true" : "false");
         return;
     }
     
-    if (!PCGet_VipmLimitsCheck(Params, "Limits", UserId, Limit_Exec_AND)) {
-        ChatPrintLIf(!bSilent, UserId, "MSG_MAIN_NOT_PASSED_LIMIT");
+    if (!PCGet_VipmLimitsCheck(Params, "Limits", playerIndex, Limit_Exec_AND)) {
+        ChatPrintLIf(!bSilent, playerIndex, "MSG_MAIN_NOT_PASSED_LIMIT");
 
-        Dbg_Log("_Cmd_Menu(%n, %s): Not passed main limits", UserId, bSilent ? "true" : "false");
+        Dbg_Log("_Cmd_Menu(%n, %s): Not passed main limits", playerIndex, bSilent ? "true" : "false");
         return;
     }
 
     if (read_argc() < 2) {
         if (ArraySizeSafe(aMenus) == 1) {
-            client_cmd(UserId, "%s %d", VIPM_M_WEAPONMENU_CMD_MENU, 0);
+            client_cmd(playerIndex, "%s %d", VIPM_M_WEAPONMENU_CMD_MENU, 0);
         } else {
             static MainMenuTitle[128];
             PCGet_Str(Params, "MainMenuTitle", MainMenuTitle, charsmax(MainMenuTitle));
-            Menu_MainMenu(UserId, MainMenuTitle, aMenus);
+            Menu_MainMenu(playerIndex, MainMenuTitle, aMenus);
         }
         return;
     }
@@ -232,27 +233,27 @@ _Cmd_Menu(const UserId, const bool:bSilent = false) {
         ArraySizeSafe(aMenus) <= MenuId
         || MenuId < 0
     ) {
-        Dbg_Log("_Cmd_Menu(%n, %s): Invalid menu id (%d)", UserId, bSilent ? "true" : "false", MenuId);
+        Dbg_Log("_Cmd_Menu(%n, %s): Invalid menu id (%d)", playerIndex, bSilent ? "true" : "false", MenuId);
         return;
     }
 
     static Menu[S_WeaponMenu];
     ArrayGetArray(aMenus, MenuId, Menu);
 
-    if (Menu[WeaponMenu_Limits] != Invalid_Array && !VipM_Limits_ExecuteList(Menu[WeaponMenu_Limits], UserId, Limit_Exec_AND)) {
-        ChatPrintLIf(!bSilent, UserId, "MSG_MENU_NOT_PASSED_LIMIT");
-        Dbg_Log("_Cmd_Menu(%n, %s): Not passed menu limits", UserId, bSilent ? "true" : "false");
+    if (Menu[WeaponMenu_Limits] != Invalid_Array && !VipM_Limits_ExecuteList(Menu[WeaponMenu_Limits], playerIndex, Limit_Exec_AND)) {
+        ChatPrintLIf(!bSilent, playerIndex, "MSG_MENU_NOT_PASSED_LIMIT");
+        Dbg_Log("_Cmd_Menu(%n, %s): Not passed menu limits", playerIndex, bSilent ? "true" : "false");
         return;
     }
     
     if (Menu[WeaponMenu_FakeMessage][0]) {
-        ChatPrint(UserId, Menu[WeaponMenu_FakeMessage]);
-        Dbg_Log("_Cmd_Menu(%n, %s): Fake menu (%s)", UserId, bSilent ? "true" : "false", Menu[WeaponMenu_FakeMessage]);
+        ChatPrint(playerIndex, Menu[WeaponMenu_FakeMessage]);
+        Dbg_Log("_Cmd_Menu(%n, %s): Fake menu (%s)", playerIndex, bSilent ? "true" : "false", Menu[WeaponMenu_FakeMessage]);
         return;
     }
 
     if (read_argc() < 3) {
-        Menu_WeaponsMenu(UserId, MenuId, Menu);
+        Menu_WeaponsMenu(playerIndex, MenuId, Menu);
         return;
     }
 
@@ -261,44 +262,44 @@ _Cmd_Menu(const UserId, const bool:bSilent = false) {
         ArraySizeSafe(Menu[WeaponMenu_Items]) <= ItemId
         || ItemId < 0
     ) {
-        Dbg_Log("_Cmd_Menu(%n, %s): Invalid item id (%d)", UserId, bSilent ? "true" : "false", ItemId);
+        Dbg_Log("_Cmd_Menu(%n, %s): Invalid item id (%d)", playerIndex, bSilent ? "true" : "false", ItemId);
         return;
     }
 
     static MenuItem[S_MenuItem];
     ArrayGetArray(Menu[WeaponMenu_Items], ItemId, MenuItem);
 
-    new iItemsLeft = GetUserLeftItems(UserId, MenuId, Menu);
+    new iItemsLeft = GetUserLeftItems(playerIndex, MenuId, Menu);
 
     if (
         MenuItem[MenuItem_UseCounter]
         && iItemsLeft == 0
     ) {
-        ChatPrintLIf(!bSilent, UserId, "MSG_NO_LEFT_ITEMS");
+        ChatPrintLIf(!bSilent, playerIndex, "MSG_NO_LEFT_ITEMS");
 
-        Dbg_Log("_Cmd_Menu(%n, %s): No left items", UserId, bSilent ? "true" : "false");
+        Dbg_Log("_Cmd_Menu(%n, %s): No left items", playerIndex, bSilent ? "true" : "false");
         return;
     }
 
     if (
-        !VipM_Limits_ExecuteList(MenuItem[MenuItem_ShowLimits], UserId, Limit_Exec_AND)
-        || !VipM_Limits_ExecuteList(MenuItem[MenuItem_ActiveLimits], UserId, Limit_Exec_AND)
-        || !VipM_Limits_ExecuteList(MenuItem[MenuItem_Limits], UserId, Limit_Exec_AND)
+        !VipM_Limits_ExecuteList(MenuItem[MenuItem_ShowLimits], playerIndex, Limit_Exec_AND)
+        || !VipM_Limits_ExecuteList(MenuItem[MenuItem_ActiveLimits], playerIndex, Limit_Exec_AND)
+        || !VipM_Limits_ExecuteList(MenuItem[MenuItem_Limits], playerIndex, Limit_Exec_AND)
     ) {
-        ChatPrintLIf(!bSilent, UserId, "MSG_MENUITEM_NOT_PASSED_LIMIT");
+        ChatPrintLIf(!bSilent, playerIndex, "MSG_MENUITEM_NOT_PASSED_LIMIT");
 
-        Dbg_Log("_Cmd_Menu(%n, %s): Not passed item limits", UserId, bSilent ? "true" : "false");
+        Dbg_Log("_Cmd_Menu(%n, %s): Not passed item limits", playerIndex, bSilent ? "true" : "false");
         return;
     }
     
     if (
-        IC_Item_GiveArray(UserId, MenuItem[MenuItem_Items])
+        IC_Item_GiveArray(playerIndex, MenuItem[MenuItem_Items])
         && MenuItem[MenuItem_UseCounter]
     ) {
-        gUserLeftItems[UserId]--;
+        gUserLeftItems[playerIndex]--;
 
         if (Menu[WeaponMenu_Count]) {
-            KeyValueCounter_Inc(g_tUserMenuItemsCounter[UserId], IntToStr(MenuId));
+            KeyValueCounter_Inc(g_tUserMenuItemsCounter[playerIndex], IntToStr(MenuId));
         }
     }
 
@@ -309,30 +310,30 @@ _Cmd_Menu(const UserId, const bool:bSilent = false) {
             || iItemsLeft != 0
         )
     ) {
-        client_cmd(UserId, "%s %d", VIPM_M_WEAPONMENU_CMD_MENU, MenuId);
+        client_cmd(playerIndex, "%s %d", VIPM_M_WEAPONMENU_CMD_MENU, MenuId);
     }
 }
 
-GetUserLeftItems(const UserId, const MenuId, const Menu[S_WeaponMenu]) {
-    new iUserItemsLeft = gUserLeftItems[UserId];
-    new iMenuItemsLeft = Menu[WeaponMenu_Count] - KeyValueCounter_Get(g_tUserMenuItemsCounter[UserId], IntToStr(MenuId));
+GetUserLeftItems(const playerIndex, const MenuId, const Menu[S_WeaponMenu]) {
+    new iUserItemsLeft = gUserLeftItems[playerIndex];
+    new iMenuItemsLeft = Menu[WeaponMenu_Count] - KeyValueCounter_Get(g_tUserMenuItemsCounter[playerIndex], IntToStr(MenuId));
     
-    Dbg_Log("GetUserLeftItems(%n, %d, %d): iUserItemsLeft = %d", UserId, MenuId, Menu[WeaponMenu_Name], iUserItemsLeft);
-    Dbg_Log("GetUserLeftItems(%n, %d, %d): iMenuItemsLeft = %d", UserId, MenuId, Menu[WeaponMenu_Name], iMenuItemsLeft);
-    Dbg_Log("GetUserLeftItems(%n, %d, %d): Menu[WeaponMenu_Count] = %d", UserId, MenuId, Menu[WeaponMenu_Name], Menu[WeaponMenu_Count]);
-    Dbg_Log("GetUserLeftItems(%n, %d, %d): g_tUserMenuItemsCounter[UserId] = %d", UserId, MenuId, Menu[WeaponMenu_Name], KeyValueCounter_Get(g_tUserMenuItemsCounter[UserId], IntToStr(MenuId)));
+    Dbg_Log("GetUserLeftItems(%n, %d, %d): iUserItemsLeft = %d", playerIndex, MenuId, Menu[WeaponMenu_Name], iUserItemsLeft);
+    Dbg_Log("GetUserLeftItems(%n, %d, %d): iMenuItemsLeft = %d", playerIndex, MenuId, Menu[WeaponMenu_Name], iMenuItemsLeft);
+    Dbg_Log("GetUserLeftItems(%n, %d, %d): Menu[WeaponMenu_Count] = %d", playerIndex, MenuId, Menu[WeaponMenu_Name], Menu[WeaponMenu_Count]);
+    Dbg_Log("GetUserLeftItems(%n, %d, %d): g_tUserMenuItemsCounter[playerIndex] = %d", playerIndex, MenuId, Menu[WeaponMenu_Name], KeyValueCounter_Get(g_tUserMenuItemsCounter[playerIndex], IntToStr(MenuId)));
 
     if (iUserItemsLeft < 0) {
-        Dbg_Log("GetUserLeftItems(%n, %d, %d): return %d (no global limit)", UserId, MenuId, Menu[WeaponMenu_Name], iMenuItemsLeft);
+        Dbg_Log("GetUserLeftItems(%n, %d, %d): return %d (no global limit)", playerIndex, MenuId, Menu[WeaponMenu_Name], iMenuItemsLeft);
         return iMenuItemsLeft;
     }
 
     if (Menu[WeaponMenu_Count] < 0) {
-        Dbg_Log("GetUserLeftItems(%n, %d, %d): return %d (no menu limit)", UserId, MenuId, Menu[WeaponMenu_Name], iUserItemsLeft);
+        Dbg_Log("GetUserLeftItems(%n, %d, %d): return %d (no menu limit)", playerIndex, MenuId, Menu[WeaponMenu_Name], iUserItemsLeft);
         return iUserItemsLeft;
     }
     
-    Dbg_Log("GetUserLeftItems(%n, %d, %d): return %d (has both limits)", UserId, MenuId, Menu[WeaponMenu_Name], min(iUserItemsLeft, iMenuItemsLeft));
+    Dbg_Log("GetUserLeftItems(%n, %d, %d): return %d (has both limits)", playerIndex, MenuId, Menu[WeaponMenu_Name], min(iUserItemsLeft, iMenuItemsLeft));
     return min(iUserItemsLeft, iMenuItemsLeft);
 }
 

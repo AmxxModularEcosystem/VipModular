@@ -20,14 +20,14 @@ public VipM_Modules_OnInited() {
 
     VipM_Modules_Register(MODULE_NAME);
     VipM_Modules_AddParamsEx(MODULE_NAME,
-        "ByKill", "Integer", false,
-        "ByHead", "Integer", false,
-        "ByKnife", "Integer", false,
-        "ByGrenade", "Integer", false
+        "ByKill", DEFAULT_PARAMS_INT_NAME, false,
+        "ByHead", DEFAULT_PARAMS_INT_NAME, false,
+        "ByKnife", DEFAULT_PARAMS_INT_NAME, false,
+        "ByGrenade", DEFAULT_PARAMS_INT_NAME, false
     );
     VipM_Modules_AddParamsEx(MODULE_NAME,
-        "MaxHealth", "Integer", false,
-        "Limits", "VipM-Limits", false
+        "MaxHealth", DEFAULT_PARAMS_INT_NAME, false,
+        "Limits", VIPM_PARAM_TYPE_LIMITS_NAME, false
     );
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@Event_ModuleActivate");
 }

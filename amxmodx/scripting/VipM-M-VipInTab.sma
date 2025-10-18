@@ -25,8 +25,8 @@ public VipM_Modules_OnInited() {
 
     VipM_Modules_Register(MODULE_NAME);
     VipM_Modules_AddParamsEx(MODULE_NAME,
-        "Enabled", "Boolean", true,
-        "Override", "Boolean", false
+        "Enabled", DEFAULT_PARAMS_BOOL_NAME, true,
+        "Override", DEFAULT_PARAMS_BOOL_NAME, false
     );
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@OnModuleActivate");
 }

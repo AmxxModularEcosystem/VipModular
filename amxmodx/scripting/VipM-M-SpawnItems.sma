@@ -23,8 +23,8 @@ public VipM_Modules_OnInited() {
     
     VipM_Modules_Register(MODULE_NAME);
     VipM_Modules_AddParamsEx(MODULE_NAME,
-        "Items", "IC-Items", true,
-        "Limits", "VipM-Limits", false
+        "Items", IC_PARAM_TYPE_ITEMS_NAME, true,
+        "Limits", VIPM_PARAM_TYPE_LIMITS_NAME, false
     );
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@OnModuleActivate");
 }
