@@ -9,14 +9,6 @@ stock ArraySizeSafe(const Array:h) {
     return h == Invalid_Array ? 0 : ArraySize(h);
 }
 
-#define ArrayForeachArray(%1=>%2[%3]) \
-    ArrayForeachArrayEx(%1 => %2[%3], __i__)
-
-#define ArrayForeachArrayEx(%1=>%2[%3],%4) \
-    if (%1 != Invalid_Array)\
-        for (new %2[%3], %4 = 0; %4 < ArraySizeSafe(%1); %4++)\
-            if (ArrayGetArray(%1, %4, %2))
-
 #define ArrayForeachArray2(%1:%4=>%2[%3]) \
     if (%1 != Invalid_Array) \
         for (new %2[%3], %4 = 0; %4 < ArraySizeSafe(%1); %4++) \

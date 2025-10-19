@@ -1,9 +1,5 @@
 #include <amxmodx>
 #include <VipModular>
-#include "VipM/Utils"
-
-#pragma semicolon 1
-#pragma compress 1
 
 enum E_ModuleParams {
     Param_Enabled = 0,
@@ -14,11 +10,11 @@ public stock const PluginName[] = "[VipM-M] Vip in TAB";
 public stock const PluginVersion[] = _VIPM_VERSION;
 public stock const PluginAuthor[] = "ArKaNeMaN";
 public stock const PluginURL[] = _VIPM_PLUGIN_URL;
-public stock const PluginDescription[] = "Vip modular`s module - VipInTab";
+public stock const PluginDescription[] = "[VipModular-Module] Show VIP status in TAB.";
 
 new const MODULE_NAME[] = "VipInTab";
 
-new bool:gHasTag[MAX_PLAYERS + 1][E_ModuleParams];
+new bool:PlayerSettings[MAX_PLAYERS + 1][E_ModuleParams];
 
 public VipM_Modules_OnInited() {
     register_plugin(PluginName, PluginVersion, PluginAuthor);
@@ -31,25 +27,25 @@ public VipM_Modules_OnInited() {
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@OnModuleActivate");
 }
 
-public VipM_OnUserUpdated(const UserId) {
-    new Trie:Params = VipM_Modules_GetParams(MODULE_NAME, UserId);
+public VipM_OnUserUpdated(const playerIndex) {
+    new Trie:Params = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
 
-    gHasTag[UserId][Param_Enabled] = PCGet_Bool(Params, "Enabled", false);
-    gHasTag[UserId][Param_Override] = PCGet_Bool(Params, "Override", false);
+    PlayerSettings[playerIndex][Param_Enabled] = PCGet_Bool(Params, "Enabled", false);
+    PlayerSettings[playerIndex][Param_Override] = PCGet_Bool(Params, "Override", false);
 }
 
 @OnModuleActivate() {
     register_message(get_user_msgid("ScoreAttrib"), "@OnMsgScoreAttrib");
 }
 
-@OnMsgScoreAttrib(const MsgId, const MsgType, const MsgDest) {
-    new UserId = get_msg_arg_int(1);
-    if (!gHasTag[UserId][Param_Enabled]) {
+@OnMsgScoreAttrib(const messageIndex, const messageType, const messageDestination) {
+    new playerIndex = get_msg_arg_int(1);
+    if (!PlayerSettings[playerIndex][Param_Enabled]) {
         return;
     }
 
     if (
-        !gHasTag[UserId][Param_Override]
+        !PlayerSettings[playerIndex][Param_Override]
         && get_msg_arg_int(2) != 0
     ) {
         return;

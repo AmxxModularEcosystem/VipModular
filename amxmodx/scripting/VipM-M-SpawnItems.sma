@@ -3,11 +3,6 @@
 #include <reapi>
 #include <VipModular>
 #include <ItemsController>
-#include "VipM/Utils"
-#include "VipM/DebugMode"
-
-#include "VipM/Utils"
-#include "VipM/ArrayTrieUtils"
 
 public stock const PluginName[] = "[VipM-M] Spawn Items";
 public stock const PluginVersion[] = _VIPM_VERSION;
@@ -33,32 +28,24 @@ public VipM_Modules_OnInited() {
     RegisterHookChain(RG_CBasePlayer_Spawn, "@OnPlayerSpawned", true);
 }
 
-@OnPlayerSpawned(const UserId) {
-    Dbg_Log("@OnPlayerSpawned(%n) Spawned, request frame", UserId);
-    RequestFrame("@GivePlayerItems", UserId);
+@OnPlayerSpawned(const playerIndex) {
+    RequestFrame("@GivePlayerItems", playerIndex);
 }
 
-@GivePlayerItems(const UserId) {
-    if (!is_user_alive(UserId)) {
-        Dbg_Log("@GivePlayerItems(%n) Dead", UserId);
+@GivePlayerItems(const playerIndex) {
+    if (!is_user_alive(playerIndex)) {
         return;
     }
     
-    if (!VipM_Modules_HasModule(MODULE_NAME, UserId)) {
-        Dbg_Log("@GivePlayerItems(%n) Has not module", UserId);
+    if (!VipM_Modules_HasModule(MODULE_NAME, playerIndex)) {
         return;
     }
     
-    new Trie:p = VipM_Modules_GetParams(MODULE_NAME, UserId);
+    new Trie:p = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
 
-    if (!PCGet_VipmLimitsCheck(p, "Limits", UserId, Limit_Exec_AND)) {
-        Dbg_Log("@GivePlayerItems(%n) Limits not passed", UserId);
+    if (!PCGet_VipmLimitsCheck(p, "Limits", playerIndex, Limit_Exec_AND)) {
         return;
     }
     
-    if (PCGet_IcItemsGive(p, "Items", UserId)) {
-        Dbg_Log("@GivePlayerItems(%n) Items given", UserId);
-    } else {
-        Dbg_Log("@GivePlayerItems(%n) Items not given", UserId);
-    }
+    PCGet_IcItemsGive(p, "Items", playerIndex);
 }

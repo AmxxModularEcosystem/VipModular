@@ -30,20 +30,6 @@ stock IsPlayerIndexValid(const playerIndex) {
     return playerIndex >= 1 && playerIndex <= 32;
 }
 
-stock IsPlayerValid(const playerIndex) {
-    return (
-        IsPlayerIndexValid(playerIndex)
-        && is_user_connected(playerIndex)
-    );
-}
-
-stock IsPlayerAlive(const playerIndex) {
-    return (
-        IsPlayerIndexValid(playerIndex)
-        && is_user_alive(playerIndex)
-    );
-}
-
 #define Lang(%1) \
     fmt(__SLANG_TEMPLATE_STR, %1)
 

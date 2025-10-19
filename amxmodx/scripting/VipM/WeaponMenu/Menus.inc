@@ -13,7 +13,7 @@ Menu_GetUserMenusCount(const UserId) {
 Menu_MainMenu(const UserId, const MainMenuTitle[], const Array:aMenus) {
     new iMenu = menu_create(MainMenuTitle, "@MenuHandler_Command");
 
-    ArrayForeachArray(aMenus => Menu[S_WeaponMenu]) {
+    ArrayForeachArray2 (aMenus: i => Menu[S_WeaponMenu]) {
         menu_additem(iMenu, Menu[WeaponMenu_Name], fmt("%s %d", VIPM_M_WEAPONMENU_CMD_MENU, __i__));
     }
 
@@ -72,7 +72,7 @@ Menu_WeaponsMenu(const UserId, const MenuId, const Menu[S_WeaponMenu]) {
     }
 
     new iItemIndex = 0;
-    ArrayForeachArray(Menu[WeaponMenu_Items] => MenuItem[S_MenuItem]) {
+    ArrayForeachArray2 (Menu[WeaponMenu_Items]: i => MenuItem[S_MenuItem]) {
         if (
             MenuItem[MenuItem_ShowLimits] != Invalid_Array
             && !VipM_Limits_ExecuteList(MenuItem[MenuItem_ShowLimits], UserId, Limit_Exec_AND)

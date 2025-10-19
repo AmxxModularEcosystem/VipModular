@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [master, feature/**, fix/**]
     paths-ignore:
       - "**.md"
 
@@ -14,8 +14,11 @@ on:
 env:
   PACKAGE_NAME: VipModular
   STORE_README: 0
-  GENERATE_PLUGINS_INI: 1
+  PLUGINS_INI_GENERATE: 1
   PLUGINS_INI_POSTFIX: vipm
+  DEPS_LIST: |
+    AmxxModularEcosystem/ParamsController@1.2.0
+    AmxxModularEcosystem/CommandAliases@1.0.1
 
 jobs:
   build:
@@ -52,6 +55,7 @@ jobs:
       - name: Setup latest ReAPI includes
         env:
           REPO: "rehlds/ReAPI"
+          OUTPUT_VAR_NAME: REAPI_INCLUDE_PATH
         run: |
           mkdir -p dep/reapi
           cd dep/reapi
@@ -64,7 +68,49 @@ jobs:
 
           7z x *.zip
 
-          echo "REAPI_INCLUDE_PATH=$(pwd)/addons/amxmodx/scripting/include" >> $GITHUB_ENV
+          echo "${OUTPUT_VAR_NAME}=$(pwd)/addons/amxmodx/scripting/include" >> $GITHUB_ENV
+
+      - name: Setup deps includes
+        env:
+          DEPS_LIST: ${{ env.DEPS_LIST }}
+          OUTPUT_VAR_NAME: DEPS_COMPILER_ARGS
+        run: |
+          handleDep() {
+            REPO=`echo $1 | grep -Po '.+(?=@)'`
+            TAG=`echo $1 | grep -Po '(?<=@).+(?=:)'`
+            OVERRIDE_INCLUDE_PATH=`echo $1 | grep -Po '(?<=:).+'`
+
+            if [ -z "$REPO" ]; then
+              echo "No repo provided"
+              exit 1
+            fi
+
+            INIT_PWD=$(pwd)
+            mkdir -p dep/${REPO}
+            cd dep/${REPO}
+
+            if [ -z "$2" ]; then
+              TAG=`curl --silent https://api.github.com/repos/${REPO}/releases/latest | jq .tag_name -r`
+            else
+              TAG=$2
+            fi
+
+            wget https://github.com/${REPO}/archive/refs/tags/${TAG}.zip
+            7z x ${TAG}.zip
+
+            REPO_NAME=`echo "${REPO}" | grep -Po '(?<=\/).+'`
+            INCLUDE_PATH='$(pwd)/${REPO_NAME}-${TAG}/${OVERRIDE_INCLUDE_PATH:-amxmodx/scripting/include}'
+
+            echo "${OUTPUT_VAR_NAME}=\"\${${OUTPUT_VAR_NAME}} -i\\\"${INCLUDE_PATH}\\\"\"" >> $GITHUB_ENV
+
+            cd $INIT_PWD
+          }
+
+          deps=$(echo ${DEPS_LIST} | tr ";" "\n")
+          for dep in $deps
+          do
+            handleDep $dep
+          done
 
       - name: Setup AMXXPawn Compiler
         uses: wopox1337/setup-amxxpawn@v1.1.0
@@ -75,8 +121,9 @@ jobs:
         working-directory: amxmodx/scripting/
         env:
           REAPI_INCLUDE: ${{ env.REAPI_INCLUDE_PATH }}
-          GENERATE_PLUGINS_INI: ${{ env.GENERATE_PLUGINS_INI }}
+          PLUGINS_INI_GENERATE: ${{ env.PLUGINS_INI_GENERATE }}
           PLUGINS_INI_POSTFIX: ${{ env.PLUGINS_INI_POSTFIX }}
+          DEPS_COMPILER_ARGS: ${{ env.DEPS_COMPILER_ARGS }}
         run: |
           compile() {
             sourcefile=$1
@@ -89,9 +136,10 @@ jobs:
             amxxpc $sourcefile -o"$output_path" \
               -i"include" \
               -i"$REAPI_INCLUDE" \
-              -i"$PARAMS_CONRTOLLER_INCLUDE"
+              ${DEPS_COMPILER_ARGS} \
+              GITHUB_ACTIONS_USED=1
               
-            if [ ! -z "${GENERATE_PLUGINS_INI}" ]; then
+            if [ ! -z "${PLUGINS_INI_GENERATE}" ]; then
               plugin_ini_path="../configs/plugins-${PLUGINS_INI_POSTFIX}.ini"
               touch $plugin_ini_path
               echo $amxxfile >> $plugin_ini_path

@@ -1,10 +1,6 @@
 #include <amxmodx>
 #include <reapi>
 #include <VipModular>
-#include "VipM/Utils"
-
-#pragma semicolon 1
-#pragma compress 1
 
 public stock const PluginName[] = "[VipM-M] Vampire";
 public stock const PluginVersion[] = _VIPM_VERSION;
@@ -36,52 +32,54 @@ public VipM_Modules_OnInited() {
     RegisterHookChain(RG_CBasePlayer_Killed, "@Event_PlayerKilled", true);
 }
 
-@Event_PlayerKilled(const VictimId, UserId, InflictorId) {
+@Event_PlayerKilled(const victimIndex, playerIndex, inflictorIndex) {
     if (
-        UserId == VictimId
-        || !is_user_alive(UserId)
-        || !is_user_connected(VictimId)
+        playerIndex == victimIndex
+        || !is_user_alive(playerIndex)
+        || !is_user_connected(victimIndex)
     ) {
         return;
     }
 
-    new Trie:p = VipM_Modules_GetParams(MODULE_NAME, UserId);
+    new Trie:p = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
     if (p == Invalid_Trie) {
         return;
     }
 
-    if (!PCGet_VipmLimitsCheck(p, "Limits", UserId, Limit_Exec_AND)) {
+    if (!PCGet_VipmLimitsCheck(p, "Limits", playerIndex, Limit_Exec_AND)) {
         return;
     }
 
-    new MaxHealth = PCGet_Int(p, "MaxHealth", 100);
-    new Health = floatround(get_entvar(UserId, var_health));
-    if (Health >= MaxHealth) {
+    new maxHealth = PCGet_Int(p, "MaxHealth", floatround(get_entvar(playerIndex, var_max_health)));
+    new currentHealth = floatround(get_entvar(playerIndex, var_health));
+    if (currentHealth >= maxHealth) {
         return;
     }
     
-    new ByKill = PCGet_Int(p, "ByKill", 0);
-    new VampHealth = 0;
-    new ActiveItem; ActiveItem = get_member(UserId, m_pActiveItem);
+    new healthByKill = PCGet_Int(p, "ByKill", 0);
+    new addHealth = 0;
+    new activeItem = get_member(playerIndex, m_pActiveItem);
+
     if (
-        !(get_member(VictimId, m_bitsDamageType) & DMG_SLASH)
-        && is_entity(ActiveItem)
-        && rg_get_iteminfo(ActiveItem, ItemInfo_iId) == CSW_KNIFE
+        !(get_member(victimIndex, m_bitsDamageType) & DMG_SLASH)
+        && is_entity(activeItem)
+        && rg_get_iteminfo(activeItem, ItemInfo_iId) == CSW_KNIFE
     ) {
-        VampHealth = PCGet_Int(p, "ByKnife", ByKill);
-    } else if(get_member(VictimId, m_bHeadshotKilled)) {
-        VampHealth = PCGet_Int(p, "ByHead", ByKill);
-    } else if (get_member(VictimId, m_bKilledByGrenade)) {
-        VampHealth = PCGet_Int(p, "ByGrenade", ByKill);
+        addHealth = PCGet_Int(p, "ByKnife", healthByKill);
+    } else if(get_member(victimIndex, m_bHeadshotKilled)) {
+        addHealth = PCGet_Int(p, "ByHead", healthByKill);
+    } else if (get_member(victimIndex, m_bKilledByGrenade)) {
+        addHealth = PCGet_Int(p, "ByGrenade", healthByKill);
     } else {
-        VampHealth = ByKill;
+        addHealth = healthByKill;
     }
 
-    if (ByKill <= 0) {
+    if (addHealth <= 0) {
         return;
     }
 
-    client_print(UserId, print_center, "%L", UserId, "VAMPIRE_HEALTH_MESSAGE", VampHealth);
-    Health = clamp(Health + VampHealth, 1, MaxHealth < 1 ? cellmax : MaxHealth);
-    set_entvar(UserId, var_health, float(Health));
+    new newHealth = clamp(currentHealth + addHealth, 1, maxHealth < 1 ? cellmax : maxHealth);
+    set_entvar(playerIndex, var_health, float(newHealth));
+    
+    client_print(playerIndex, print_center, "%L", playerIndex, "VAMPIRE_HEALTH_MESSAGE", addHealth);
 }

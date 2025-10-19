@@ -243,10 +243,10 @@ stock bool:PCGet_VipmLimitsCheck(const Trie:p, const key[], const playerIndex = 
     return VipM_Limits_ExecuteList(limits, playerIndex, type);
 }
 
-stock T_LimitUnit:PCSingle_VipmLimit(const JSON:objectJson, const key[], const T_LimitUnit:def = Invalid_LimitUnit, const bool:dotNot = false, const bool:orFail = false) {
+stock T_LimitUnit:PCSingle_ObjVipmLimit(const JSON:objectJson, const key[], const T_LimitUnit:def = Invalid_LimitUnit, const bool:dotNot = false, const bool:orFail = false) {
     return PCSingle_ObjCell(objectJson, key, VIPM_PARAM_TYPE_LIMIT_NAME, def, dotNot, orFail);
 }
 
-stock Array:PCSingle_VipmLimits(const JSON:objectJson, const key[], const Array:def = Invalid_Array, const bool:dotNot = false, const bool:orFail = false) {
+stock Array:PCSingle_ObjVipmLimits(const JSON:objectJson, const key[], const Array:def = Invalid_Array, const bool:dotNot = false, const bool:orFail = false) {
     return PCSingle_ObjCell(objectJson, key, VIPM_PARAM_TYPE_LIMITS_NAME, def, dotNot, orFail);
 }

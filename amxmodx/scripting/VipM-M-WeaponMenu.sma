@@ -3,7 +3,6 @@
 #include <VipModular>
 #include <ParamsController>
 #include "VipM/Utils"
-#include "VipM/DebugMode"
 
 #include "VipM/WeaponMenu/Objects/WeaponMenu"
 #include "VipM/WeaponMenu/Objects/MenuItem"
@@ -38,7 +37,7 @@ public VipM_Modules_OnInited() {
 
     VipM_Modules_Register(MODULE_NAME);
     VipM_Modules_AddParamsEx(MODULE_NAME,
-        // TODO Read "Menus" as param
+        // TODO: Read "Menus" as param
         "MainMenuTitle", DEFAULT_PARAMS_STR_NAME, false,
         "Count", DEFAULT_PARAMS_INT_NAME, false,
         "Limits", VIPM_PARAM_TYPE_LIMITS_NAME, false,
@@ -89,8 +88,6 @@ ResetUserMenuCounters(const playerIndex) {
     g_tUserMenuItemsCounter[playerIndex] = KeyValueCounter_Reset(g_tUserMenuItemsCounter[playerIndex]);
 
     gUserShouldResetCounters[playerIndex] = false;
-
-    Dbg_Log("ResetUserMenuCounters(%n): gUserLeftItems[playerIndex] = %d", playerIndex, gUserLeftItems[playerIndex]);
 }
 
 public client_putinserver(playerIndex) {
@@ -106,12 +103,10 @@ public client_disconnected(playerIndex) {
     for (new playerIndex = 1; playerIndex <= MAX_PLAYERS; playerIndex++) {
         gUserShouldResetCounters[playerIndex] = true;
     }
-    Dbg_Log("@OnRestartRound(): Should reset all counters.");
 }
 
 @OnPlayerSpawn(const playerIndex) {
-    if (!IsPlayerAlive(playerIndex)) {
-        Dbg_Log("@OnPlayerSpawn(%n): Invalid (or dead) player", playerIndex);
+    if (!is_user_alive(playerIndex)) {
         return;
     }
 
@@ -119,8 +114,6 @@ public client_disconnected(playerIndex) {
 
     if (gUserShouldResetCounters[playerIndex] || PCGet_Bool(p, "ResetCountOnSpawn", false)) {
         ResetUserMenuCounters(playerIndex);
-    } else {
-        Dbg_Log("@OnPlayerSpawn(%n): Shouldn't reset counter", playerIndex);
     }
 
     // TODO: Добавить квар для отключения авто-открытия
@@ -153,15 +146,12 @@ public client_disconnected(playerIndex) {
         client_cmd(playerIndex, VIPM_M_WEAPONMENU_CMD_MENU_SILENT);
     }
     
-    Dbg_Log("@Task_AutoOpen(%d): fAutoCloseDelay = %.2f", playerIndex, fAutoCloseDelay);
     if (fAutoCloseDelay > 0.0) {
-        Dbg_Log("@Task_AutoOpen(%d): Start auto close task", playerIndex);
         set_task(fAutoCloseDelay, "@Task_AutoClose", TASK_OFFSET_AUTO_CLOSE + playerIndex);
     }
 }
 
 @Task_AutoClose(playerIndex) {
-    Dbg_Log("@Task_AutoClose(%d)", playerIndex);
     playerIndex -= TASK_OFFSET_AUTO_CLOSE;
     menu_cancel(playerIndex);
     show_menu(playerIndex, 0, "");
@@ -188,32 +178,25 @@ AbortAutoCloseMenu(const playerIndex) {
 }
 
 _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
-    if (!IsPlayerValid(playerIndex)) {
-        Dbg_Log("_Cmd_Menu(%d, %s): Invalid player", playerIndex, bSilent ? "true" : "false");
+    if (!is_user_connected(playerIndex)) {
         return;
     }
 
     if (!is_user_alive(playerIndex)) {
         ChatPrintLIf(!bSilent, playerIndex, "MSG_YOU_DEAD");
-
-        Dbg_Log("_Cmd_Menu(%n, %s): Player is dead", playerIndex, bSilent ? "true" : "false");
         return;
     }
 
-    new Trie:Params = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
-    new Array:aMenus = VipM_Params_GetArr(Params, "Menus");
+    new Trie:p = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
+    new Array:aMenus = VipM_Params_GetArr(p, "Menus");
 
     if (ArraySizeSafe(aMenus) < 1) {
         ChatPrintLIf(!bSilent, playerIndex, "MSG_NO_ACCESS");
-
-        Dbg_Log("_Cmd_Menu(%n, %s): No access", playerIndex, bSilent ? "true" : "false");
         return;
     }
     
-    if (!PCGet_VipmLimitsCheck(Params, "Limits", playerIndex, Limit_Exec_AND)) {
+    if (!PCGet_VipmLimitsCheck(p, "Limits", playerIndex, Limit_Exec_AND)) {
         ChatPrintLIf(!bSilent, playerIndex, "MSG_MAIN_NOT_PASSED_LIMIT");
-
-        Dbg_Log("_Cmd_Menu(%n, %s): Not passed main limits", playerIndex, bSilent ? "true" : "false");
         return;
     }
 
@@ -221,10 +204,9 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
         if (ArraySizeSafe(aMenus) == 1) {
             client_cmd(playerIndex, "%s %d", VIPM_M_WEAPONMENU_CMD_MENU, 0);
         } else {
-            static MainMenuTitle[128];
-            PCGet_Str(Params, "MainMenuTitle", MainMenuTitle, charsmax(MainMenuTitle));
-            Menu_MainMenu(playerIndex, MainMenuTitle, aMenus);
+            Menu_MainMenu(playerIndex, PCGet_iStr(p, "MainMenuTitle", uLang(playerIndex, "MENU_MAIN_TITLE")), aMenus);
         }
+
         return;
     }
 
@@ -233,7 +215,6 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
         ArraySizeSafe(aMenus) <= MenuId
         || MenuId < 0
     ) {
-        Dbg_Log("_Cmd_Menu(%n, %s): Invalid menu id (%d)", playerIndex, bSilent ? "true" : "false", MenuId);
         return;
     }
 
@@ -242,13 +223,11 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
 
     if (Menu[WeaponMenu_Limits] != Invalid_Array && !VipM_Limits_ExecuteList(Menu[WeaponMenu_Limits], playerIndex, Limit_Exec_AND)) {
         ChatPrintLIf(!bSilent, playerIndex, "MSG_MENU_NOT_PASSED_LIMIT");
-        Dbg_Log("_Cmd_Menu(%n, %s): Not passed menu limits", playerIndex, bSilent ? "true" : "false");
         return;
     }
     
     if (Menu[WeaponMenu_FakeMessage][0]) {
         ChatPrint(playerIndex, Menu[WeaponMenu_FakeMessage]);
-        Dbg_Log("_Cmd_Menu(%n, %s): Fake menu (%s)", playerIndex, bSilent ? "true" : "false", Menu[WeaponMenu_FakeMessage]);
         return;
     }
 
@@ -262,7 +241,6 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
         ArraySizeSafe(Menu[WeaponMenu_Items]) <= ItemId
         || ItemId < 0
     ) {
-        Dbg_Log("_Cmd_Menu(%n, %s): Invalid item id (%d)", playerIndex, bSilent ? "true" : "false", ItemId);
         return;
     }
 
@@ -276,8 +254,6 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
         && iItemsLeft == 0
     ) {
         ChatPrintLIf(!bSilent, playerIndex, "MSG_NO_LEFT_ITEMS");
-
-        Dbg_Log("_Cmd_Menu(%n, %s): No left items", playerIndex, bSilent ? "true" : "false");
         return;
     }
 
@@ -287,8 +263,6 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
         || !VipM_Limits_ExecuteList(MenuItem[MenuItem_Limits], playerIndex, Limit_Exec_AND)
     ) {
         ChatPrintLIf(!bSilent, playerIndex, "MSG_MENUITEM_NOT_PASSED_LIMIT");
-
-        Dbg_Log("_Cmd_Menu(%n, %s): Not passed item limits", playerIndex, bSilent ? "true" : "false");
         return;
     }
     
@@ -304,9 +278,9 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
     }
 
     if (
-        PCGet_Bool(Params, "StayOpen", false)
+        PCGet_Bool(p, "StayOpen", false)
         && (
-            !PCGet_Bool(Params, "StayOpen_CheckCounter", true)
+            !PCGet_Bool(p, "StayOpen_CheckCounter", true)
             || iItemsLeft != 0
         )
     ) {
@@ -318,22 +292,14 @@ GetUserLeftItems(const playerIndex, const MenuId, const Menu[S_WeaponMenu]) {
     new iUserItemsLeft = gUserLeftItems[playerIndex];
     new iMenuItemsLeft = Menu[WeaponMenu_Count] - KeyValueCounter_Get(g_tUserMenuItemsCounter[playerIndex], IntToStr(MenuId));
     
-    Dbg_Log("GetUserLeftItems(%n, %d, %d): iUserItemsLeft = %d", playerIndex, MenuId, Menu[WeaponMenu_Name], iUserItemsLeft);
-    Dbg_Log("GetUserLeftItems(%n, %d, %d): iMenuItemsLeft = %d", playerIndex, MenuId, Menu[WeaponMenu_Name], iMenuItemsLeft);
-    Dbg_Log("GetUserLeftItems(%n, %d, %d): Menu[WeaponMenu_Count] = %d", playerIndex, MenuId, Menu[WeaponMenu_Name], Menu[WeaponMenu_Count]);
-    Dbg_Log("GetUserLeftItems(%n, %d, %d): g_tUserMenuItemsCounter[playerIndex] = %d", playerIndex, MenuId, Menu[WeaponMenu_Name], KeyValueCounter_Get(g_tUserMenuItemsCounter[playerIndex], IntToStr(MenuId)));
-
     if (iUserItemsLeft < 0) {
-        Dbg_Log("GetUserLeftItems(%n, %d, %d): return %d (no global limit)", playerIndex, MenuId, Menu[WeaponMenu_Name], iMenuItemsLeft);
         return iMenuItemsLeft;
     }
 
     if (Menu[WeaponMenu_Count] < 0) {
-        Dbg_Log("GetUserLeftItems(%n, %d, %d): return %d (no menu limit)", playerIndex, MenuId, Menu[WeaponMenu_Name], iUserItemsLeft);
         return iUserItemsLeft;
     }
     
-    Dbg_Log("GetUserLeftItems(%n, %d, %d): return %d (has both limits)", playerIndex, MenuId, Menu[WeaponMenu_Name], min(iUserItemsLeft, iMenuItemsLeft));
     return min(iUserItemsLeft, iMenuItemsLeft);
 }
 

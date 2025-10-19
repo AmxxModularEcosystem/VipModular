@@ -13,6 +13,8 @@ DefaultObjects_Limit_GameTime_Register() {
 
 
 @DefaultObjects_Limit_GameTime_OnCheck(const Trie:p) {
+    new gameTime = floatround(get_gametime());
+
     return (
         gameTime >= PCGet_Int(p, "Min", cellmin)
         && gameTime <= PCGet_Int(p, "Max", cellmax)

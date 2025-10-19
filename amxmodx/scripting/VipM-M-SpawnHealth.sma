@@ -1,12 +1,6 @@
 #include <amxmodx>
 #include <reapi>
 #include <VipModular>
-#include "VipM/Utils"
-#include "VipM/DebugMode"
-#include "VipM/ArrayTrieUtils"
-
-#pragma semicolon 1
-#pragma compress 1
 
 public stock const PluginName[] = "[VipM-M] Spawn Health";
 public stock const PluginVersion[] = _VIPM_VERSION;
@@ -41,35 +35,39 @@ public VipM_Modules_OnInited() {
     RegisterHookChain(RG_CBasePlayer_Spawn, "@Event_PlayerSpawned", true);
 }
 
-@Event_PlayerSpawned(const UserId) {
-    if (!is_user_alive(UserId)) {
+@Event_PlayerSpawned(const playerIndex) {
+    if (!is_user_alive(playerIndex)) {
         return;
     }
     
-    if (!VipM_Modules_HasModule(MODULE_NAME, UserId)) {
+    if (!VipM_Modules_HasModule(MODULE_NAME, playerIndex)) {
         return;
     }
 
-    new Trie:p = VipM_Modules_GetParams(MODULE_NAME, UserId);
+    new Trie:p = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
     
-    if (!PCGet_VipmLimitsCheck(p, "Limits", UserId, Limit_Exec_AND)) {
+    if (!PCGet_VipmLimitsCheck(p, "Limits", playerIndex, Limit_Exec_AND)) {
         return;
     }
+
+    new maxHealth = PCGet_Int(p, "MaxHealth", floatround(get_entvar(playerIndex, var_max_health)));
+    set_entvar(playerIndex, var_max_health, float(maxHealth));
 
     new health = PCGet_Int(p, "Health", 0);
-    new maxHealth = PCGet_Int(p, "MaxHealth", floatround(Float:get_entvar(UserId, var_max_health)));
     if (health > 0) {
         if (!PCGet_Bool(p, "SetHealth", true)) {
-            health = min(floatround(get_entvar(UserId, var_health)) + health, maxHealth);
+            health = min(floatround(get_entvar(playerIndex, var_health)) + health, maxHealth);
         }
-        set_entvar(UserId, var_health, float(health));
+
+        set_entvar(playerIndex, var_health, float(health));
     }
 
     new armor = PCGet_Int(p, "Armor", 0);
     if (armor > 0) {
         if (!PCGet_Bool(p, "SetArmor", true)) {
-            armor = min(rg_get_user_armor(UserId) + armor, PCGet_Int(p, "MaxArmor", 100));
+            armor = min(rg_get_user_armor(playerIndex) + armor, PCGet_Int(p, "MaxArmor", 100));
         }
-        rg_set_user_armor(UserId, armor, PCGet_Bool(p, "Helmet", false) ? ARMOR_VESTHELM : ARMOR_KEVLAR);
+
+        rg_set_user_armor(playerIndex, armor, PCGet_Bool(p, "Helmet", false) ? ARMOR_VESTHELM : ARMOR_KEVLAR);
     }
 }

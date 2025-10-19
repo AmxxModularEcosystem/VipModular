@@ -9,7 +9,7 @@
 stock const VIPM_LIBRARY[] = "VipModular";
 #define _VIPM_VERSION "5.0.0-b13"
 stock const VIPM_VERSION[] = _VIPM_VERSION;
-#define _VIPM_PLUGIN_URL "https://github.com/ArKaNeMaN/amxx-VipModular-pub"
+#define _VIPM_PLUGIN_URL "https://github.com/AmxxModularEcosystem/VipModular"
 
 // deprecated
 stock const VIPM_CFG_PATH[] = "plugins/VipModular";
