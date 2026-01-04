@@ -22,6 +22,7 @@ new Array:g_aVipUnits = Invalid_Array;
 
 VipUnit_Init() {
     CallOnce();
+    log_amx("Init vip units...");
 
     // Пока что лимиты обязательно должны быть перед модулями
     // После поломки интерфейса будет отдельный форвард для лимитов, а пока только для модулей
@@ -29,6 +30,7 @@ VipUnit_Init() {
     ModuleUnit_Init();
 
     g_aVipUnits = ArrayCreate(S_VipUnit, 1);
+    log_amx("Vip units inited.");
 }
 
 VipUnit_GetCount() {

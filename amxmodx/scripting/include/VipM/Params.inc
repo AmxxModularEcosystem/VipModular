@@ -12,57 +12,68 @@
  * Vip Modular: Parameters
 */
 
+#pragma deprecated Use params controller instead
 enum E_ParamType {
 
     /*
      * Пользовательский тип параметра. Подразумевает использование события OnRead.
      * Обязательность таких параметров игнорируется.
      */
+    #pragma deprecated Use params controller instead
     ptCustom = 0,
     
     /*
      * Целое число.
      */
+    #pragma deprecated Use params controller instead
     ptInteger,
     
     /*
      * Дробное число.
      */
+    #pragma deprecated Use params controller instead
     ptFloat,
     
     /*
      * true/false.
      */
+    #pragma deprecated Use params controller instead
     ptBoolean,
     
     /*
      * Строка.
      */
+    #pragma deprecated Use params controller instead
     ptString,
     
     /*
      * Цвет (Массив из трёх целых чисел).
      */
+    #pragma deprecated Use params controller instead
     ptColor,
     
     /*
      * Двумерный вектор (Массив из двух дробных чисел).
      */
+    #pragma deprecated Use params controller instead
     ptVector2,
     
     /*
      * Трёхмерный вектор (Массив из трёх дробных чисел).
      */
+    #pragma deprecated Use params controller instead
     ptVector3,
     
     /*
      * Условный элемент.
      */
+    #pragma deprecated Use params controller instead
     ptLimit,
     
     /*
      * Массив условных элементов.
      */
+    #pragma deprecated Use params controller instead
     ptLimits,
 }
 stock const VIPM_PARAM_TYPE_NAMES[E_ParamType][] = {"Custom", "Integer", "Float", "Bool", "String", "Color", "Vector2", "Vector3", "Limit", "Limits"};

@@ -1,135 +1,139 @@
-#include amxmodx
-#include VipModular
+#include <amxmodx>
+#include <VipModular>
+#include <VipM/L/Counter>
+
 #include "VipM/Utils"
 #include "VipM/ArrayTrieUtils"
-#include "VipM/DebugMode"
 
 #include "VipM/WeaponMenu/Objects/WeaponMenu"
 
-Menu_GetUserMenusCount(const UserId) {
-    return ArraySizeSafe(VipM_Params_GetArr(VipM_Modules_GetParams(MODULE_NAME, UserId), "Menus"));
+Menu_GetUserMenusCount(const playerIndex) {
+    return ArraySizeSafe(VipM_Params_GetArr(VipM_Modules_GetParams(MODULE_NAME, playerIndex), "Menus"));
 }
 
-Menu_MainMenu(const UserId, const MainMenuTitle[], const Array:aMenus) {
-    new iMenu = menu_create(MainMenuTitle, "@MenuHandler_Command");
+Menu_MainMenu(const playerIndex, const MainMenuTitle[], const Array:menus) {
+    new menuHandler = menu_create(MainMenuTitle, "@MenuHandler_Command");
 
-    ArrayForeachArray2 (aMenus: i => Menu[S_WeaponMenu]) {
-        menu_additem(iMenu, Menu[WeaponMenu_Name], fmt("%s %d", VIPM_M_WEAPONMENU_CMD_MENU, __i__));
+    ArrayForeachArray2 (menus: i => menuObject[S_WeaponMenu]) {
+        menu_additem(menuHandler, menuObject[WeaponMenu_Name], fmt("%s %d", VIPM_M_WEAPONMENU_CMD_MENU, i));
     }
 
-    menu_setprop(iMenu, MPROP_BACKNAME, Lang("VIPM_M_WM_MENU_BACK"));
-    menu_setprop(iMenu, MPROP_NEXTNAME, Lang("VIPM_M_WM_MENU_NEXT"));
-    menu_setprop(iMenu, MPROP_EXITNAME, Lang("VIPM_M_WM_MENU_EXIT"));
+    menu_setprop(menuHandler, MPROP_BACKNAME, Lang("VIPM_M_WM_MENU_BACK"));
+    menu_setprop(menuHandler, MPROP_NEXTNAME, Lang("VIPM_M_WM_MENU_NEXT"));
+    menu_setprop(menuHandler, MPROP_EXITNAME, Lang("VIPM_M_WM_MENU_EXIT"));
 
-    menu_display(UserId, iMenu);
+    menu_display(playerIndex, menuHandler);
 }
 
-Menu_WeaponsMenu(const UserId, const MenuId, const Menu[S_WeaponMenu]) {
-    new iItemsLeft = GetUserLeftItems(UserId, MenuId, Menu);
-    new iMenusCount = Menu_GetUserMenusCount(UserId);
+Menu_WeaponsMenu(const playerIndex, const menuIndex, const menuObject[S_WeaponMenu]) {
+    new iItemsLeft = GetUserLeftItems(playerIndex, menuObject);
+    new iMenusCount = Menu_GetUserMenusCount(playerIndex);
 
     static sItemsLeft[128] = "";
     if (iItemsLeft >= 0) {
-        formatex(sItemsLeft, charsmax(sItemsLeft), "\w%L^n", UserId, "VIPM_M_WM_MENU_MAIN_ITEMS_LEFT", iItemsLeft);
+        formatex(sItemsLeft, charsmax(sItemsLeft), "\w%L^n", playerIndex, "VIPM_M_WM_MENU_MAIN_ITEMS_LEFT", iItemsLeft);
     } else {
         sItemsLeft[0] = 0;
     }
 
     static sExpireStatus[128];
-    if (gUserExpireStatus[UserId][0]) {
-        formatex(sExpireStatus, charsmax(sExpireStatus), "\w%L^n", UserId, "VIPM_M_WM_MENU_EXPIRE_STATUS", gUserExpireStatus[UserId]);
+    if (gUserExpireStatus[playerIndex][0]) {
+        formatex(sExpireStatus, charsmax(sExpireStatus), "\w%L^n", playerIndex, "VIPM_M_WM_MENU_EXPIRE_STATUS", gUserExpireStatus[playerIndex]);
     } else {
         sExpireStatus[0] = 0;
     }
 
     static sMenu[512];
-    formatex(sMenu, charsmax(sMenu), "%s^n%s%s", Menu[WeaponMenu_Title], sExpireStatus, sItemsLeft);
+    formatex(sMenu, charsmax(sMenu), "%s^n%s%s", menuObject[WeaponMenu_Title], sExpireStatus, sItemsLeft);
 
-    new iMenu = menu_create(
-        sMenu,
-        Menu[WeaponMenu_BackOnExit] && iMenusCount > 1
-            ? "@MenuHandler_Weapons"
-            : "@MenuHandler_Command"
-    );
+    new menuHandler = menu_create(sMenu, "@MenuHandler_Command");
 
-    if (Menu[WeaponMenu_BackOnExit] && iMenusCount > 1) {
-        menu_setprop(iMenu, MPROP_EXITNAME, uLang(UserId, "VIPM_M_WM_MENU_WEAPONS_BACK_TO_MAIN_TEXT"));
+    if (menuObject[WeaponMenu_BackOnExit] && iMenusCount > 1) {
+        menu_setprop(menuHandler, MPROP_EXITNAME, uLang(playerIndex, "VIPM_M_WM_MENU_WEAPONS_BACK_TO_MAIN_TEXT"));
     }
 
-    if (Menu[WeaponMenu_PerPage] >= 0) {
-        menu_setprop(iMenu, MPROP_PERPAGE, Menu[WeaponMenu_PerPage]);
+    if (menuObject[WeaponMenu_PerPage] >= 0) {
+        menu_setprop(menuHandler, MPROP_PERPAGE, menuObject[WeaponMenu_PerPage]);
     }
 
-    menu_setprop(iMenu, MPROP_SHOWPAGE, Menu[WeaponMenu_ShowPage]);
+    menu_setprop(menuHandler, MPROP_SHOWPAGE, menuObject[WeaponMenu_ShowPage]);
 
-    menu_setprop(iMenu, MPROP_BACKNAME, Lang("VIPM_M_WM_MENU_BACK"));
-    menu_setprop(iMenu, MPROP_NEXTNAME, Lang("VIPM_M_WM_MENU_NEXT"));
-    menu_setprop(iMenu, MPROP_EXITNAME, Lang("VIPM_M_WM_MENU_EXIT"));
+    menu_setprop(menuHandler, MPROP_BACKNAME, Lang("VIPM_M_WM_MENU_BACK"));
+    menu_setprop(menuHandler, MPROP_NEXTNAME, Lang("VIPM_M_WM_MENU_NEXT"));
+    menu_setprop(menuHandler, MPROP_EXITNAME, Lang("VIPM_M_WM_MENU_EXIT"));
 
     static iInactiveItemHandler;
     if (!iInactiveItemHandler) {
         iInactiveItemHandler = menu_makecallback("@MenuItemHandler_Inactive");
     }
 
-    new iItemIndex = 0;
-    ArrayForeachArray2 (Menu[WeaponMenu_Items]: i => MenuItem[S_MenuItem]) {
+    new itemIndex = 0;
+    ArrayForeachArray2 (menuObject[WeaponMenu_Items]: i => itemObject[S_MenuItem]) {
         if (
-            MenuItem[MenuItem_ShowLimits] != Invalid_Array
-            && !VipM_Limits_ExecuteList(MenuItem[MenuItem_ShowLimits], UserId, Limit_Exec_AND)
+            itemObject[MenuItem_ShowLimits] != Invalid_Array
+            && !VipM_Limits_ExecuteList(itemObject[MenuItem_ShowLimits], playerIndex, Limit_Exec_AND)
         ) {
             continue;
         }
+        
+        new bool:isItemActive = (
+            itemObject[MenuItem_ShowLimits] == Invalid_Array
+            || VipM_Limits_ExecuteList(itemObject[MenuItem_ActiveLimits], playerIndex, Limit_Exec_AND)
+        );
 
-        switch (MenuItem[MenuItem_Type]) {
+        static title[64];
+        if (isItemActive) {
+            copy(title, charsmax(title), itemObject[MenuItem_Title]);
+        } else {
+            copy(title, charsmax(title), itemObject[MenuItem_InactiveTitle]);
+        }
+
+        switch (itemObject[MenuItem_Type]) {
             case MenuItemType_Default: {
-                new bool:bIsActive = MenuItem[MenuItem_ShowLimits] == Invalid_Array
-                    || VipM_Limits_ExecuteList(MenuItem[MenuItem_ActiveLimits], UserId, Limit_Exec_AND);
+                static cmd[128];
+                formatex(cmd, charsmax(cmd), "%s %d %d", VIPM_M_WEAPONMENU_CMD_MENU, menuIndex, i);
+                if (menuObject[WeaponMenu_BackOnExit]) {
+                    add(cmd, charsmax(cmd), fmt(";%s %d", VIPM_M_WEAPONMENU_CMD_MENU, menuIndex));
+                }
 
-                menu_additem(iMenu, fmt("%s%s", bIsActive ? "" : "\d", MenuItem[MenuItem_Title]), fmt("%s %d %d", VIPM_M_WEAPONMENU_CMD_MENU, MenuId, __i__));
-                if (!bIsActive && !MenuItem[MenuItem_FakeInactive]) {
-                    menu_item_setcall(iMenu, iItemIndex, iInactiveItemHandler);
+                menu_additem(menuHandler, title, cmd);
+
+                if (!isItemActive && !itemObject[MenuItem_FakeInactive]) {
+                    menu_item_setcall(menuHandler, itemIndex, iInactiveItemHandler);
                 }
             }
             
             case MenuItemType_Text: {
-                menu_addtext2(iMenu, MenuItem[MenuItem_Title]);
+                menu_addtext2(menuHandler, itemObject[MenuItem_Title]);
             }
 
             case MenuItemType_Blank: {
-                menu_addblank2(iMenu);
+                menu_addblank2(menuHandler);
             }
         }
-        iItemIndex++;
+        itemIndex++;
     }
-    menu_display(UserId, iMenu);
+    menu_display(playerIndex, menuHandler);
 }
 
 @MenuItemHandler_Inactive() {
     return ITEM_DISABLED;
 }
 
-@MenuHandler_Weapons(const UserId, const MenuId, const ItemId) {
-    @MenuHandler_Command(UserId, MenuId, ItemId);
-    
-    if (ItemId == MENU_EXIT) {
-        client_cmd(UserId, "%s", VIPM_M_WEAPONMENU_CMD_MENU);
-    }
-}
-
-@MenuHandler_Command(const UserId, const MenuId, const ItemId){
-    AbortAutoCloseMenu(UserId);
+@MenuHandler_Command(const playerIndex, const menuIndex, const ItemId){
+    AbortAutoCloseMenu(playerIndex);
 
     if (ItemId == MENU_EXIT) {
-        menu_destroy(MenuId);
+        menu_destroy(menuIndex);
         return;
     }
 
     static sCmd[128];
-    menu_item_getinfo(MenuId, ItemId, _, sCmd, charsmax(sCmd));
+    menu_item_getinfo(menuIndex, ItemId, _, sCmd, charsmax(sCmd));
 
     if (sCmd[0]) {
-        client_cmd(UserId, sCmd);
+        client_cmd(playerIndex, sCmd);
     }
 
-    menu_destroy(MenuId);
+    menu_destroy(menuIndex);
 }

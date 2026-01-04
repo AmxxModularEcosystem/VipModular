@@ -20,9 +20,7 @@ new bool:__VIPM_INFO_COMPILED_BY_GH_ACTIONS = bool:(GITHUB_ACTIONS_USED);
 
 SrvCmds_Init() {
     register_srvcmd("vipm_info", "@SrvCmd_Info");
-    
     register_srvcmd("vipm_modules", "@SrvCmd_Modules");
-
     register_srvcmd("vipm_limits", "@SrvCmd_Limits");
 }
 

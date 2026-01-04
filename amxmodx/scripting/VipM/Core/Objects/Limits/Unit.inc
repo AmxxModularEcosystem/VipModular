@@ -23,12 +23,14 @@ static Array:g_aLimitUnits = Invalid_Array;
 
 LimitUnit_Init() {
     CallOnce();
+    log_amx("Init limit units...");
 
     LimitType_Init();
     
     g_aLimitUnits = ArrayCreate(S_LimitUnit, 1);
     
     Forwards_RegAndCall("VipM_Limits_OnInited", ET_IGNORE);
+    log_amx("Limit units inited.");
 }
 
 LimitUnit_GetCount() {

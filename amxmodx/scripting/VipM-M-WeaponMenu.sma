@@ -2,6 +2,8 @@
 #include <reapi>
 #include <VipModular>
 #include <ParamsController>
+#include <VipM/L/Counter>
+
 #include "VipM/Utils"
 
 #include "VipM/WeaponMenu/Objects/WeaponMenu"
@@ -39,9 +41,13 @@ public VipM_Modules_OnInited() {
     VipM_Modules_AddParamsEx(MODULE_NAME,
         // TODO: Read "Menus" as param
         "MainMenuTitle", DEFAULT_PARAMS_STR_NAME, false,
+        "Limits", VIPM_PARAM_TYPE_LIMITS_NAME, false
+    );
+    VipM_Modules_AddParamsEx(MODULE_NAME,
         "Count", DEFAULT_PARAMS_INT_NAME, false,
-        "Limits", VIPM_PARAM_TYPE_LIMITS_NAME, false,
-        "ResetCountOnSpawn", DEFAULT_PARAMS_BOOL_NAME, false
+        "CounterType", VIPM_L_COUNTER_PARAM_TYPE, false,
+        "CounterKey", DEFAULT_PARAMS_SHORT_STR_NAME, false,
+        "ResetCountOnSpawn", DEFAULT_PARAMS_BOOL_NAME, false // deprecated
     );
     VipM_Modules_AddParamsEx(MODULE_NAME,
         "AutoopenLimits", VIPM_PARAM_TYPE_LIMITS_NAME, false,
@@ -210,16 +216,16 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
         return;
     }
 
-    new MenuId = read_argv_int(2);
+    new menuIndex = read_argv_int(2);
     if (
-        ArraySizeSafe(aMenus) <= MenuId
-        || MenuId < 0
+        ArraySizeSafe(aMenus) <= menuIndex
+        || menuIndex < 0
     ) {
         return;
     }
 
     static Menu[S_WeaponMenu];
-    ArrayGetArray(aMenus, MenuId, Menu);
+    ArrayGetArray(aMenus, menuIndex, Menu);
 
     if (Menu[WeaponMenu_Limits] != Invalid_Array && !VipM_Limits_ExecuteList(Menu[WeaponMenu_Limits], playerIndex, Limit_Exec_AND)) {
         ChatPrintLIf(!bSilent, playerIndex, "MSG_MENU_NOT_PASSED_LIMIT");
@@ -232,25 +238,25 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
     }
 
     if (read_argc() < 3) {
-        Menu_WeaponsMenu(playerIndex, MenuId, Menu);
+        Menu_WeaponsMenu(playerIndex, menuIndex, Menu);
         return;
     }
 
-    new ItemId = read_argv_int(3);
+    new itemIndex = read_argv_int(3);
     if (
-        ArraySizeSafe(Menu[WeaponMenu_Items]) <= ItemId
-        || ItemId < 0
+        ArraySizeSafe(Menu[WeaponMenu_Items]) <= itemIndex
+        || itemIndex < 0
     ) {
         return;
     }
 
-    static MenuItem[S_MenuItem];
-    ArrayGetArray(Menu[WeaponMenu_Items], ItemId, MenuItem);
+    static itemObject[S_MenuItem];
+    ArrayGetArray(Menu[WeaponMenu_Items], itemIndex, itemObject);
 
-    new iItemsLeft = GetUserLeftItems(playerIndex, MenuId, Menu);
+    new iItemsLeft = GetUserLeftItems(playerIndex, Menu);
 
     if (
-        MenuItem[MenuItem_UseCounter]
+        itemObject[MenuItem_UseCounter]
         && iItemsLeft == 0
     ) {
         ChatPrintLIf(!bSilent, playerIndex, "MSG_NO_LEFT_ITEMS");
@@ -258,23 +264,19 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
     }
 
     if (
-        !VipM_Limits_ExecuteList(MenuItem[MenuItem_ShowLimits], playerIndex, Limit_Exec_AND)
-        || !VipM_Limits_ExecuteList(MenuItem[MenuItem_ActiveLimits], playerIndex, Limit_Exec_AND)
-        || !VipM_Limits_ExecuteList(MenuItem[MenuItem_Limits], playerIndex, Limit_Exec_AND)
+        !VipM_Limits_ExecuteList(itemObject[MenuItem_ShowLimits], playerIndex, Limit_Exec_AND)
+        || !VipM_Limits_ExecuteList(itemObject[MenuItem_ActiveLimits], playerIndex, Limit_Exec_AND)
+        || !VipM_Limits_ExecuteList(itemObject[MenuItem_Limits], playerIndex, Limit_Exec_AND)
     ) {
         ChatPrintLIf(!bSilent, playerIndex, "MSG_MENUITEM_NOT_PASSED_LIMIT");
         return;
     }
     
     if (
-        IC_Item_GiveArray(playerIndex, MenuItem[MenuItem_Items])
-        && MenuItem[MenuItem_UseCounter]
+        IC_Item_GiveArray(playerIndex, itemObject[MenuItem_Items])
+        && itemObject[MenuItem_UseCounter]
     ) {
-        gUserLeftItems[playerIndex]--;
-
-        if (Menu[WeaponMenu_Count]) {
-            KeyValueCounter_Inc(g_tUserMenuItemsCounter[playerIndex], IntToStr(MenuId));
-        }
+        IncUserMenuCounters(playerIndex, Menu);
     }
 
     if (
@@ -284,23 +286,45 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
             || iItemsLeft != 0
         )
     ) {
-        client_cmd(playerIndex, "%s %d", VIPM_M_WEAPONMENU_CMD_MENU, MenuId);
+        client_cmd(playerIndex, "%s %d", VIPM_M_WEAPONMENU_CMD_MENU, menuIndex);
     }
 }
 
-GetUserLeftItems(const playerIndex, const MenuId, const Menu[S_WeaponMenu]) {
-    new iUserItemsLeft = gUserLeftItems[playerIndex];
-    new iMenuItemsLeft = Menu[WeaponMenu_Count] - KeyValueCounter_Get(g_tUserMenuItemsCounter[playerIndex], IntToStr(MenuId));
-    
-    if (iUserItemsLeft < 0) {
-        return iMenuItemsLeft;
-    }
+IncUserMenuCounters(const playerIndex, const menuObject[S_WeaponMenu]) {
+    new Trie:p = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
 
-    if (Menu[WeaponMenu_Count] < 0) {
-        return iUserItemsLeft;
-    }
+    VipM_L_Counter_Inc(
+        PCGet_VipmCounterType(p, "CounterType", VipM_L_Counter_PerLife),
+        PCGet_iStr(p, "CounterKey", VIPM_M_WEAPONMENU_PLAYER_COUNTER_KEY),
+        playerIndex
+    );
+
+    VipM_L_Counter_Inc(
+        menuObject[WeaponMenu_CounterType],
+        menuObject[WeaponMenu_CounterKey],
+        playerIndex
+    );
+}
+
+GetUserLeftItems(const playerIndex, const menuObject[S_WeaponMenu]) {
+    new Trie:p = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
+
+    new usedPlayer = VipM_L_Counter_Get(
+        PCGet_VipmCounterType(p, "CounterType", VipM_L_Counter_PerLife),
+        PCGet_iStr(p, "CounterKey", VIPM_M_WEAPONMENU_PLAYER_COUNTER_KEY),
+        playerIndex
+    );
+
+    new usedMenu = VipM_L_Counter_Get(
+        menuObject[WeaponMenu_CounterType],
+        menuObject[WeaponMenu_CounterKey],
+        playerIndex
+    );
     
-    return min(iUserItemsLeft, iMenuItemsLeft);
+    return min(
+        usedMenu,
+        usedPlayer
+    );
 }
 
 #include "VipM/WeaponMenu/Natives"

@@ -7,6 +7,7 @@
 #include <json>
 #include <VipModular>
 #include <ParamsController>
+#include <VipM/L/Counter>
 
 #include "VipM/WeaponMenu/Objects/MenuItem"
 
@@ -16,6 +17,8 @@ enum _:S_WeaponMenu {
 
     Array:WeaponMenu_Items, // S_MenuItem[]
     WeaponMenu_Count,
+    VipM_L_Counter_Type:WeaponMenu_CounterType,
+    WeaponMenu_CounterKey[VIPM_L_COUNTER_KEY_MAX_LEN],
 
     Array:WeaponMenu_Limits, // T_LimitUnit[]
 
@@ -26,29 +29,36 @@ enum _:S_WeaponMenu {
     WeaponMenu_FakeMessage[256],
 }
 
-bool:WeaponMenu_Read(const JSON:menuJson, Menu[S_WeaponMenu]) {
-    PCSingle_ObjString(menuJson, "Name", Menu[WeaponMenu_Name], charsmax(Menu[WeaponMenu_Name]));
+static WeaponMenuCounterKeysCount = 0;
+
+bool:WeaponMenu_Read(const JSON:menuJson, menuObject[S_WeaponMenu]) {
+    PCSingle_ObjString(menuJson, "Name", menuObject[WeaponMenu_Name], charsmax(menuObject[WeaponMenu_Name]));
 
     if (PCSingle_ObjChatMessage(
         menuJson, "FakeMessage",
-        Menu[WeaponMenu_FakeMessage], charsmax(Menu[WeaponMenu_FakeMessage])
+        menuObject[WeaponMenu_FakeMessage], charsmax(menuObject[WeaponMenu_FakeMessage])
     )) {
         return true;
     }
     
-    Menu[WeaponMenu_Items] = Json_Object_GetMenuItemsList(menuJson, "Items");
-    if (Menu[WeaponMenu_Items] == Invalid_Array) {
-        PCJson_LogForFile(menuJson, "WARNING", "Menu items list are empty.");
+    menuObject[WeaponMenu_Items] = Json_Object_GetMenuItemsList(menuJson, "Items");
+    if (menuObject[WeaponMenu_Items] == Invalid_Array) {
+        PCJson_LogForFile(menuJson, "WARNING", "menuObject items list are empty.");
         return false;
     }
 
-    PCSingle_ObjString(menuJson, "Title", Menu[WeaponMenu_Title], charsmax(Menu[WeaponMenu_Title]), Menu[WeaponMenu_Name]);
+    PCSingle_ObjString(menuJson, "Title", menuObject[WeaponMenu_Title], charsmax(menuObject[WeaponMenu_Title]), menuObject[WeaponMenu_Name]);
 
-    Menu[WeaponMenu_Count] = PCSingle_ObjInt(menuJson, "Count", -1);
-    Menu[WeaponMenu_BackOnExit] = PCSingle_ObjBool(menuJson, "BackOnExit", false);
-    Menu[WeaponMenu_PerPage] = PCSingle_ObjInt(menuJson, "PerPage", -1);
-    Menu[WeaponMenu_ShowPage] = PCSingle_ObjBool(menuJson, "ShowPage", true);
-    Menu[WeaponMenu_Limits] = Json_Object_GetLimits(menuJson, "Limits");
+    menuObject[WeaponMenu_BackOnExit] = PCSingle_ObjBool(menuJson, "BackOnExit", false);
+    menuObject[WeaponMenu_PerPage] = PCSingle_ObjInt(menuJson, "PerPage", -1);
+    menuObject[WeaponMenu_ShowPage] = PCSingle_ObjBool(menuJson, "ShowPage", true);
+    menuObject[WeaponMenu_Limits] = PCSingle_ObjVipmLimits(menuJson, "Limits");
+
+    menuObject[WeaponMenu_Count] = PCSingle_ObjInt(menuJson, "Count", -1);
+    menuObject[WeaponMenu_CounterType] = PCSingle_ObjVipmCounterType(menuJson, "CounterType");
+    if (!PCSingle_ObjShortString(menuJson, "CounterKey", menuObject[WeaponMenu_CounterKey], charsmax(menuObject[WeaponMenu_CounterKey]))) {
+        formatex(menuObject[WeaponMenu_CounterKey], charsmax(menuObject[WeaponMenu_CounterKey]), "%s-%d", VIPM_M_WEAPONMENU_MENU_COUNTER_KEY_PREFIX, ++WeaponMenuCounterKeysCount);
+    }
 
     return true;
 }

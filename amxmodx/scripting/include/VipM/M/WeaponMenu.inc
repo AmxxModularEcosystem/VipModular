@@ -9,6 +9,9 @@ stock const VIPM_M_WEAPONMENU_CMD_MENU[] = "vipm_m_weaponmenu_menu";
 stock const VIPM_M_WEAPONMENU_CMD_MENU_SILENT[] = "vipm_m_weaponmenu_menu_silent";
 stock const VIPM_M_WEAPONMENU_CMD_AUTOOPEN_TOGGLE[] = "vipm_m_weaponmenu_autoopen_toggle";
 
+stock const VIPM_M_WEAPONMENU_PLAYER_COUNTER_KEY[] = "VipM-M-WeaponMenu-Player";
+stock const VIPM_M_WEAPONMENU_MENU_COUNTER_KEY_PREFIX[] = "VipM-M-WeaponMenu-Menu";
+
 /**
  * Устанавливает статус окончания привилегий, выводимый игроку в оружейном меню.
  * 

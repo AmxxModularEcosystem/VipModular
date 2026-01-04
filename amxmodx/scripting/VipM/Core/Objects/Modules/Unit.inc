@@ -23,12 +23,14 @@ static Array:g_aModuleUnits = Invalid_Array;
 
 ModuleUnit_Init() {
     CallOnce();
+    log_amx("Init module units...");
 
     ModuleType_Init();
 
     g_aModuleUnits = ArrayCreate(S_ModuleUnit, 1);
     
     Forwards_RegAndCall("VipM_Modules_OnInited", ET_IGNORE);
+    log_amx("Module units inited.");
 }
 
 ModuleUnit_GetCount() {

@@ -28,10 +28,13 @@ static ArrayMap(g_amModuleTypes); // S_ModuleType
 
 ModuleType_Init() {
     CallOnce();
+    log_amx("Init module types...");
 
     ArrayMapCreate(g_amModuleTypes, S_ModuleType);
     
     Forwards_Reg("VipM_Modules_OnActivate", ET_STOP, FP_STRING);
+    
+    log_amx("Module types inited.");
 }
 
 Array:ModuleType_GetAll() {
@@ -62,6 +65,8 @@ T_ModuleType:ModuleType_Construct(const sName[]) {
     ModuleType[ModuleType_Active] = false;
 
     arrayset(ModuleType[ModuleType_Events], -1, sizeof(ModuleType[ModuleType_Events]));
+    
+    log_amx("Module type '%s' registered.", ModuleType[ModuleType_Name]);
 
     return T_ModuleType:ArrayMapPushArray(g_amModuleTypes, ModuleType, ModuleType[ModuleType_Name]);
 }

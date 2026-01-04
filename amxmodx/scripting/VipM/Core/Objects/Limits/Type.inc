@@ -29,8 +29,11 @@ static ArrayMap(g_amLimitTypes); // S_LimitType
 
 LimitType_Init() {
     CallOnce();
+    log_amx("Init limit types...");
 
     ArrayMapCreate(g_amLimitTypes, S_LimitType);
+    
+    log_amx("Limit types inited.");
 }
 
 Array:LimitType_GetAll() {
@@ -63,6 +66,8 @@ T_LimitType:LimitType_Construct(const sName[], const bool:bForPlayer = false, co
     LimitType[LimitType_ForPlayer] = bForPlayer;
 
     arrayset(LimitType[LimitType_Events], -1, sizeof(LimitType[LimitType_Events]));
+    
+    log_amx("Limit type '%s' registered.", LimitType[LimitType_Name]);
 
     return T_LimitType:ArrayMapPushArray(g_amLimitTypes, LimitType, LimitType[LimitType_Name]);
 }

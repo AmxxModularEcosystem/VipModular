@@ -23,6 +23,7 @@ static ActiveItemInstancesCount = 0;
 
 ItemInstance_Init() {
     CallOnce();
+    log_amx("Init item instances...");
 
     ItemType_Init();
 
@@ -31,6 +32,7 @@ ItemInstance_Init() {
     ActiveItemInstancesCount = 0;
 
     Forwards_RegAndCall("IC_Item_OnInited", ET_IGNORE);
+    log_amx("Item instances inited.");
 }
 
 T_IC_Item:ItemInstance_Construct(const T_IC_ItemType:type, const Trie:params) {

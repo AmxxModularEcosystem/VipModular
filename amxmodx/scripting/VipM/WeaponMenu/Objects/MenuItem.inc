@@ -17,6 +17,7 @@ enum _:S_MenuItem {
     MenuItemType:MenuItem_Type,
 
     MenuItem_Title[64],
+    MenuItem_InactiveTitle[64],
     Array:MenuItem_Items, // T_IC_Item[]
     bool:MenuItem_UseCounter,
     bool:MenuItem_FakeInactive,
@@ -32,23 +33,26 @@ bool:MenuItem_Read(const JSON:itemJson, item[S_MenuItem]) {
         return false;
     }
 
-    if (!json_object_get_string(itemJson, "Title", item[MenuItem_Title], charsmax(item[MenuItem_Title]))) {
+    if (!PCSingle_ObjShortString(itemJson, "Title", item[MenuItem_Title], charsmax(item[MenuItem_Title]))) {
         item[MenuItem_Type] = MenuItemType_Blank;
         return true;
     }
+    
+    item[MenuItem_ShowLimits] = PCSingle_ObjVipmLimits(itemJson, "ShowLimits");
+    item[MenuItem_ActiveLimits] = PCSingle_ObjVipmLimits(itemJson, "ActiveLimits");
+    
+    if (!PCSingle_ObjShortString(itemJson, "InactiveTitle", item[MenuItem_InactiveTitle], charsmax(item[MenuItem_InactiveTitle]))) {
+        formatex(item[MenuItem_InactiveTitle], charsmax(item[MenuItem_InactiveTitle]), "\d%s", item[MenuItem_Title]);
+    }
 
     item[MenuItem_Items] = PCSingle_ObjIcItems(itemJson, "Items");
-
     if (item[MenuItem_Items] == Invalid_Array) {
         item[MenuItem_Type] = MenuItemType_Text;
         return true;
     }
     
     item[MenuItem_Type] = MenuItemType_Default;
-
-    item[MenuItem_ShowLimits] = Json_Object_GetLimits(itemJson, "ShowLimits");
-    item[MenuItem_ActiveLimits] = Json_Object_GetLimits(itemJson, "ActiveLimits");
-    item[MenuItem_Limits] = Json_Object_GetLimits(itemJson, "Limits");
+    item[MenuItem_Limits] = PCSingle_ObjVipmLimits(itemJson, "Limits");
     item[MenuItem_FakeInactive] = PCSingle_ObjBool(itemJson, "FakeInactive", false);
     item[MenuItem_UseCounter] = PCSingle_ObjBool(itemJson, "UseCounter", true);
 

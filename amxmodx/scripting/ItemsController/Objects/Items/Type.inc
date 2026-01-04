@@ -19,11 +19,13 @@ static Trie:ItemTypesMap = Invalid_Trie;
 
 ItemType_Init() {
     CallOnce();
+    log_amx("Init item types...");
 
     ItemTypes = ArrayCreate(S_ItemType, 1);
     ItemTypesMap = TrieCreate();
     
     Forwards_RegAndCall("IC_ItemType_OnInited", ET_IGNORE);
+    log_amx("Item types inited.");
 }
 
 T_IC_ItemType:ItemType_Construct(const name[]) {
@@ -40,10 +42,12 @@ T_IC_ItemType:ItemType_Construct(const name[]) {
     new typeObject[S_ItemType];
     copy(typeObject[ItemType_Name], charsmax(typeObject[ItemType_Name]), name);
     arrayset(typeObject[ItemType_Events], INVALID_HANDLE, sizeof(typeObject[ItemType_Events]));
-    typeObject[ItemType_Params]= ArrayCreate(1, 1);
+    typeObject[ItemType_Params] = ArrayCreate(1, 1);
     
     new T_IC_ItemType:type = T_IC_ItemType:ArrayPushArray(ItemTypes, typeObject);
     TrieSetCell(ItemTypesMap, typeObject[ItemType_Name], type);
+    
+    log_amx("Item type '%s' registered.", typeObject[ItemType_Name]);
 
     return type;
 }
