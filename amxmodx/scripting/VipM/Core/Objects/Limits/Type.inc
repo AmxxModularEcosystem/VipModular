@@ -4,6 +4,7 @@
 #define __vipm_core_objects_limits_type_included
 
 #include <amxmodx>
+#include <ParamsController>
 #include <VipM/Limits>
 #include <VipM/Params>
 #include "VipM/Utils"
@@ -227,4 +228,8 @@ bool:LimitType_Execute(const T_LimitType:type, const Trie:tParams, const UserId 
     }
 
     return bRes;
+}
+
+T_LimitType:PCSingle_ObjVipmLimitType(const JSON:objectJson, const key[], const T_LimitType:def = Invalid_LimitType, const bool:dotNot = false, const bool:orFail = false) {
+    return PCSingle_ObjCell(objectJson, key, VIPM_PARAM_TYPE_LIMIT_TYPE_NAME, def, dotNot, orFail);
 }

@@ -63,26 +63,6 @@ static bool:LimitUnit__Get(const T_LimitUnit:iLimitUnit, LimitUnit[S_LimitUnit],
     return true;
 }
 
-static T_LimitType:LimitUnit__ReadType(const JSON:limitJson) {
-    new typeName[VIPM_LIMITS_TYPE_NAME_MAX_LEN];
-    PCSingle_ObjString(limitJson, "Limit", typeName, charsmax(typeName));
-    trim(typeName);
-
-    if (!typeName[0]) {
-        PCJson_ErrorForFile(limitJson, "Limit type name not specified.");
-        return Invalid_LimitType;
-    }
-
-    new T_LimitType:type = LimitType_Find(typeName);
-
-    if (type == Invalid_LimitType) {
-        PCJson_ErrorForFile(limitJson, "Limit type '%s' not found.", typeName);
-        return Invalid_LimitType;
-    }
-
-    return type;
-}
-
 T_LimitUnit:LimitUnit_Read(const JSON:valueJson) {
     static Trie:cache = Invalid_Trie;
     TrieCreateIfNotCreated(cache);
@@ -92,7 +72,7 @@ T_LimitUnit:LimitUnit_Read(const JSON:valueJson) {
         return cached;
     }
 
-    new T_LimitType:type = LimitUnit__ReadType(linked);
+    new T_LimitType:type = PCSingle_ObjVipmLimitType(linked, "Limit", .orFail = true);
     if (type == Invalid_LimitType) {
         PCJson_FreeLinked(linked);
         return Invalid_LimitUnit;

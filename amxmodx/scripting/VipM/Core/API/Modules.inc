@@ -66,8 +66,6 @@ T_ModuleType:@_Modules_Register(const PluginId) {
     new Array:params = ParamsController_Param_ListFromNativeParams(Arg_Params, paramsCount);
     ModuleType_AddParams(module, params);
     ArrayDestroy(params);
-
-    set_error_filter()
 }
 
 bool:@_Modules_RegisterEvent(const PluginId) {
