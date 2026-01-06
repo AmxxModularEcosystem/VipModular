@@ -24,13 +24,13 @@ enum _:S_ModuleType {
 
 enum T_ModuleType { Invalid_ModuleType = -1 }
 
-static ArrayMap(g_amModuleTypes); // S_ModuleType
+static ArrayMap(ModuleTypes); // S_ModuleType
 
 ModuleType_Init() {
     CallOnce();
     log_amx("Init module types...");
 
-    ArrayMapCreate(g_amModuleTypes, S_ModuleType);
+    ArrayMapCreate(ModuleTypes, S_ModuleType);
     
     Forwards_Reg("VipM_Modules_OnActivate", ET_STOP, FP_STRING);
     
@@ -38,15 +38,15 @@ ModuleType_Init() {
 }
 
 Array:ModuleType_GetAll() {
-    return ArrayClone(g_amModuleTypes[AM_Arr]);
+    return ArrayClone(ModuleTypes[AM_Arr]);
 }
 
 ModuleType_GetCount() {
-    return ArrayMapSize(g_amModuleTypes);
+    return ArrayMapSize(ModuleTypes);
 }
 
 T_ModuleType:ModuleType_Construct(const sName[]) {
-    if (!ArrayMapCreated(g_amModuleTypes)) {
+    if (!ArrayMapCreated(ModuleTypes)) {
         abort(AMX_ERR_GENERAL, "Attempt to create module type before modules init.");
         return Invalid_ModuleType;
     }
@@ -68,31 +68,31 @@ T_ModuleType:ModuleType_Construct(const sName[]) {
     
     log_amx("Module type '%s' registered.", ModuleType[ModuleType_Name]);
 
-    return T_ModuleType:ArrayMapPushArray(g_amModuleTypes, ModuleType, ModuleType[ModuleType_Name]);
+    return T_ModuleType:ArrayMapPushArray(ModuleTypes, ModuleType, ModuleType[ModuleType_Name]);
 }
 
 T_ModuleType:ModuleType_Find(const sName[]) {
-    if (ArrayMapKeyExists(g_amModuleTypes, sName)) {
-        return T_ModuleType:ArrayMapGetIndex(g_amModuleTypes, sName);
+    if (ArrayMapKeyExists(ModuleTypes, sName)) {
+        return T_ModuleType:ArrayMapGetIndex(ModuleTypes, sName);
     } else {
         return Invalid_ModuleType;
     }
 }
 
 static ModuleType__Get(const T_ModuleType:iModuleType, ModuleType[S_ModuleType]) {
-    ArrayMapGetArray(g_amModuleTypes, _:iModuleType, ModuleType);
+    ArrayMapGetArray(ModuleTypes, _:iModuleType, ModuleType);
 }
 
 static ModuleType__Save(const ModuleType[S_ModuleType]) {
-    ArrayMapSetArrayByKey(g_amModuleTypes, ModuleType[ModuleType_Name], ModuleType);
+    ArrayMapSetArrayByKey(ModuleTypes, ModuleType[ModuleType_Name], ModuleType);
 }
 
 static ModuleType__SetValue(const T_ModuleType:iModuleType, const iCell, const any:iValue) {
-    return ArrayMapSetCell(g_amModuleTypes, iModuleType, iValue, iCell);
+    return ArrayMapSetCell(ModuleTypes, iModuleType, iValue, iCell);
 }
 
 static any:ModuleType__GetValue(const T_ModuleType:iModuleType, const iCell) {
-    return ArrayMapGetCell(g_amModuleTypes, iModuleType, iCell);
+    return ArrayMapGetCell(ModuleTypes, iModuleType, iCell);
 }
 
 ModuleType_GetName(const T_ModuleType:iModuleType, sOut[], const iOutLen) {
@@ -235,7 +235,7 @@ bool:ModuleType_Activate(const T_ModuleType:type) {
 }
 
 ModuleType_ActivateUsed() {
-    ArrayMapForeachArray (g_amModuleTypes: type => ModuleType[S_ModuleType]) {
+    ArrayMapForeachArray (ModuleTypes: type => ModuleType[S_ModuleType]) {
         if (ModuleType[ModuleType_Used]) {
             ModuleType_Activate(type);
         }

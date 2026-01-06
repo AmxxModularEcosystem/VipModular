@@ -12,6 +12,7 @@
 
 #define VIPM_LIMITS_TYPE_NAME_MAX_LEN 64
 
+stock const VIPM_PARAM_TYPE_LIMIT_TYPE_NAME[] = "VipM-LimitType";
 stock const VIPM_PARAM_TYPE_LIMIT_NAME[] = "VipM-Limit";
 stock const VIPM_PARAM_TYPE_LIMITS_NAME[] = "VipM-Limits";
 

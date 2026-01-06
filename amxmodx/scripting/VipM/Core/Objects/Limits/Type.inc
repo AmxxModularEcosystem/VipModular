@@ -25,27 +25,27 @@ enum _:S_LimitType {
 
 enum T_LimitType { Invalid_LimitType = -1 }
 
-static ArrayMap(g_amLimitTypes); // S_LimitType
+static ArrayMap(LimitTypes); // S_LimitType
 
 LimitType_Init() {
     CallOnce();
     log_amx("Init limit types...");
 
-    ArrayMapCreate(g_amLimitTypes, S_LimitType);
+    ArrayMapCreate(LimitTypes, S_LimitType);
     
     log_amx("Limit types inited.");
 }
 
 Array:LimitType_GetAll() {
-    return ArrayClone(g_amLimitTypes[AM_Arr]);
+    return ArrayClone(LimitTypes[AM_Arr]);
 }
 
 LimitType_GetCount() {
-    return ArraySizeSafe(g_amLimitTypes[AM_Arr]);
+    return ArraySizeSafe(LimitTypes[AM_Arr]);
 }
 
 T_LimitType:LimitType_Construct(const sName[], const bool:bForPlayer = false, const bool:bStatic = false) {
-    if (!ArrayMapCreated(g_amLimitTypes)) {
+    if (!ArrayMapCreated(LimitTypes)) {
         abort(AMX_ERR_GENERAL, "Attempt to create limit type before limits controller init.");
         return Invalid_LimitType;
     }
@@ -55,37 +55,37 @@ T_LimitType:LimitType_Construct(const sName[], const bool:bForPlayer = false, co
         return Invalid_LimitType;
     }
 
-    new LimitType[S_LimitType];
+    new typeObject[S_LimitType];
 
-    copy(LimitType[LimitType_Name], charsmax(LimitType[LimitType_Name]), sName);
-    LimitType[LimitType_Params] = ArrayCreate(1, 1);
+    copy(typeObject[LimitType_Name], charsmax(typeObject[LimitType_Name]), sName);
+    typeObject[LimitType_Params] = ArrayCreate(1, 1);
 
-    LimitType[LimitType_Static] = bStatic;
-    LimitType[LimitType_StaticValue] = 0;
+    typeObject[LimitType_Static] = bStatic;
+    typeObject[LimitType_StaticValue] = 0;
 
-    LimitType[LimitType_ForPlayer] = bForPlayer;
+    typeObject[LimitType_ForPlayer] = bForPlayer;
 
-    arrayset(LimitType[LimitType_Events], -1, sizeof(LimitType[LimitType_Events]));
+    arrayset(typeObject[LimitType_Events], -1, sizeof(typeObject[LimitType_Events]));
     
-    log_amx("Limit type '%s' registered.", LimitType[LimitType_Name]);
+    log_amx("Limit type '%s' registered.", typeObject[LimitType_Name]);
 
-    return T_LimitType:ArrayMapPushArray(g_amLimitTypes, LimitType, LimitType[LimitType_Name]);
+    return T_LimitType:ArrayMapPushArray(LimitTypes, typeObject, typeObject[LimitType_Name]);
 }
 
 T_LimitType:LimitType_Find(const sName[]) {
-    if (ArrayMapKeyExists(g_amLimitTypes, sName)) {
-        return T_LimitType:ArrayMapGetIndex(g_amLimitTypes, sName);
+    if (ArrayMapKeyExists(LimitTypes, sName)) {
+        return T_LimitType:ArrayMapGetIndex(LimitTypes, sName);
     } else {
         return Invalid_LimitType;
     }
 }
 
-static LimitType__Get(const T_LimitType:type, LimitType[S_LimitType]) {
-    ArrayMapGetArray(g_amLimitTypes, _:type, LimitType);
+static LimitType__Get(const T_LimitType:type, typeObject[S_LimitType]) {
+    ArrayMapGetArray(LimitTypes, _:type, typeObject);
 }
 
-static LimitType__Set(const LimitType[S_LimitType]) {
-    ArrayMapSetArrayByKey(g_amLimitTypes, LimitType[LimitType_Name], LimitType);
+static LimitType__Set(const typeObject[S_LimitType]) {
+    ArrayMapSetArrayByKey(LimitTypes, typeObject[LimitType_Name], typeObject);
 }
 
 LimitType_AddParams(const T_LimitType:type, const Array:params) {
@@ -152,20 +152,20 @@ LimitType_SetEventListener(
     const PluginId,
     const sFuncName[]
 ) {
-    new LimitType[S_LimitType];
-    LimitType__Get(type, LimitType);
+    new typeObject[S_LimitType];
+    LimitType__Get(type, typeObject);
 
-    if (LimitType[LimitType_Events][iEvent] >= 0) {
-        DestroyForward(LimitType[LimitType_Events][iEvent]);
+    if (typeObject[LimitType_Events][iEvent] >= 0) {
+        DestroyForward(typeObject[LimitType_Events][iEvent]);
     }
     
-    LimitType[LimitType_Events][iEvent] = LimitType__MakeEventForward(iEvent, PluginId, sFuncName);
+    typeObject[LimitType_Events][iEvent] = LimitType__MakeEventForward(iEvent, PluginId, sFuncName);
 
-    if (LimitType[LimitType_Events][iEvent] < 0) {
+    if (typeObject[LimitType_Events][iEvent] < 0) {
         abort(AMX_ERR_PARAMS, "[ERROR] Can't create forward for func '%s' in plugin #%d.", sFuncName, PluginId);
     }
 
-    LimitType__Set(LimitType);
+    LimitType__Set(typeObject);
 }
 
 static LimitType__MakeEventForward(const E_LimitEvent:iEvent, const PluginId, const sFuncName[]) {
@@ -182,47 +182,47 @@ static LimitType__MakeEventForward(const E_LimitEvent:iEvent, const PluginId, co
 }
 
 bool:LimitType_IsStatic(const T_LimitType:type) {
-    new LimitType[S_LimitType];
-    LimitType__Get(type, LimitType);
+    new typeObject[S_LimitType];
+    LimitType__Get(type, typeObject);
     
-    return LimitType[LimitType_Static];
+    return typeObject[LimitType_Static];
 }
 
 LimitType_SetStaticValue(const T_LimitType:type, const bool:bValue, const UserId = 0) {
-    new LimitType[S_LimitType];
-    LimitType__Get(type, LimitType);
+    new typeObject[S_LimitType];
+    LimitType__Get(type, typeObject);
     
-    if (!LimitType[LimitType_Static]) {
+    if (!typeObject[LimitType_Static]) {
         abort(AMX_ERR_PARAMS, "Trying to set static value for a non-static limit.");
         return;
     }
 
     if (UserId > 0) {
-        BitSetIf(LimitType[LimitType_StaticValue], UserId - 1, bValue);
+        BitSetIf(typeObject[LimitType_StaticValue], UserId - 1, bValue);
     } else {
-        LimitType[LimitType_StaticValue] = bValue;
+        typeObject[LimitType_StaticValue] = bValue;
     }
 
-    LimitType__Set(LimitType);
+    LimitType__Set(typeObject);
 }
 
 bool:LimitType_Execute(const T_LimitType:type, const Trie:tParams, const UserId = 0) {
-    new LimitType[S_LimitType];
-    LimitType__Get(type, LimitType);
+    new typeObject[S_LimitType];
+    LimitType__Get(type, typeObject);
     
     new bool:bRes = false;
-    if (LimitType[LimitType_Static]) {
-        if (LimitType[LimitType_ForPlayer]) {
-            bRes = BitIs(LimitType[LimitType_StaticValue], UserId - 1);
+    if (typeObject[LimitType_Static]) {
+        if (typeObject[LimitType_ForPlayer]) {
+            bRes = BitIs(typeObject[LimitType_StaticValue], UserId - 1);
         } else {
-            bRes = !!LimitType[LimitType_StaticValue];
+            bRes = !!typeObject[LimitType_StaticValue];
         }
     } else {
-        if (LimitType[LimitType_Events][Limit_OnCheck] < 0) {
-            abort(AMX_ERR_GENERAL, "'Limit_OnCheck' event listener for non-static limit type '%s' must be implemented.", LimitType[LimitType_Name]);
+        if (typeObject[LimitType_Events][Limit_OnCheck] < 0) {
+            abort(AMX_ERR_GENERAL, "'Limit_OnCheck' event listener for non-static limit type '%s' must be implemented.", typeObject[LimitType_Name]);
             bRes = false;
         } else {
-            ExecuteForward(LimitType[LimitType_Events][Limit_OnCheck], bRes, tParams, UserId);
+            ExecuteForward(typeObject[LimitType_Events][Limit_OnCheck], bRes, tParams, UserId);
         }
     }
 

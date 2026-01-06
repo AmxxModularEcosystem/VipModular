@@ -7,7 +7,6 @@
 #include "VipM/Utils"
 #include "VipM/Forwards"
 #include <VipM/Modules>
-#include "VipM/ArrayMap"
 #include "VipM/ArrayTrieUtils"
 
 #include "VipM/Core/Objects/Modules/Type"

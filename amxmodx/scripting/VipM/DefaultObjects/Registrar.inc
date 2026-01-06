@@ -2,11 +2,13 @@
 
 #include "VipM/DefaultObjects/ParamType/Limit"
 #include "VipM/DefaultObjects/ParamType/Limits"
+#include "VipM/DefaultObjects/ParamType/LimitType"
 #include "VipM/DefaultObjects/ParamType/CounterType"
 
 public ParamsController_OnRegisterTypes() {
     DefaultObjects_ParamType_Limit_Register();
     DefaultObjects_ParamType_Limits_Register();
+    DefaultObjects_ParamType_LimitType_Register();
     DefaultObjects_ParamType_CounterType_Register();
 }
 

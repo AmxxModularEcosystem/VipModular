@@ -7,7 +7,6 @@
 #include <amxmodx>
 #include <VipM/Limits>
 #include "VipM/Utils"
-#include "VipM/ArrayMap"
 #include "VipM/ArrayTrieUtils"
 
 #include "VipM/Core/Objects/Limits/Type"

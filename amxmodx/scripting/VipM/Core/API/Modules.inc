@@ -42,12 +42,13 @@ T_ModuleType:@_Modules_Register(const PluginId) {
         return;
     }
 
-    new Array:aParams = CfgParam_GetFromNative(Arg_Params, iParamsNum);
-    if (aParams == Invalid_Array) {
+    new Array:params = CfgParam_GetFromNative(Arg_Params, iParamsNum);
+    if (params == Invalid_Array) {
         return;
     }
 
-    ModuleType_AddParams(iModuleType, aParams);
+    ModuleType_AddParams(iModuleType, params);
+    ArrayDestroy(params);
 }
 
 @VipM_Modules_AddParamsEx(const pluginIndex, const paramsCount) {
@@ -65,6 +66,8 @@ T_ModuleType:@_Modules_Register(const PluginId) {
     new Array:params = ParamsController_Param_ListFromNativeParams(Arg_Params, paramsCount);
     ModuleType_AddParams(module, params);
     ArrayDestroy(params);
+
+    set_error_filter()
 }
 
 bool:@_Modules_RegisterEvent(const PluginId) {
