@@ -17,7 +17,7 @@ env:
   PLUGINS_INI_GENERATE: 1
   PLUGINS_INI_POSTFIX: vipm
   DEPS_LIST: |
-    AmxxModularEcosystem/ParamsController@1.2.0
+    AmxxModularEcosystem/ParamsController@1.3.0
     AmxxModularEcosystem/CommandAliases@1.0.1
 
 jobs:
@@ -76,8 +76,9 @@ jobs:
           OUTPUT_VAR_NAME: DEPS_COMPILER_ARGS
         run: |
           handleDep() {
-            REPO=`echo $1 | grep -Po '.+(?=@)'`
-            TAG=`echo $1 | grep -Po '(?<=@).+(?=:)'`
+            REPO="${1%%@*}"
+            TAG="${1#*@}"
+            TAG="${TAG%%:*}"
             OVERRIDE_INCLUDE_PATH=`echo $1 | grep -Po '(?<=:).+'`
 
             if [ -z "$REPO" ]; then
@@ -89,28 +90,39 @@ jobs:
             mkdir -p dep/${REPO}
             cd dep/${REPO}
 
-            if [ -z "$2" ]; then
+            if [ -z "$" ]; then
               TAG=`curl --silent https://api.github.com/repos/${REPO}/releases/latest | jq .tag_name -r`
-            else
-              TAG=$2
             fi
 
-            wget https://github.com/${REPO}/archive/refs/tags/${TAG}.zip
-            7z x ${TAG}.zip
+            wget https://github.com/${REPO}/archive/refs/tags/${TAG}.zip -q > /dev/null
+            7z x ${TAG}.zip > /dev/null
 
             REPO_NAME=`echo "${REPO}" | grep -Po '(?<=\/).+'`
-            INCLUDE_PATH='$(pwd)/${REPO_NAME}-${TAG}/${OVERRIDE_INCLUDE_PATH:-amxmodx/scripting/include}'
+            INCLUDE_PATH="$(pwd)/${REPO_NAME}-${TAG}/${OVERRIDE_INCLUDE_PATH:-amxmodx/scripting/include}"
 
-            echo "${OUTPUT_VAR_NAME}=\"\${${OUTPUT_VAR_NAME}} -i\\\"${INCLUDE_PATH}\\\"\"" >> $GITHUB_ENV
+            echo "-i\"${INCLUDE_PATH}\""
 
             cd $INIT_PWD
           }
 
+          # Собираем все аргументы в локальную переменную
+          DEPS_COMPILER_ARGS=""
+          
           deps=$(echo ${DEPS_LIST} | tr ";" "\n")
+          echo "deps: ${deps}"
+          echo "-"
+          echo "-"
+
           for dep in $deps
           do
-            handleDep $dep
+            # Вызываем функцию, но перенаправляем её вывод в локальную переменную
+            path_arg=$(handleDep "$dep")
+            DEPS_COMPILER_ARGS="${DEPS_COMPILER_ARGS} ${path_arg}"
           done
+          
+          # Записываем финальную переменную
+          echo "Final ${OUTPUT_VAR_NAME}: ${DEPS_COMPILER_ARGS}"
+          echo "${OUTPUT_VAR_NAME}=${DEPS_COMPILER_ARGS}" >> $GITHUB_ENV
 
       - name: Setup AMXXPawn Compiler
         uses: wopox1337/setup-amxxpawn@v1.1.0
@@ -132,11 +144,12 @@ jobs:
 
             mkdir -p $(dirname $output_path)
 
-            echo -n "Compiling $sourcefile ... "
+            echo "Compiling $sourcefile ... "
+            echo "amxxpc $sourcefile -o\"$output_path\" -i\"include\" -i\"$REAPI_INCLUDE\" $DEPS_COMPILER_ARGS GITHUB_ACTIONS_USED=1"
             amxxpc $sourcefile -o"$output_path" \
               -i"include" \
               -i"$REAPI_INCLUDE" \
-              ${DEPS_COMPILER_ARGS} \
+              $DEPS_COMPILER_ARGS \
               GITHUB_ACTIONS_USED=1
               
             if [ ! -z "${PLUGINS_INI_GENERATE}" ]; then
