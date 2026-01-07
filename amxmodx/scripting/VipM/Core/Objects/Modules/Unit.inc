@@ -18,7 +18,7 @@ enum _:S_ModuleUnit {
     Trie:ModuleUnit_Params,
 }
 
-static Array:g_aModuleUnits = Invalid_Array;
+static Array:ModuleUnits = Invalid_Array;
 
 ModuleUnit_Init() {
     CallOnce();
@@ -26,58 +26,34 @@ ModuleUnit_Init() {
 
     ModuleType_Init();
 
-    g_aModuleUnits = ArrayCreate(S_ModuleUnit, 1);
+    ModuleUnits = ArrayCreate(S_ModuleUnit, 1);
     
     Forwards_RegAndCall("VipM_Modules_OnInited", ET_IGNORE);
     log_amx("Module units inited.");
 }
 
 ModuleUnit_GetCount() {
-    return ArraySizeSafe(g_aModuleUnits);
+    return ArraySizeSafe(ModuleUnits);
 }
 
-static T_ModuleUnit:ModuleUnit__Construct(const T_ModuleType:iModuleType, const Trie:tParams) {
-    if (g_aModuleUnits == Invalid_Array) {
+static T_ModuleUnit:ModuleUnit__Construct(const T_ModuleType:type, const Trie:p) {
+    if (ModuleUnits == Invalid_Array) {
         abort(AMX_ERR_GENERAL, "Attempt to create module unit before init.");
         return Invalid_ModuleUnit;
     }
     
-    new ModuleUnit[S_ModuleUnit];
+    new unitObject[S_ModuleUnit];
 
-    ModuleUnit[ModuleUnit_Type] = iModuleType;
-    ModuleUnit[ModuleUnit_Params] = tParams;
+    unitObject[ModuleUnit_Type] = type;
+    unitObject[ModuleUnit_Params] = p;
 
-    ModuleType_MarkAsUsed(iModuleType);
+    ModuleType_MarkAsUsed(type);
 
-    return T_ModuleUnit:ArrayPushArray(g_aModuleUnits, ModuleUnit);
+    return T_ModuleUnit:ArrayPushArray(ModuleUnits, unitObject);
 }
-
-// static ModuleUnit__Get(const T_ModuleUnit:iModuleUnit, ModuleUnit[S_ModuleUnit]) {
-//     ArrayGetArray(g_aModuleUnits, _:iModuleUnit, ModuleUnit);
-// }
 
 static any:ModuleUnit__GetValue(const T_ModuleUnit:iModuleUnit, const iCell) {
-    return ArrayGetCell(g_aModuleUnits, _:iModuleUnit, iCell);
-}
-
-static T_ModuleType:ModuleUnit__ReadType(const JSON:jModuleUnit) {
-    new sModuleTypeName[VIPM_MODULES_TYPE_NAME_MAX_LEN];
-    PCSingle_ObjString(jModuleUnit, "Module", sModuleTypeName, charsmax(sModuleTypeName));
-    trim(sModuleTypeName);
-
-    if (!sModuleTypeName[0]) {
-        PCJson_ErrorForFile(jModuleUnit, "Module type name not specified.");
-        return Invalid_ModuleType;
-    }
-
-    new T_ModuleType:iModuleType = ModuleType_Find(sModuleTypeName);
-
-    if (iModuleType == Invalid_ModuleType) {
-        PCJson_ErrorForFile(jModuleUnit, "Module type '%s' not found.", sModuleTypeName);
-        return Invalid_ModuleType;
-    }
-
-    return iModuleType;
+    return ArrayGetCell(ModuleUnits, _:iModuleUnit, iCell);
 }
 
 T_ModuleUnit:ModuleUnit_Read(const JSON:valueJson) {
@@ -89,7 +65,7 @@ T_ModuleUnit:ModuleUnit_Read(const JSON:valueJson) {
         return cached;
     }
 
-    new T_ModuleType:type = ModuleUnit__ReadType(linked);
+    new T_ModuleType:type = PCSingle_ObjVipmModuleType(linked, "Module", .orFail = true);
     if (type == Invalid_ModuleType) {
         PCJson_FreeLinked(linked);
         return Invalid_ModuleUnit;
@@ -154,16 +130,16 @@ ModuleUnit_GetTypeName(const T_ModuleUnit:iModuleUnit, sOut[], const iOutLen) {
 //     return sName;
 // }
 
-Trie:ModuleUnit_FreeParamsIfTemp(&Trie:tParams) {
-    if (tParams == Invalid_Trie) {
-        return tParams;
+Trie:ModuleUnit_FreeParamsIfTemp(&Trie:p) {
+    if (p == Invalid_Trie) {
+        return p;
     }
 
-    if (TrieKeyExists(tParams, VIPM_MODULES_PARAMS_TEMP_MARK_KEY)) {
-        TrieDestroy(tParams);
+    if (TrieKeyExists(p, VIPM_MODULES_PARAMS_TEMP_MARK_KEY)) {
+        TrieDestroy(p);
     }
 
-    return tParams;
+    return p;
 }
 
 Trie:ModuleUnit_Merge(const T_ModuleUnit:iModuleUnit, const Trie:tParams1, const Trie:tParams2) {

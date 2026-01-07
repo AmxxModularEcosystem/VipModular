@@ -149,36 +149,36 @@ Trie:LimitType_ReadParams(const T_LimitType:type, const JSON:paramsJson) {
 
 LimitType_SetEventListener(
     const T_LimitType:type,
-    const E_LimitEvent:iEvent,
-    const PluginId,
-    const sFuncName[]
+    const E_LimitEvent:event,
+    const pluginIndex,
+    const func[]
 ) {
     new typeObject[S_LimitType];
     LimitType__Get(type, typeObject);
 
-    if (typeObject[LimitType_Events][iEvent] >= 0) {
-        DestroyForward(typeObject[LimitType_Events][iEvent]);
+    if (typeObject[LimitType_Events][event] >= 0) {
+        DestroyForward(typeObject[LimitType_Events][event]);
     }
     
-    typeObject[LimitType_Events][iEvent] = LimitType__MakeEventForward(iEvent, PluginId, sFuncName);
+    typeObject[LimitType_Events][event] = LimitType__MakeEventForward(event, pluginIndex, func);
 
-    if (typeObject[LimitType_Events][iEvent] < 0) {
-        abort(AMX_ERR_PARAMS, "[ERROR] Can't create forward for func '%s' in plugin #%d.", sFuncName, PluginId);
+    if (typeObject[LimitType_Events][event] < 0) {
+        abort(AMX_ERR_PARAMS, "[ERROR] Can't create forward for func '%s' in plugin #%d.", func, pluginIndex);
     }
 
     LimitType__Set(typeObject);
 }
 
-static LimitType__MakeEventForward(const E_LimitEvent:iEvent, const PluginId, const sFuncName[]) {
-    switch (iEvent) {
-        case Limit_OnRead: // (const JSON:jCfg, Trie:tParams)
-            return CreateOneForward(PluginId, sFuncName, FP_CELL, FP_CELL);
+static LimitType__MakeEventForward(const E_LimitEvent:event, const pluginIndex, const func[]) {
+    switch (event) {
+        case Limit_OnRead: // (const JSON:jCfg, Trie:p)
+            return CreateOneForward(pluginIndex, func, FP_CELL, FP_CELL);
             
-        case Limit_OnCheck: // (const Trie:tParams, const UserId)
-            return CreateOneForward(PluginId, sFuncName, FP_CELL, FP_CELL);
+        case Limit_OnCheck: // (const Trie:p, const playerIndex)
+            return CreateOneForward(pluginIndex, func, FP_CELL, FP_CELL);
     }
 
-    abort(AMX_ERR_GENERAL, "[ERROR] Invalid event index (%d).", iEvent);
+    abort(AMX_ERR_GENERAL, "[ERROR] Invalid event index (%d).", event);
     return -1;
 }
 
@@ -189,7 +189,7 @@ bool:LimitType_IsStatic(const T_LimitType:type) {
     return typeObject[LimitType_Static];
 }
 
-LimitType_SetStaticValue(const T_LimitType:type, const bool:bValue, const UserId = 0) {
+LimitType_SetStaticValue(const T_LimitType:type, const bool:value, const playerIndex = 0) {
     new typeObject[S_LimitType];
     LimitType__Get(type, typeObject);
     
@@ -198,36 +198,36 @@ LimitType_SetStaticValue(const T_LimitType:type, const bool:bValue, const UserId
         return;
     }
 
-    if (UserId > 0) {
-        BitSetIf(typeObject[LimitType_StaticValue], UserId - 1, bValue);
+    if (playerIndex > 0) {
+        BitSetIf(typeObject[LimitType_StaticValue], playerIndex - 1, value);
     } else {
-        typeObject[LimitType_StaticValue] = bValue;
+        typeObject[LimitType_StaticValue] = value;
     }
 
     LimitType__Set(typeObject);
 }
 
-bool:LimitType_Execute(const T_LimitType:type, const Trie:tParams, const UserId = 0) {
+bool:LimitType_Execute(const T_LimitType:type, const Trie:p, const playerIndex = 0) {
     new typeObject[S_LimitType];
     LimitType__Get(type, typeObject);
     
-    new bool:bRes = false;
+    new bool:res = false;
     if (typeObject[LimitType_Static]) {
         if (typeObject[LimitType_ForPlayer]) {
-            bRes = BitIs(typeObject[LimitType_StaticValue], UserId - 1);
+            res = BitIs(typeObject[LimitType_StaticValue], playerIndex - 1);
         } else {
-            bRes = !!typeObject[LimitType_StaticValue];
+            res = !!typeObject[LimitType_StaticValue];
         }
     } else {
         if (typeObject[LimitType_Events][Limit_OnCheck] < 0) {
             abort(AMX_ERR_GENERAL, "'Limit_OnCheck' event listener for non-static limit type '%s' must be implemented.", typeObject[LimitType_Name]);
-            bRes = false;
+            res = false;
         } else {
-            ExecuteForward(typeObject[LimitType_Events][Limit_OnCheck], bRes, tParams, UserId);
+            ExecuteForward(typeObject[LimitType_Events][Limit_OnCheck], res, p, playerIndex);
         }
     }
 
-    return bRes;
+    return res;
 }
 
 T_LimitType:PCSingle_ObjVipmLimitType(const JSON:objectJson, const key[], const T_LimitType:def = Invalid_LimitType, const bool:dotNot = false, const bool:orFail = false) {

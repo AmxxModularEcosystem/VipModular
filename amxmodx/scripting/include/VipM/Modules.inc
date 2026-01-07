@@ -11,7 +11,9 @@
 
 stock const VIPM_MODULES_PARAMS_TEMP_MARK_KEY[] = "___temp_module_params___";
 
-enum E_ModuleEvent{
+stock const VIPM_PARAM_TYPE_MODULE_TYPE_NAME[] = "VipM-ModuleType";
+
+enum E_ModuleEvent {
 
     /*
      * Описание:    Вызывается, когда модуль был активирован.
@@ -34,19 +36,6 @@ enum E_ModuleEvent{
      * Примечание: Если возвращено VIPM_STOP, элемент модуля будет пропущен.
      */
     Module_OnRead,
-
-    /*
-     * Описание:    Вызывается, когда надо обьединить два набора параметров модуля. Только для модулей с Once = false.
-     * Возв. тип:   Trie
-     * Параметры:   (const Trie:MainParams, const Trie:NewParams):
-     *      MainParams - Основной набор параметров модуля.
-     *      NewParams - Добавляемый набор параметров модуля.
-     * 
-     * Примечание: Результат обьединения должен быть возвращён обработчиком события.
-     * 
-     * УСТАРЕЛО! Используйте Module_OnMergeParams. 
-     */
-    Module_OnCompareParams,
 
     /*
      * Описание:    Вызывается при добавлении игроку второго и последующих модулей одного типа.
@@ -137,30 +126,30 @@ native VipM_Modules_AddParamsEx(const moduleName[], const any:...);
 /**
  * Активен ли указанный модуль.
  *
- * @param Module    Название модуля.
+ * @param moduleName    Название модуля.
  *
  * @return true, если модуль активен, иначе false.
  */
-native bool:VipM_Modules_IsActive(const Module[]);
+native bool:VipM_Modules_IsActive(const moduleName[]);
 
 /**
  * Получение набора параметров модуля для указанного игрока.
  *
- * @param Module    Название модуля.
- * @param UserId    Индекс игрока.
+ * @param moduleName   Название модуля.
+ * @param playerIndex  Индекс игрока.
  *
  * @return Trie с параметрами.
  */
-native Trie:VipM_Modules_GetParams(const Module[], const UserId);
+native Trie:VipM_Modules_GetParams(const moduleName[], const playerIndex);
 
 /**
  * Проверка наличия у игрока доступа к указанному модулю.
  *
- * @param sModuleName   Название модуля.
- * @param UserId        Индекс игрока.
+ * @param moduleName   Название модуля.
+ * @param playerIndex  Индекс игрока.
  *
  * @return true, если у игрока имеется доступ к модулю, иначе false.
  */
-stock bool:VipM_Modules_HasModule(const sModuleName[], const UserId) {
-    return VipM_Modules_GetParams(sModuleName, UserId) != Invalid_Trie;
+stock bool:VipM_Modules_HasModule(const moduleName[], const playerIndex) {
+    return VipM_Modules_GetParams(moduleName, playerIndex) != Invalid_Trie;
 }

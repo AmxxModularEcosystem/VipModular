@@ -173,11 +173,6 @@ ModuleType_SetEventListener(
     new typeObject[S_ModuleType];
     ModuleType__Get(type, typeObject);
 
-    if (event == Module_OnCompareParams) {
-        log_amx("[WARNING] Event 'Module_OnCompareParams' is deprecated and will not be fired.");
-        return;
-    }
-
     if (typeObject[ModuleType_Events][event] >= 0) {
         DestroyForward(typeObject[ModuleType_Events][event]);
     }
@@ -256,4 +251,8 @@ Trie:ModuleType_MergeParams(const T_ModuleType:type, const Trie:tParams1, const 
     }
     
     return tRes;
+}
+
+T_ModuleType:PCSingle_ObjVipmModuleType(const JSON:objectJson, const key[], const T_ModuleType:def = Invalid_ModuleType, const bool:dotNot = false, const bool:orFail = false) {
+    return PCSingle_ObjCell(objectJson, key, VIPM_PARAM_TYPE_MODULE_TYPE_NAME, def, dotNot, orFail);
 }
