@@ -1,17 +1,17 @@
 #include <ItemsController>
 
 DefaultObjects_HandleNativeFilter(const name[], const trap) {
-    new ret = false;
+    new handled = false;
     
     if (DefaultObjects_ItemType_CustomWeapon_NativeFilter(name, trap)) {
-        ret = true;
+        handled = true;
     }
 
-    if (DefaultObjects_ItemType_If_NativeFilter(name)) {
-        ret = true;
+    if (DefaultObjects_ItemType_If_NativeFilter(name, trap)) {
+        handled = true;
     }
 
-    return ret;
+    return handled;
 }
 
 #include "ItemsController/DefaultObjects/ItemType/Armor"

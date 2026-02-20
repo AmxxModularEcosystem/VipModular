@@ -4,7 +4,7 @@
 
 DefaultObjects_Limit_GameTime_Register() {
     VipM_Limits_RegisterType("GameTime", false, false);
-    VipM_Limits_AddTypeParams("GameTime",
+    VipM_Limits_AddParamsEx("GameTime",
         "Min", DEFAULT_PARAMS_TIME_INTERVAL_NAME, false,
         "Max", DEFAULT_PARAMS_TIME_INTERVAL_NAME, false
     );

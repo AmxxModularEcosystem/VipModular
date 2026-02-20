@@ -161,7 +161,7 @@ Array:ItemInstance_ReadArrayFromJsonValue(const JSON:instancesJson, &Array:array
         PCJson_ErrorForFile(linkedJson, "Json value must be an array or an object.");
     }
 
-    PCJson_FreeLinked(linkedJson);
+    PCJson_FreeLinked(linkedJson, instancesJson);
     
     return array;
 }

@@ -17,7 +17,7 @@ env:
   PLUGINS_INI_GENERATE: 1
   PLUGINS_INI_POSTFIX: vipm
   DEPS_LIST: |
-    AmxxModularEcosystem/ParamsController@1.3.1
+    AmxxModularEcosystem/ParamsController@1.3.2
     AmxxModularEcosystem/CommandAliases@1.0.1
 
 jobs:

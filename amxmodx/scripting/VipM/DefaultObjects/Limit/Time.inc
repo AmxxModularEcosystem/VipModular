@@ -4,11 +4,10 @@
 
 DefaultObjects_Limit_Time_Register() {
     VipM_Limits_RegisterType("Time", false, false);
-    VipM_Limits_AddTypeParams("Time",
+    VipM_Limits_AddParamsEx("Time",
         "Before", DEFAULT_PARAMS_TIME_NAME, false,
         "After", DEFAULT_PARAMS_TIME_NAME, false
     );
-    VipM_Limits_RegisterTypeEvent("Time", Limit_OnRead, "@DefaultObjects_Limit_Time_OnRead");
     VipM_Limits_RegisterTypeEvent("Time", Limit_OnCheck, "@DefaultObjects_Limit_Time_OnCheck");
 }
 

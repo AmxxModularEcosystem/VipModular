@@ -83,7 +83,7 @@ Array:MenuItem_ReadList(const JSON:itemsJson, &Array:items = Invalid_Array) {
         }
     }
 
-    PCJson_FreeLinked(linkedJson);
+    PCJson_FreeLinked(linkedJson, itemsJson);
     return items;
 }
 

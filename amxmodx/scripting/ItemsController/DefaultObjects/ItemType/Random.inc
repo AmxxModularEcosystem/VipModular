@@ -9,7 +9,7 @@ DefaultObjects_ItemType_Random_Register() {
         .onGive = "@OnRandomGive"
     );
     IC_ItemType_AddParams(type,
-        "Items", "IC-Items", true
+        "Items", IC_PARAM_TYPE_ITEMS_NAME, true
     );
 }
 

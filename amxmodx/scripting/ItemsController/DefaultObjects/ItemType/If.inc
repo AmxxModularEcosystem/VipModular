@@ -5,8 +5,10 @@
 #include <ItemsController>
 #include <ParamsController>
 
+static bool:IsVipModularInstalled = true;
+
 DefaultObjects_ItemType_If_Register() {
-    if (!LibraryExists(VIPM_LIBRARY, LibType_Library)) {
+    if (!IsVipModularInstalled) {
         return;
     }
 
@@ -15,9 +17,9 @@ DefaultObjects_ItemType_If_Register() {
         .onGive = "@OnIfGive"
     );
     IC_ItemType_AddParams(type,
-        "Limits", "VipM-Limits", true,
-        "Items", "IC-Items", false,
-        "ElseItems", "IC-Items", false
+        "Limits", VIPM_PARAM_TYPE_LIMITS_NAME, true,
+        "Items", IC_PARAM_TYPE_ITEMS_NAME, false,
+        "ElseItems", IC_PARAM_TYPE_ITEMS_NAME, false
     );
 }
 
@@ -29,8 +31,9 @@ DefaultObjects_ItemType_If_Register() {
     return PCGet_IcItemsGive(p, "Items", playerIndex) ? IC_RET_GIVE_SUCCESS : IC_RET_GIVE_FAIL;
 }
 
-bool:DefaultObjects_ItemType_If_NativeFilter(const name[]) {
+bool:DefaultObjects_ItemType_If_NativeFilter(const name[], const trap) {
     if (equal(name, "VipM_Limits_ExecuteList")) {
+        IsVipModularInstalled = !!trap;
         return true;
     }
 

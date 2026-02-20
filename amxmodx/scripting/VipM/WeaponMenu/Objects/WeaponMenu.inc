@@ -87,7 +87,7 @@ Array:WeaponMenu_ReadList(const JSON:jWeaponMenus, &Array:aWeaponMenus = Invalid
         }
     }
 
-    PCJson_FreeLinked(linkedJson);
+    PCJson_FreeLinked(linkedJson, jWeaponMenus);
     return aWeaponMenus;
 }
 

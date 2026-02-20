@@ -74,7 +74,7 @@ T_LimitUnit:LimitUnit_Read(const JSON:valueJson) {
 
     new T_LimitType:type = PCSingle_ObjVipmLimitType(linked, "Limit", .orFail = true);
     if (type == Invalid_LimitType) {
-        PCJson_FreeLinked(linked);
+        PCJson_FreeLinked(linked, valueJson);
         return Invalid_LimitUnit;
     }
 
@@ -82,7 +82,7 @@ T_LimitUnit:LimitUnit_Read(const JSON:valueJson) {
     if (!LimitType_IsStatic(type)) {
         p = LimitType_ReadParams(type, linked);
         if (p == Invalid_Trie) {
-            PCJson_FreeLinked(linked);
+            PCJson_FreeLinked(linked, valueJson);
             return Invalid_LimitUnit;
         }
     }
@@ -92,7 +92,7 @@ T_LimitUnit:LimitUnit_Read(const JSON:valueJson) {
         TrieSetCell(cache, linkPath, cached);
     }
 
-    PCJson_FreeLinked(linked);
+    PCJson_FreeLinked(linked, valueJson);
     return cached;
 }
 

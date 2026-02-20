@@ -67,13 +67,13 @@ T_ModuleUnit:ModuleUnit_Read(const JSON:valueJson) {
 
     new T_ModuleType:type = PCSingle_ObjVipmModuleType(linked, "Module", .orFail = true);
     if (type == Invalid_ModuleType) {
-        PCJson_FreeLinked(linked);
+        PCJson_FreeLinked(linked, valueJson);
         return Invalid_ModuleUnit;
     }
 
     new Trie:p = ModuleType_ReadParams(type, linked);
     if (p == Invalid_Trie) {
-        PCJson_FreeLinked(linked);
+        PCJson_FreeLinked(linked, valueJson);
         return Invalid_ModuleUnit;
     }
 
@@ -82,7 +82,7 @@ T_ModuleUnit:ModuleUnit_Read(const JSON:valueJson) {
         TrieSetCell(cache, linkPath, cached);
     }
 
-    PCJson_FreeLinked(linked);
+    PCJson_FreeLinked(linked, valueJson);
     return cached;
 }
 

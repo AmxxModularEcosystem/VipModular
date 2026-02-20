@@ -9,7 +9,7 @@ DefaultObjects_ItemType_ItemsList_Register() {
         .onGive = "@OnItemsListGive"
     );
     IC_ItemType_AddParams(type,
-        "Items", "IC-Items", true
+        "Items", IC_PARAM_TYPE_ITEMS_NAME, true
     );
 }
 

@@ -57,6 +57,10 @@ Array:CfgParam_GetFromNative(const iStartParam, const iNativeParamsCount, &Array
             case ptLimits: {
                 paramType = VIPM_PARAM_TYPE_LIMITS_NAME;
             }
+            case ptCustom: {
+                // Чтоб не ругалось
+                continue;
+            }
             default: {
                 log_amx("[WARNING] Invalid param type (%d).", get_param_byref(i + 1));
                 continue;

@@ -50,9 +50,10 @@ public plugin_natives() {
 }
 
 @NativeFilter(const name[], index, trap) {
+    new bool:handled = false;
     if (DefaultObjects_HandleNativeFilter(name, trap)) {
-        return PLUGIN_HANDLED;
+        handled = true;
     }
 
-    return PLUGIN_CONTINUE;
+    return handled ? PLUGIN_HANDLED : PLUGIN_CONTINUE;
 }

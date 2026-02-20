@@ -83,14 +83,14 @@ T_VipUnit:VipUnit_Read(const JSON:valueJson) {
     new Array:aAccess = PCSingle_ObjVipmLimits(linked, "Access");
     if (aAccess == Invalid_Array) {
         PCJson_ErrorForFile(linked, "Field 'Access' is required in vip object.");
-        PCJson_FreeLinked(linked);
+        PCJson_FreeLinked(linked, valueJson);
         return Invalid_VipUnit;
     }
 
     new Array:aModules = JsonObject_GetModuleUnits(linked, "Modules");
     if (aModules == Invalid_Array) {
         PCJson_ErrorForFile(linked, "Field 'Modules' is required in vip object.");
-        PCJson_FreeLinked(linked);
+        PCJson_FreeLinked(linked, valueJson);
         return Invalid_VipUnit;
     }
 
@@ -99,7 +99,7 @@ T_VipUnit:VipUnit_Read(const JSON:valueJson) {
         TrieSetCell(cache, linkPath, cached);
     }
 
-    PCJson_FreeLinked(linked);
+    PCJson_FreeLinked(linked, valueJson);
     return cached;
 }
 
