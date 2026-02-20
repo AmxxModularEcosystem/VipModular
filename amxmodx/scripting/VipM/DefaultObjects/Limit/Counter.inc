@@ -11,7 +11,8 @@ DefaultObjects_Limit_Counter_Register() {
     VipM_Limits_AddParamsEx("Counter",
         "Type", VIPM_L_COUNTER_PARAM_TYPE, true,
         "Key", DEFAULT_PARAMS_SHORT_STR_NAME, true,
-        "Max", DEFAULT_PARAMS_INT_NAME, false
+        "Max", DEFAULT_PARAMS_INT_NAME, false,
+        "Inc", DEFAULT_PARAMS_INT_NAME, false
     );
 
     RegisterHookChain(RG_CBasePlayer_Spawn, "@DefaultObjects_Limit_Counter_OnPlayerSpawn", false);
@@ -87,7 +88,9 @@ static DefaultObjects_Limit_Counter_GetPlayerKey(const playerIndex) {
         return false;
     }
 
-    TrieSetCell(counter, DefaultObjects_Limit_Counter_GetPlayerKey(playerIndex), ++value);
+    value += PCGet_Int(p, "Inc", 1);
+
+    TrieSetCell(counter, DefaultObjects_Limit_Counter_GetPlayerKey(playerIndex), value);
 
     return true;
 }
