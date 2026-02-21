@@ -14,6 +14,7 @@ DefaultObjects_Limit_Counter_Register() {
         "Max", DEFAULT_PARAMS_INT_NAME, false,
         "Inc", DEFAULT_PARAMS_INT_NAME, false
     );
+    VipM_Limits_RegisterTypeEvent("Counter", Limit_OnCheck, "@DefaultObjects_Limit_Counter_OnCheck");
 
     RegisterHookChain(RG_CBasePlayer_Spawn, "@DefaultObjects_Limit_Counter_OnPlayerSpawn", false);
     RegisterHookChain(RG_CSGameRules_RestartRound, "@DefaultObjects_Limit_Counter_OnRestartRound", false);
