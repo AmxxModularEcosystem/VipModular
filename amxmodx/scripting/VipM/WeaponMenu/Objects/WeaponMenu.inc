@@ -55,7 +55,7 @@ bool:WeaponMenu_Read(const JSON:menuJson, menuObject[S_WeaponMenu]) {
     menuObject[WeaponMenu_Limits] = PCSingle_ObjVipmLimits(menuJson, "Limits");
 
     menuObject[WeaponMenu_Count] = PCSingle_ObjInt(menuJson, "Count", -1);
-    menuObject[WeaponMenu_CounterType] = PCSingle_ObjVipmCounterType(menuJson, "CounterType");
+    menuObject[WeaponMenu_CounterType] = PCSingle_ObjVipmCounterType(menuJson, "CounterType", VipM_L_Counter_PerLife);
     if (!PCSingle_ObjShortString(menuJson, "CounterKey", menuObject[WeaponMenu_CounterKey], charsmax(menuObject[WeaponMenu_CounterKey]))) {
         formatex(menuObject[WeaponMenu_CounterKey], charsmax(menuObject[WeaponMenu_CounterKey]), "%s-%d", VIPM_M_WEAPONMENU_MENU_COUNTER_KEY_PREFIX, ++WeaponMenuCounterKeysCount);
     }

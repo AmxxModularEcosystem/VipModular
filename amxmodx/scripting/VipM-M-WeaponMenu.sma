@@ -216,11 +216,8 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
         return;
     }
 
-    new menuIndex = read_argv_int(2);
-    if (
-        ArraySizeSafe(aMenus) <= menuIndex
-        || menuIndex < 0
-    ) {
+    new menuIndex = read_argv_int(1);
+    if (menuIndex >= ArraySizeSafe(aMenus) || menuIndex < 0) {
         return;
     }
 
@@ -242,7 +239,7 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
         return;
     }
 
-    new itemIndex = read_argv_int(3);
+    new itemIndex = read_argv_int(2);
     if (
         ArraySizeSafe(Menu[WeaponMenu_Items]) <= itemIndex
         || itemIndex < 0
@@ -253,11 +250,11 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
     static itemObject[S_MenuItem];
     ArrayGetArray(Menu[WeaponMenu_Items], itemIndex, itemObject);
 
-    new iItemsLeft = GetUserLeftItems(playerIndex, Menu);
+    new leftItems = GetUserLeftItems(playerIndex, Menu);
 
     if (
         itemObject[MenuItem_UseCounter]
-        && iItemsLeft == 0
+        && leftItems == 0
     ) {
         ChatPrintLIf(!bSilent, playerIndex, "MSG_NO_LEFT_ITEMS");
         return;
@@ -283,7 +280,7 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
         PCGet_Bool(p, "StayOpen", false)
         && (
             !PCGet_Bool(p, "StayOpen_CheckCounter", true)
-            || iItemsLeft != 0
+            || leftItems != 0
         )
     ) {
         client_cmd(playerIndex, "%s %d", VIPM_M_WEAPONMENU_CMD_MENU, menuIndex);
@@ -309,6 +306,13 @@ IncUserMenuCounters(const playerIndex, const menuObject[S_WeaponMenu]) {
 GetUserLeftItems(const playerIndex, const menuObject[S_WeaponMenu]) {
     new Trie:p = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
 
+    new maxPlayer = PCGet_Int(p, "Count", -1);
+    new maxMenu = menuObject[WeaponMenu_Count];
+
+    if (maxPlayer < 0 && maxMenu < 0) {
+        return -1;
+    }
+
     new usedPlayer = VipM_L_Counter_Get(
         PCGet_VipmCounterType(p, "CounterType", VipM_L_Counter_PerLife),
         PCGet_iStr(p, "CounterKey", VIPM_M_WEAPONMENU_PLAYER_COUNTER_KEY),
@@ -320,11 +324,18 @@ GetUserLeftItems(const playerIndex, const menuObject[S_WeaponMenu]) {
         menuObject[WeaponMenu_CounterKey],
         playerIndex
     );
-    
-    return min(
-        usedMenu,
-        usedPlayer
-    );
+
+
+    if (maxPlayer < 0) {
+        return maxMenu - usedMenu;
+    } else if (maxMenu < 0) {
+        return maxPlayer - usedPlayer;
+    } else {
+        return min(
+            maxPlayer - usedPlayer,
+            maxMenu - usedMenu
+        );
+    }
 }
 
 #include "VipM/WeaponMenu/Natives"
