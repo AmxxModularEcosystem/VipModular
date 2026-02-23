@@ -77,7 +77,7 @@ Menu_WeaponsMenu(const playerIndex, const menuIndex, const menuObject[S_WeaponMe
         }
         
         new bool:isItemActive = (
-            itemObject[MenuItem_ShowLimits] == Invalid_Array
+            itemObject[MenuItem_ActiveLimits] == Invalid_Array
             || VipM_Limits_ExecuteList(itemObject[MenuItem_ActiveLimits], playerIndex, Limit_Exec_AND)
         );
 
