@@ -15,30 +15,30 @@ API_Modules_Init(){
 
 }
 
-T_ModuleType:@_Modules_Register(const PluginId) {
-    enum {Arg_sModuleTypeName = 1}
+T_ModuleType:@_Modules_Register(const pluginIndex) {
+    enum {Arg_TypeName = 1}
 
-    new sModuleTypeName[VIPM_MODULES_TYPE_NAME_MAX_LEN];
-    get_string(Arg_sModuleTypeName, sModuleTypeName, charsmax(sModuleTypeName));
+    new typeName[VIPM_MODULES_TYPE_NAME_MAX_LEN];
+    get_string(Arg_TypeName, typeName, charsmax(typeName));
 
-    new T_ModuleType:iModuleType = ModuleType_Construct(sModuleTypeName);
-    if (iModuleType == Invalid_ModuleType) {
-        log_error(0, "Can't create module type '%s'.", sModuleTypeName);
+    new T_ModuleType:type = ModuleType_Construct(typeName);
+    if (type == Invalid_ModuleType) {
+        log_error(0, "Can't create module type '%s'.", typeName);
         return Invalid_ModuleType;
     }
 
-    return iModuleType;
+    return type;
 }
 
-@_Modules_AddParams(const PluginId, const iParamsNum) {
-    enum {Arg_sModuleTypeName = 1, Arg_Params}
+@_Modules_AddParams(const pluginIndex, const iParamsNum) {
+    enum {Arg_TypeName = 1, Arg_Params}
 
-    new sModuleTypeName[VIPM_MODULES_TYPE_NAME_MAX_LEN];
-    get_string(Arg_sModuleTypeName, sModuleTypeName, charsmax(sModuleTypeName));
+    new typeName[VIPM_MODULES_TYPE_NAME_MAX_LEN];
+    get_string(Arg_TypeName, typeName, charsmax(typeName));
 
-    new T_ModuleType:iModuleType = ModuleType_Find(sModuleTypeName);
-    if (iModuleType == Invalid_ModuleType) {
-        log_error(0, "Module type '%s' not found.", sModuleTypeName);
+    new T_ModuleType:type = ModuleType_Find(typeName);
+    if (type == Invalid_ModuleType) {
+        log_error(0, "Module type '%s' not found.", typeName);
         return;
     }
 
@@ -47,77 +47,77 @@ T_ModuleType:@_Modules_Register(const PluginId) {
         return;
     }
 
-    ModuleType_AddParams(iModuleType, params);
+    ModuleType_AddParams(type, params);
     ArrayDestroy(params);
 }
 
 @VipM_Modules_AddParamsEx(const pluginIndex, const paramsCount) {
-    enum {Arg_ModuleName = 1, Arg_Params}
+    enum {Arg_TypeName = 1, Arg_Params}
 
-    new modelName[VIPM_MODULES_TYPE_NAME_MAX_LEN];
-    get_string(Arg_ModuleName, modelName, charsmax(modelName));
+    new typeName[VIPM_MODULES_TYPE_NAME_MAX_LEN];
+    get_string(Arg_TypeName, typeName, charsmax(typeName));
 
-    new T_ModuleType:module = ModuleType_Find(modelName);
-    if (module == Invalid_ModuleType) {
-        log_error(0, "Module type '%s' not found.", modelName);
+    new T_ModuleType:type = ModuleType_Find(typeName);
+    if (type == Invalid_ModuleType) {
+        log_error(0, "Module type '%s' not found.", typeName);
         return;
     }
 
     new Array:params = ParamsController_Param_ListFromNativeParams(Arg_Params, paramsCount);
-    ModuleType_AddParams(module, params);
+    ModuleType_AddParams(type, params);
     ArrayDestroy(params);
 }
 
-bool:@_Modules_RegisterEvent(const PluginId) {
-    enum {Arg_sModuleTypeName = 1, Arg_iEvent, Arg_sFuncName}
+bool:@_Modules_RegisterEvent(const pluginIndex) {
+    enum {Arg_TypeName = 1, Arg_iEvent, Arg_sFuncName}
 
-    new sModuleTypeName[VIPM_MODULES_TYPE_NAME_MAX_LEN];
-    get_string(Arg_sModuleTypeName, sModuleTypeName, charsmax(sModuleTypeName));
+    new typeName[VIPM_MODULES_TYPE_NAME_MAX_LEN];
+    get_string(Arg_TypeName, typeName, charsmax(typeName));
 
-    new T_ModuleType:iModuleType = ModuleType_Find(sModuleTypeName);
-    if (iModuleType == Invalid_ModuleType) {
-        log_error(0, "Module type '%s' not found.", sModuleTypeName);
+    new T_ModuleType:type = ModuleType_Find(typeName);
+    if (type == Invalid_ModuleType) {
+        log_error(0, "Module type '%s' not found.", typeName);
         return false;
     }
 
-    new E_ModuleEvent:iEvent = E_ModuleEvent:get_param(Arg_iEvent);
+    new E_ModuleEvent:event = E_ModuleEvent:get_param(Arg_iEvent);
 
-    new sFuncName[64];
-    get_string(Arg_sFuncName, sFuncName, charsmax(sFuncName));
+    new funcName[64];
+    get_string(Arg_sFuncName, funcName, charsmax(funcName));
     
-    ModuleType_SetEventListener(iModuleType, iEvent, PluginId, sFuncName);
+    ModuleType_SetEventListener(type, event, pluginIndex, funcName);
     return true;
 }
 
 bool:@_Modules_IsActive() {
-    enum {Arg_sModuleTypeName = 1}
+    enum {Arg_TypeName = 1}
 
-    new sModuleTypeName[VIPM_MODULES_TYPE_NAME_MAX_LEN];
-    get_string(Arg_sModuleTypeName, sModuleTypeName, charsmax(sModuleTypeName));
+    new typeName[VIPM_MODULES_TYPE_NAME_MAX_LEN];
+    get_string(Arg_TypeName, typeName, charsmax(typeName));
 
-    new T_ModuleType:iModuleType = ModuleType_Find(sModuleTypeName);
-    if (iModuleType == Invalid_ModuleType) {
-        log_error(0, "Module type '%s' not found.", sModuleTypeName);
+    new T_ModuleType:type = ModuleType_Find(typeName);
+    if (type == Invalid_ModuleType) {
+        log_error(0, "Module type '%s' not found.", typeName);
         return false;
     }
 
-    return ModuleType_IsActive(iModuleType);
+    return ModuleType_IsActive(type);
 }
 
 Trie:@_Modules_GetParams() {
-    enum {Arg_sModuleTypeName = 1, Arg_UserId}
+    enum {Arg_TypeName = 1, Arg_PlayerIndex}
 
-    new sModuleTypeName[VIPM_MODULES_TYPE_NAME_MAX_LEN];
-    get_string(Arg_sModuleTypeName, sModuleTypeName, charsmax(sModuleTypeName));
+    new typeName[VIPM_MODULES_TYPE_NAME_MAX_LEN];
+    get_string(Arg_TypeName, typeName, charsmax(typeName));
 
-    // TODO: Потом переделать сразу не хендлеры
-    new T_ModuleType:iModuleType = ModuleType_Find(sModuleTypeName);
-    if (iModuleType == Invalid_ModuleType) {
-        log_error(0, "Module type '%s' not found.", sModuleTypeName);
+    // TODO: Потом переделать сразу на хендлеры
+    new T_ModuleType:type = ModuleType_Find(typeName);
+    if (type == Invalid_ModuleType) {
+        log_error(AMX_ERR_PARAMS, "Module type '%s' not found.", typeName);
         return Invalid_Trie;
     }
 
-    new UserId = get_param(Arg_UserId);
+    new playerIndex = get_param(Arg_PlayerIndex);
     
-    return VipsManager_GetUserParams(UserId, iModuleType);
+    return VipsManager_GetUserParams(playerIndex, type);
 }

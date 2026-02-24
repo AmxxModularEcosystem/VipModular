@@ -30,26 +30,26 @@ VipsManager_SetRootDir(const sRootDir[]) {
     copy(g_sRootDir, charsmax(g_sRootDir), sRootDir);
 }
 
-bool:VipsManager_LoadFromFile(const sFilePath[]) {
-    if (!file_exists(sFilePath)) {
+bool:VipsManager_LoadFromFile(const filePath[]) {
+    if (!file_exists(filePath)) {
         return false;
     }
 
-    new JSON:jVipUnits = PCJson_ParseFile(sFilePath, g_sRootDir);
-    g_aVips = VipUnit_ReadList(jVipUnits, g_aVips);
-    PCJson_Free(jVipUnits);
+    new JSON:unitsJson = PCJson_ParseFile(filePath, g_sRootDir);
+    g_aVips = VipUnit_ReadList(unitsJson, g_aVips);
+    PCJson_Free(unitsJson);
 
     return true;
 }
 
-bool:VipsManager_LoadFromFolder(sFolderPath[]) {
-    if (!dir_exists(sFolderPath)) {
+bool:VipsManager_LoadFromFolder(dirPath[]) {
+    if (!dir_exists(dirPath)) {
         return false;
     }
 
-    new sFile[PLATFORM_MAX_PATH], iDirHandler, FileType:iType;
-    iDirHandler = open_dir(sFolderPath, sFile, charsmax(sFile), iType);
-    if (!iDirHandler) {
+    new filePath[PLATFORM_MAX_PATH], dirHandler, FileType:fileType;
+    dirHandler = open_dir(dirPath, filePath, charsmax(filePath), fileType);
+    if (!dirHandler) {
         return false;
     }
 
@@ -57,15 +57,15 @@ bool:VipsManager_LoadFromFolder(sFolderPath[]) {
     iRegEx_FileName = regex_compile("(.+).json$", ret, "", 0, "i");
 
     do {
-        if (iType != FileType_File || regex_match_c(sFile, iRegEx_FileName) <= 0) {
+        if (fileType != FileType_File || regex_match_c(filePath, iRegEx_FileName) <= 0) {
             continue;
         }
 
-        VipsManager_LoadFromFile(fmt("%s/%s", sFolderPath, sFile));
-    } while (next_file(iDirHandler, sFile, charsmax(sFile), iType));
+        VipsManager_LoadFromFile(fmt("%s/%s", dirPath, filePath));
+    } while (next_file(dirHandler, filePath, charsmax(filePath), fileType));
 
     regex_free(iRegEx_FileName);
-    close_dir(iDirHandler);
+    close_dir(dirHandler);
 
     return true;
 }
@@ -112,26 +112,31 @@ VipsManager_UserReload(const playerIndex) {
     Forwards_CallP("VipM_OnUserUpdated", playerIndex);
 }
 
-VipsManager_UserReset(const UserId) {
-    if (g_tUserModules[UserId] == Invalid_Trie) {
+VipsManager_UserReset(const playerIndex) {
+    if (g_tUserModules[playerIndex] == Invalid_Trie) {
         return;
     }
 
-    new TrieIter:Iter = TrieIterCreate(g_tUserModules[UserId]);
-    while (!TrieIterEnded(Iter)) {
+    new TrieIter:iter = TrieIterCreate(g_tUserModules[playerIndex]);
+    while (!TrieIterEnded(iter)) {
         new Trie:tParams = Invalid_Trie;
-        if (TrieIterGetCell(Iter, tParams)) {
+        if (TrieIterGetCell(iter, tParams)) {
             ModuleUnit_FreeParamsIfTemp(tParams);
         }
-        TrieIterNext(Iter);
+        TrieIterNext(iter);
     }
-    TrieIterDestroy(Iter);
+    TrieIterDestroy(iter);
 
-    TrieDestroy(g_tUserModules[UserId]);
+    TrieDestroy(g_tUserModules[playerIndex]);
 }
 
-Trie:VipsManager_GetUserParams(const UserId, const T_ModuleType:iModuleType) {
-    new Trie:tParams = Invalid_Trie;
-    TrieGetCell(g_tUserModules[UserId], ModuleType_iGetName(iModuleType), tParams);
-    return tParams;
+Trie:VipsManager_GetUserParams(const playerIndex, const T_ModuleType:type) {
+    if (g_tUserModules[playerIndex] == Invalid_Trie) {
+        return Invalid_Trie;
+    }
+
+    new Trie:p = Invalid_Trie;
+    TrieGetCell(g_tUserModules[playerIndex], ModuleType_iGetName(type), p);
+
+    return p;
 }

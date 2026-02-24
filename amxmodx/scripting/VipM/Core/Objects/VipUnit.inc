@@ -80,21 +80,21 @@ T_VipUnit:VipUnit_Read(const JSON:valueJson) {
         return cached;
     }
     
-    new Array:aAccess = PCSingle_ObjVipmLimits(linked, "Access");
-    if (aAccess == Invalid_Array) {
+    new Array:accessLimits = PCSingle_ObjVipmLimits(linked, "Access");
+    if (accessLimits == Invalid_Array) {
         PCJson_ErrorForFile(linked, "Field 'Access' is required in vip object.");
         PCJson_FreeLinked(linked, valueJson);
         return Invalid_VipUnit;
     }
 
-    new Array:aModules = JsonObject_GetModuleUnits(linked, "Modules");
-    if (aModules == Invalid_Array) {
+    new Array:modules = JsonObject_GetModuleUnits(linked, "Modules");
+    if (modules == Invalid_Array) {
         PCJson_ErrorForFile(linked, "Field 'Modules' is required in vip object.");
         PCJson_FreeLinked(linked, valueJson);
         return Invalid_VipUnit;
     }
 
-    cached = VipUnit__Construct(aAccess, aModules);
+    cached = VipUnit__Construct(accessLimits, modules);
     if (linkPath[0] != EOS && cached != Invalid_VipUnit) {
         TrieSetCell(cache, linkPath, cached);
     }
