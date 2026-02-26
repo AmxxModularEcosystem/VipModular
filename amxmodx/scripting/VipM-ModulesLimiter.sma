@@ -26,13 +26,17 @@ public VipM_Modules_OnActivate(const moduleName[]) {
         ModulesLimits == Invalid_Trie
         || !TrieKeyExists(ModulesLimits, moduleName)
     ) {
+        log_amx("Module `%s` is not limited.", moduleName);
         return VIPM_CONTINUE;
     }
 
     new Array:limits;
     TrieGetCell(ModulesLimits, moduleName, limits);
     if (!VipM_Limits_ExecuteList(limits)) {
+        log_amx("Module `%s` is disabled by limits.", moduleName);
         return VIPM_STOP;
+    } else {
+        log_amx("Module `%s` is enabled by limits.", moduleName);
     }
     
     return VIPM_CONTINUE;
