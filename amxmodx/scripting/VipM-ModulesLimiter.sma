@@ -15,7 +15,7 @@ new const CONFIG_FILE_PATH[] = "Modules.json";
 
 new Trie:ModulesLimits = Invalid_Trie;
 
-public VipM_OnLoaded() {
+public VipM_Modules_OnInited() {
     register_plugin(PluginName, PluginVersion, PluginAuthor);
     
     ModulesLimits = LoadModulesLimitsFromFile(PCPath_iMakePath(fmt("%s/%s", VIPM_CONFIGS_FOLDER_NAME, CONFIG_FILE_PATH)));
@@ -67,17 +67,7 @@ Trie:LoadModulesLimitsFromFile(const filePath[], &Trie:modules = Invalid_Trie) {
         }
 
         new Array:limits = PCSingle_ObjVipmLimits(itemJson, "Limits");
-        if (!ArraySizeSafe(limits)) {
-            PCJson_LogForFile(itemJson, "WARNING", "Field `Limits` must have 1 or more items.");
-            json_free(itemJson);
-            continue;
-        }
-
         new Array:moduleNames = json_object_get_strings_list(itemJson, "Modules", VIPM_MODULES_TYPE_NAME_MAX_LEN);
-        if (!ArraySizeSafe(moduleNames)) {
-            PCJson_LogForFile(itemJson, "WARNING", "Field `Modules` must have 1 or more items.");
-            continue;
-        }
 
         ArrayForeachString (moduleNames: j => moduleName[VIPM_MODULES_TYPE_NAME_MAX_LEN]) {
             if (TrieKeyExists(modules, moduleName)) {
