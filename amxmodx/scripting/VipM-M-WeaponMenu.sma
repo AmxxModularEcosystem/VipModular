@@ -57,7 +57,8 @@ public VipM_Modules_OnInited() {
     );
     VipM_Modules_AddParamsEx(MODULE_NAME,
         "StayOpen", DEFAULT_PARAMS_BOOL_NAME, false,
-        "StayOpen_CheckCounter", DEFAULT_PARAMS_BOOL_NAME, false
+        "StayOpen_CheckCounter", DEFAULT_PARAMS_BOOL_NAME, false,
+        "StayOpen_WhenRestricted", DEFAULT_PARAMS_BOOL_NAME, false
     );
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@OnModuleActivate");
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnRead, "@OnReadConfig");
@@ -226,6 +227,11 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
 
     if (Menu[WeaponMenu_Limits] != Invalid_Array && !VipM_Limits_ExecuteList(Menu[WeaponMenu_Limits], playerIndex, Limit_Exec_AND)) {
         ChatPrintLIf(!bSilent, playerIndex, "MSG_MENU_NOT_PASSED_LIMIT");
+
+        if (PCGet_Bool(p, "StayOpen_WhenRestricted", false)) {
+            client_cmd(playerIndex, VIPM_M_WEAPONMENU_CMD_MENU_SILENT);
+        }
+
         return;
     }
     
@@ -266,6 +272,11 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
         || !VipM_Limits_ExecuteList(itemObject[MenuItem_Limits], playerIndex, Limit_Exec_AND)
     ) {
         ChatPrintLIf(!bSilent, playerIndex, "MSG_MENUITEM_NOT_PASSED_LIMIT");
+
+        if (PCGet_Bool(p, "StayOpen_WhenRestricted", false)) {
+            client_cmd(playerIndex, "%s %d", VIPM_M_WEAPONMENU_CMD_MENU_SILENT, menuIndex);
+        }
+
         return;
     }
     
