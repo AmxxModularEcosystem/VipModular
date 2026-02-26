@@ -7,7 +7,7 @@
 #include <json>
 #include <ParamsController>
 
-#define IC_VERSION "1.0.0-rc3"
+#define IC_VERSION "1.0.0-rc4"
 stock const IC_LIBRARY[] = "items-controller";
 stock const IC_VERSION_CVAR[] = "ic_version";
 

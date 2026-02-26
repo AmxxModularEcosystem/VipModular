@@ -95,13 +95,7 @@ jobs:
 
             mkdir -p $(dirname $output_path)
 
-            echo "Compiling $sourcefile ... "
-            echo "amxxpc $sourcefile -o\"$output_path\" -i\"include\" -i\"$REAPI_INCLUDE\" $DEPS_COMPILER_ARGS GITHUB_ACTIONS_USED=1"
-            
-            echo "DEPS_COMPILER_ARGS=[$DEPS_COMPILER_ARGS]"
-            echo "Listing dep tree:"
-            find ../.. -maxdepth 4 -type d -path "*ParamsController*" -o -path "*CommandAliases*"
-
+            echo "Compiling $sourcefile... "
             amxxpc $sourcefile -o"$output_path" \
               -i"include" \
               -i"$REAPI_INCLUDE" \
