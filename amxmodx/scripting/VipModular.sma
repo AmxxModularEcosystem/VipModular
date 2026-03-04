@@ -22,6 +22,7 @@ public plugin_precache() {
     register_plugin(PluginName, PluginVersion, PluginAuthor);
     register_library(VIPM_LIBRARY);
     PCCvar_Const("vipm_version", PluginVersion);
+    ParamsController_Init();
 
     Forwards_Init();
 
