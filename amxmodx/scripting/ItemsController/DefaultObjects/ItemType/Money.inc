@@ -10,8 +10,8 @@ DefaultObjects_ItemType_Money_Register() {
         .onGive = "@OnMoneyGive"
     );
     IC_ItemType_AddParams(type,
-        "Amount", "Integer", true,
-        "TrackChange", "Boolean", false
+        "Amount", DEFAULT_PARAMS_INT_NAME, true,
+        "TrackChange", DEFAULT_PARAMS_BOOL_NAME, false
     );
 }
 

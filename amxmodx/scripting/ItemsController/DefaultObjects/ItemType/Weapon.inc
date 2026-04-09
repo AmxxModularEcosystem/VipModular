@@ -10,8 +10,8 @@ DefaultObjects_ItemType_Weapon_Register() {
         .onGive = "@OnWeaponGive"
     );
     IC_ItemType_AddParams(type,
-        "Name", "String", true,
-        "BpAmmo", "Integer", false
+        "Name", DEFAULT_PARAMS_STR_NAME, true,
+        "BpAmmo", DEFAULT_PARAMS_INT_NAME, false
     );
 }
 

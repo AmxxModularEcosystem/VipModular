@@ -12,7 +12,7 @@ DefaultObjects_ItemType_Speed_Register() {
         .onGive = "@ItemType_Speed_OnGive"
     );
     IC_ItemType_AddParams(type,
-        "Multiplier", "Float", true
+        "Multiplier", DEFAULT_PARAMS_FLOAT_NAME, true
     );
     
     RegisterHookChain(RG_CBasePlayer_ResetMaxSpeed, "@ItemType_Speed_OnPlayerResetSpeedPost", true);

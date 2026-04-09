@@ -8,8 +8,8 @@ DefaultObjects_ItemType_Command_Register() {
         .onGive = "@OnCommandGive"
     );
     IC_ItemType_AddParams(type,
-        "Command", "String", true,
-        "ByServer", "Boolean", false
+        "Command", DEFAULT_PARAMS_STR_NAME, true,
+        "ByServer", DEFAULT_PARAMS_BOOL_NAME, false
     );
 }
 

@@ -9,10 +9,10 @@ DefaultObjects_ItemType_Armor_Register() {
         .onGive = "@OnArmorGive"
     );
     IC_ItemType_AddParams(type,
-        "Armor", "Integer", true,
-        "MaxArmor", "Integer", false,
-        "SetArmor", "Boolean", false,
-        "Helmet", "Boolean", false
+        "Armor", DEFAULT_PARAMS_INT_NAME, true,
+        "MaxArmor", DEFAULT_PARAMS_INT_NAME, false,
+        "SetArmor", DEFAULT_PARAMS_BOOL_NAME, false,
+        "Helmet", DEFAULT_PARAMS_BOOL_NAME, false
     );
 }
 

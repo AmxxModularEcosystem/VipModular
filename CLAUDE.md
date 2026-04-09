@@ -120,6 +120,13 @@ All under `amxmodx/configs/plugins/VipModular/`:
 
 ---
 
+## Local-only docs
+
+Some context is intentionally kept out of the repository (e.g. local tool paths).  
+Check `.claude/` memory for a `local-env.md` file — if it exists, read it before working with the build system or dependency headers.
+
+---
+
 ## Sub-docs
 
 - [`docs/claude/module-system.md`](docs/claude/module-system.md) — registering & using modules
