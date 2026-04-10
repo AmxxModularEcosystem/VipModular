@@ -5,8 +5,8 @@
 DefaultObjects_Limit_Frags_Register() {
     VipM_Limits_RegisterType("Frags", true, false);
     VipM_Limits_AddParamsEx("Frags",
-        "Min", DEFAULT_PARAMS_INT_NAME, false,
-        "Max", DEFAULT_PARAMS_INT_NAME, false
+        PCParam("Min", DEFAULT_PARAMS_INT_NAME),
+        PCParam("Max", DEFAULT_PARAMS_INT_NAME)
     );
     VipM_Limits_RegisterTypeEvent("Frags", Limit_OnCheck, "@DefaultObjects_Limit_Frags_OnCheck");
 }

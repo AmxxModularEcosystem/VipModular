@@ -5,8 +5,8 @@
 DefaultObjects_Limit_Flags_Register() {
     VipM_Limits_RegisterType("Flags", true, false);
     VipM_Limits_AddParamsEx("Flags",
-        "Flags", DEFAULT_PARAMS_FLAGS_NAME, true,
-        "Strict", DEFAULT_PARAMS_BOOL_NAME, false
+        PCParam("Flags", DEFAULT_PARAMS_FLAGS_NAME, true),
+        PCParam("Strict", DEFAULT_PARAMS_BOOL_NAME)
     );
     VipM_Limits_RegisterTypeEvent("Flags", Limit_OnCheck, "@DefaultObjects_Limit_Flags_OnCheck");
 }

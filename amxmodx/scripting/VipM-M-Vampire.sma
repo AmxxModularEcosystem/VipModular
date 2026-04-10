@@ -16,14 +16,14 @@ public VipM_Modules_OnInited() {
 
     VipM_Modules_Register(MODULE_NAME);
     VipM_Modules_AddParamsEx(MODULE_NAME,
-        "ByKill", DEFAULT_PARAMS_INT_NAME, false,
-        "ByHead", DEFAULT_PARAMS_INT_NAME, false,
-        "ByKnife", DEFAULT_PARAMS_INT_NAME, false,
-        "ByGrenade", DEFAULT_PARAMS_INT_NAME, false
+        PCParam("ByKill", DEFAULT_PARAMS_INT_NAME),
+        PCParam("ByHead", DEFAULT_PARAMS_INT_NAME),
+        PCParam("ByKnife", DEFAULT_PARAMS_INT_NAME),
+        PCParam("ByGrenade", DEFAULT_PARAMS_INT_NAME)
     );
     VipM_Modules_AddParamsEx(MODULE_NAME,
-        "MaxHealth", DEFAULT_PARAMS_INT_NAME, false,
-        "Limits", VIPM_PARAM_TYPE_LIMITS_NAME, false
+        PCParam("MaxHealth", DEFAULT_PARAMS_INT_NAME),
+        PCParam("Limits", VIPM_PARAM_TYPE_LIMITS_NAME)
     );
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@Event_ModuleActivate");
 }

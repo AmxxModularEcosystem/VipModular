@@ -9,10 +9,10 @@ DefaultObjects_ItemType_Armor_Register() {
         .onGive = "@OnArmorGive"
     );
     IC_ItemType_AddParams(type,
-        "Armor", DEFAULT_PARAMS_INT_NAME, true,
-        "MaxArmor", DEFAULT_PARAMS_INT_NAME, false,
-        "SetArmor", DEFAULT_PARAMS_BOOL_NAME, false,
-        "Helmet", DEFAULT_PARAMS_BOOL_NAME, false
+        PCParam("Armor", DEFAULT_PARAMS_INT_NAME, true),
+        PCParam("MaxArmor", DEFAULT_PARAMS_INT_NAME),
+        PCParam("SetArmor", DEFAULT_PARAMS_BOOL_NAME),
+        PCParam("Helmet", DEFAULT_PARAMS_BOOL_NAME)
     );
 }
 

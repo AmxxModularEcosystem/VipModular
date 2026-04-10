@@ -8,10 +8,10 @@ new RealCurrentMapName[32];
 DefaultObjects_Limit_Map_Register() {
     VipM_Limits_RegisterType("Map", true, false);
     VipM_Limits_AddParamsEx("Map",
-        "Map", DEFAULT_PARAMS_SHORT_STR_NAME, false,
-        "Regexp", DEFAULT_PARAMS_REGEXP_NAME, false,
-        "Real", DEFAULT_PARAMS_BOOL_NAME, false,
-        "Prefix", DEFAULT_PARAMS_BOOL_NAME, false
+        PCParam("Map", DEFAULT_PARAMS_SHORT_STR_NAME),
+        PCParam("Regexp", DEFAULT_PARAMS_REGEXP_NAME),
+        PCParam("Real", DEFAULT_PARAMS_BOOL_NAME),
+        PCParam("Prefix", DEFAULT_PARAMS_BOOL_NAME)
     );
     VipM_Limits_RegisterTypeEvent("Map", Limit_OnCheck, "@DefaultObjects_Limit_Map_OnCheck");
 

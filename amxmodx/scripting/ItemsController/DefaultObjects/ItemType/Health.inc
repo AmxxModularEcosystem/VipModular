@@ -10,9 +10,9 @@ DefaultObjects_ItemType_Health_Register() {
         .onGive = "@OnHealthGive"
     );
     IC_ItemType_AddParams(type,
-        "Health", DEFAULT_PARAMS_FLOAT_NAME, true,
-        "MaxHealth", DEFAULT_PARAMS_FLOAT_NAME, false,
-        "SetHealth", DEFAULT_PARAMS_BOOL_NAME, false
+        PCParam("Health", DEFAULT_PARAMS_FLOAT_NAME, true),
+        PCParam("MaxHealth", DEFAULT_PARAMS_FLOAT_NAME),
+        PCParam("SetHealth", DEFAULT_PARAMS_BOOL_NAME)
     );
 }
 

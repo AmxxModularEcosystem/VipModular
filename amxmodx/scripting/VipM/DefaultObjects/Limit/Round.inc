@@ -6,8 +6,8 @@
 DefaultObjects_Limit_Round_Register() {
     VipM_Limits_RegisterType("Round", false, false);
     VipM_Limits_AddParamsEx("Round",
-        "Min", DEFAULT_PARAMS_INT_NAME, false,
-        "Max", DEFAULT_PARAMS_INT_NAME, false
+        PCParam("Min", DEFAULT_PARAMS_INT_NAME),
+        PCParam("Max", DEFAULT_PARAMS_INT_NAME)
     );
     VipM_Limits_RegisterTypeEvent("Round", Limit_OnCheck, "@DefaultObjects_Limit_Round_OnCheck");
 }

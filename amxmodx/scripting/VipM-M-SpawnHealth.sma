@@ -15,18 +15,18 @@ public VipM_Modules_OnInited() {
 
     VipM_Modules_Register(MODULE_NAME);
     VipM_Modules_AddParamsEx(MODULE_NAME,
-        "Health", DEFAULT_PARAMS_INT_NAME, false,
-        "SetHealth", DEFAULT_PARAMS_BOOL_NAME, false,
-        "MaxHealth", DEFAULT_PARAMS_INT_NAME, false
+        PCParam("Health", DEFAULT_PARAMS_INT_NAME),
+        PCParam("SetHealth", DEFAULT_PARAMS_BOOL_NAME),
+        PCParam("MaxHealth", DEFAULT_PARAMS_INT_NAME)
     );
     VipM_Modules_AddParamsEx(MODULE_NAME,
-        "Armor", DEFAULT_PARAMS_INT_NAME, false,
-        "SetArmor", DEFAULT_PARAMS_BOOL_NAME, false,
-        "MaxArmor", DEFAULT_PARAMS_INT_NAME, false
+        PCParam("Armor", DEFAULT_PARAMS_INT_NAME),
+        PCParam("SetArmor", DEFAULT_PARAMS_BOOL_NAME),
+        PCParam("MaxArmor", DEFAULT_PARAMS_INT_NAME)
     );
     VipM_Modules_AddParamsEx(MODULE_NAME,
-        "Helmet", DEFAULT_PARAMS_BOOL_NAME, false,
-        "Limits", VIPM_PARAM_TYPE_LIMITS_NAME, false
+        PCParam("Helmet", DEFAULT_PARAMS_BOOL_NAME),
+        PCParam("Limits", VIPM_PARAM_TYPE_LIMITS_NAME)
     );
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@Event_ModuleActivate");
 }

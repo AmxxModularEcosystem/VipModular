@@ -5,7 +5,7 @@
 DefaultObjects_Limit_InFreezyTime_Register() {
     VipM_Limits_RegisterType("InFreezyTime", false, false);
     VipM_Limits_AddParamsEx("InFreezyTime",
-        "Reverse", DEFAULT_PARAMS_BOOL_NAME, false
+        PCParam("Reverse", DEFAULT_PARAMS_BOOL_NAME)
     );
     VipM_Limits_RegisterTypeEvent("InFreezyTime", Limit_OnCheck, "@DefaultObjects_Limit_InFreezyTime_OnCheck");
 }

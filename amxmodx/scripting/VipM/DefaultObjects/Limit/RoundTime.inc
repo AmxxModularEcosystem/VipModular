@@ -5,8 +5,8 @@
 DefaultObjects_Limit_RoundTime_Register() {
     VipM_Limits_RegisterType("RoundTime", false, false);
     VipM_Limits_AddParamsEx("RoundTime",
-        "Min", DEFAULT_PARAMS_TIME_INTERVAL_NAME, false,
-        "Max", DEFAULT_PARAMS_TIME_INTERVAL_NAME, false
+        PCParam("Min", DEFAULT_PARAMS_TIME_INTERVAL_NAME),
+        PCParam("Max", DEFAULT_PARAMS_TIME_INTERVAL_NAME)
     );
     VipM_Limits_RegisterTypeEvent("RoundTime", Limit_OnCheck, "@DefaultObjects_Limit_RoundTime_OnCheck");
 }

@@ -12,8 +12,8 @@ DefaultObjects_ItemType_DamageMult_Register() {
         .onGive = "@ItemType_DamageMult_OnGive"
     );
     IC_ItemType_AddParams(type,
-        "Given", DEFAULT_PARAMS_FLOAT_NAME, false,
-        "Taken", DEFAULT_PARAMS_FLOAT_NAME, false
+        PCParam("Given", DEFAULT_PARAMS_FLOAT_NAME),
+        PCParam("Taken", DEFAULT_PARAMS_FLOAT_NAME)
     );
     
     RegisterHookChain(RG_CBasePlayer_Spawn, "@ItemType_DamageMult_OnPlayerSpawnPre", false);

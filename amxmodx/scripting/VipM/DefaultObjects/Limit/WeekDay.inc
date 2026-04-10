@@ -6,7 +6,7 @@
 DefaultObjects_Limit_WeekDay_Register() {
     VipM_Limits_RegisterType("WeekDay", false, false);
     VipM_Limits_AddParamsEx("WeekDay",
-        "Day", DEFAULT_PARAMS_WEEK_DAY_NAME, true
+        PCParam("Day", DEFAULT_PARAMS_WEEK_DAY_NAME, true)
     );
     VipM_Limits_RegisterTypeEvent("WeekDay", Limit_OnCheck, "@DefaultObjects_Limit_WeekDay_OnCheck");
 }

@@ -9,10 +9,10 @@ static Trie:CounterTypes[VipM_L_Counter_Type];
 DefaultObjects_Limit_Counter_Register() {
     VipM_Limits_RegisterType("Counter", true, false);
     VipM_Limits_AddParamsEx("Counter",
-        "Type", VIPM_L_COUNTER_PARAM_TYPE, true,
-        "Key", DEFAULT_PARAMS_SHORT_STR_NAME, true,
-        "Max", DEFAULT_PARAMS_INT_NAME, false,
-        "Inc", DEFAULT_PARAMS_INT_NAME, false
+        PCParam("Type", VIPM_L_COUNTER_PARAM_TYPE, true),
+        PCParam("Key", DEFAULT_PARAMS_SHORT_STR_NAME, true),
+        PCParam("Max", DEFAULT_PARAMS_INT_NAME),
+        PCParam("Inc", DEFAULT_PARAMS_INT_NAME)
     );
     VipM_Limits_RegisterTypeEvent("Counter", Limit_OnCheck, "@DefaultObjects_Limit_Counter_OnCheck");
 

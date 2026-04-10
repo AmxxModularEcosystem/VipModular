@@ -4,25 +4,25 @@
 DefaultObjects_Limit_Logic_Register() {
     VipM_Limits_RegisterType("Logic-OR", false, false);
     VipM_Limits_AddParamsEx("Logic-OR",
-        "Limits", VIPM_PARAM_TYPE_LIMITS_NAME, true
+        PCParam("Limits", VIPM_PARAM_TYPE_LIMITS_NAME, true)
     );
     VipM_Limits_RegisterTypeEvent("Logic-OR", Limit_OnCheck, "@DefaultObjects_Limit_Logic_OnOrCheck");
 
     VipM_Limits_RegisterType("Logic-XOR", false, false);
     VipM_Limits_AddParamsEx("Logic-XOR",
-        "Limits", VIPM_PARAM_TYPE_LIMITS_NAME, true
+        PCParam("Limits", VIPM_PARAM_TYPE_LIMITS_NAME, true)
     );
     VipM_Limits_RegisterTypeEvent("Logic-XOR", Limit_OnCheck, "@DefaultObjects_Limit_Logic_OnXorCheck");
 
     VipM_Limits_RegisterType("Logic-AND", false, false);
     VipM_Limits_AddParamsEx("Logic-AND",
-        "Limits", VIPM_PARAM_TYPE_LIMITS_NAME, true
+        PCParam("Limits", VIPM_PARAM_TYPE_LIMITS_NAME, true)
     );
     VipM_Limits_RegisterTypeEvent("Logic-AND", Limit_OnCheck, "@DefaultObjects_Limit_Logic_OnAndCheck");
 
     VipM_Limits_RegisterType("Logic-NOT", false, false);
     VipM_Limits_AddParamsEx("Logic-NOT",
-        "Limits", VIPM_PARAM_TYPE_LIMITS_NAME, true
+        PCParam("Limits", VIPM_PARAM_TYPE_LIMITS_NAME, true)
     );
     VipM_Limits_RegisterTypeEvent("Logic-NOT", Limit_OnCheck, "@DefaultObjects_Limit_Logic_OnNotCheck");
 }

@@ -7,7 +7,7 @@ static PlayerIps[MAX_PLAYERS + 1][MAX_IP_LENGTH];
 DefaultObjects_Limit_Ip_Register() {
     VipM_Limits_RegisterType("Ip", true, false);
     VipM_Limits_AddParamsEx("Ip",
-        "Ip", DEFAULT_PARAMS_SHORT_STR_NAME, true
+        PCParam("Ip", DEFAULT_PARAMS_SHORT_STR_NAME, true)
     );
     VipM_Limits_RegisterTypeEvent("Ip", Limit_OnCheck, "@DefaultObjects_Limit_Ip_OnCheck");
 }

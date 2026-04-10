@@ -6,7 +6,7 @@
 DefaultObjects_Limit_Name_Register() {
     VipM_Limits_RegisterType("Name", true, false);
     VipM_Limits_AddParamsEx("Name",
-        "Name", DEFAULT_PARAMS_SHORT_STR_NAME, true
+        PCParam("Name", DEFAULT_PARAMS_SHORT_STR_NAME, true)
     );
     VipM_Limits_RegisterTypeEvent("Name", Limit_OnCheck, "@DefaultObjects_Limit_Name_OnCheck");
 }

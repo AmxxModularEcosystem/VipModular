@@ -9,15 +9,15 @@ DefaultObjects_ItemType_Function_Register() {
         .onGive = "@OnFunctionGive"
     );
     IC_ItemType_AddParams(type,
-        "Plugin", DEFAULT_PARAMS_STR_NAME, true,
-        "Function", DEFAULT_PARAMS_STR_NAME, true
+        PCParam("Plugin", DEFAULT_PARAMS_STR_NAME, true),
+        PCParam("Function", DEFAULT_PARAMS_STR_NAME, true)
     );
 
     // For AES-Bonuses compat
     IC_ItemType_AddParams(type,
-        "Value", DEFAULT_PARAMS_INT_NAME, false,
-        "Flags", DEFAULT_PARAMS_SHORT_STR_NAME, false,
-        "Days", DEFAULT_PARAMS_INT_NAME, false
+        PCParam("Value", DEFAULT_PARAMS_INT_NAME),
+        PCParam("Flags", DEFAULT_PARAMS_SHORT_STR_NAME),
+        PCParam("Days", DEFAULT_PARAMS_INT_NAME)
     );
 }
 

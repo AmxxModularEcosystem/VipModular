@@ -7,8 +7,8 @@ static Float:PlayerSpawnTime[MAX_PLAYERS + 1] = {0.0, ...};
 DefaultObjects_Limit_LifeTime_Register() {
     VipM_Limits_RegisterType("LifeTime", true, false);
     VipM_Limits_AddParamsEx("LifeTime",
-        "Min", DEFAULT_PARAMS_TIME_INTERVAL_NAME, false,
-        "Max", DEFAULT_PARAMS_TIME_INTERVAL_NAME, false
+        PCParam("Min", DEFAULT_PARAMS_TIME_INTERVAL_NAME),
+        PCParam("Max", DEFAULT_PARAMS_TIME_INTERVAL_NAME)
     );
     VipM_Limits_RegisterTypeEvent("LifeTime", Limit_OnCheck, "@DefaultObjects_Limit_LifeTime_OnCheck");
     

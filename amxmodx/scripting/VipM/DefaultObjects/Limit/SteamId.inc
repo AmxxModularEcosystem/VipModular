@@ -7,7 +7,7 @@ static PlayerSteamIds[MAX_PLAYERS + 1][MAX_AUTHID_LENGTH];
 DefaultObjects_Limit_SteamId_Register() {
     VipM_Limits_RegisterType("SteamId", true, false);
     VipM_Limits_AddParamsEx("SteamId",
-        "SteamId", DEFAULT_PARAMS_SHORT_STR_NAME, true
+        PCParam("SteamId", DEFAULT_PARAMS_SHORT_STR_NAME, true)
     );
     VipM_Limits_RegisterTypeEvent("SteamId", Limit_OnCheck, "@DefaultObjects_Limit_SteamId_OnCheck");
 }

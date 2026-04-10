@@ -40,25 +40,19 @@ public VipM_Modules_OnInited() {
     VipM_Modules_Register(MODULE_NAME);
     VipM_Modules_AddParamsEx(MODULE_NAME,
         // TODO: Read "Menus" as param
-        "MainMenuTitle", DEFAULT_PARAMS_STR_NAME, false,
-        "Limits", VIPM_PARAM_TYPE_LIMITS_NAME, false
-    );
-    VipM_Modules_AddParamsEx(MODULE_NAME,
-        "Count", DEFAULT_PARAMS_INT_NAME, false,
-        "CounterType", VIPM_L_COUNTER_PARAM_TYPE, false,
-        "CounterKey", DEFAULT_PARAMS_SHORT_STR_NAME, false,
-        "ResetCountOnSpawn", DEFAULT_PARAMS_BOOL_NAME, false // deprecated
-    );
-    VipM_Modules_AddParamsEx(MODULE_NAME,
-        "AutoopenLimits", VIPM_PARAM_TYPE_LIMITS_NAME, false,
-        "AutoopenDelay", DEFAULT_PARAMS_FLOAT_NAME, false,
-        "AutoopenCloseDelay", DEFAULT_PARAMS_FLOAT_NAME, false,
-        "AutoopenMenuNum", DEFAULT_PARAMS_INT_NAME, false
-    );
-    VipM_Modules_AddParamsEx(MODULE_NAME,
-        "StayOpen", DEFAULT_PARAMS_BOOL_NAME, false,
-        "StayOpen_CheckCounter", DEFAULT_PARAMS_BOOL_NAME, false,
-        "StayOpen_WhenRestricted", DEFAULT_PARAMS_BOOL_NAME, false
+        PCParam("MainMenuTitle", DEFAULT_PARAMS_STR_NAME),
+        PCParam("Limits", VIPM_PARAM_TYPE_LIMITS_NAME),
+        PCParam("Count", DEFAULT_PARAMS_INT_NAME),
+        PCParam("CounterType", VIPM_L_COUNTER_PARAM_TYPE),
+        PCParam("CounterKey", DEFAULT_PARAMS_SHORT_STR_NAME),
+        PCParam("ResetCountOnSpawn", DEFAULT_PARAMS_BOOL_NAME), // deprecated
+        PCParam("AutoopenLimits", VIPM_PARAM_TYPE_LIMITS_NAME),
+        PCParam("AutoopenDelay", DEFAULT_PARAMS_FLOAT_NAME),
+        PCParam("AutoopenCloseDelay", DEFAULT_PARAMS_FLOAT_NAME),
+        PCParam("AutoopenMenuNum", DEFAULT_PARAMS_INT_NAME),
+        PCParam("StayOpen", DEFAULT_PARAMS_BOOL_NAME),
+        PCParam("StayOpen_CheckCounter", DEFAULT_PARAMS_BOOL_NAME),
+        PCParam("StayOpen_WhenRestricted", DEFAULT_PARAMS_BOOL_NAME)
     );
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@OnModuleActivate");
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnRead, "@OnReadConfig");
