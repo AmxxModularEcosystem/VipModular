@@ -70,7 +70,7 @@ jobs:
 
           echo "${OUTPUT_VAR_NAME}=$(pwd)/addons/amxmodx/scripting/include" >> $GITHUB_ENV
 
-      - uses: AmxxModularEcosystem/install-amxmodx-deps@master
+      - uses: AmxxModularEcosystem/install-amxmodx-deps@v1
         with:
           deps_list: ${{ env.DEPS_LIST }}
           output_var_name: DEPS_COMPILER_ARGS
