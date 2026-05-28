@@ -10,6 +10,8 @@ DefaultObjects_ParamType_ModuleType_Register() {
 }
 
 bool:@DefaultObjects_ParamType_ModuleType_OnRead(const JSON:valueJson) {
+    ModuleType_Init();
+
     new typeName[VIPM_MODULES_TYPE_NAME_MAX_LEN];
     PCSingle_ShortString(valueJson, typeName, charsmax(typeName));
     trim(typeName);

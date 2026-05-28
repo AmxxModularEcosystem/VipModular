@@ -10,6 +10,8 @@ DefaultObjects_ParamType_LimitType_Register() {
 }
 
 bool:@DefaultObjects_ParamType_LimitType_OnRead(const JSON:valueJson) {
+    LimitType_Init();
+    
     new typeName[VIPM_LIMITS_TYPE_NAME_MAX_LEN];
     PCSingle_ShortString(valueJson, typeName, charsmax(typeName));
     trim(typeName);

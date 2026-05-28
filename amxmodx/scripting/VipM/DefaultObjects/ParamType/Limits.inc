@@ -3,11 +3,15 @@
 #include <ParamsController>
 #include <VipModular>
 
+#include "VipM/Core/Objects/Limits/Unit"
+
 DefaultObjects_ParamType_Limits_Register() {
     ParamsController_RegSimpleType(VIPM_PARAM_TYPE_LIMITS_NAME, "@DefaultObjects_ParamType_Limits_OnRead");
 }
 
 @DefaultObjects_ParamType_Limits_OnRead(const JSON:valueJson) {
+    LimitUnit_Init();
+
     if (json_is_array(valueJson) && json_array_get_count(valueJson) < 1) {
         PCJson_LogForFile(valueJson, "WARNING", "Limits array is empty.");
         return false;
