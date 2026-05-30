@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/AmxxModularEcosystem/amxx-builder/master/schema/amxbuild.schema.json
+
+name: VipModular
+
+amxmodx:
+  version: "1.10.5428"
+
+deps:
+  - AmxxModularEcosystem/ParamsController@1.4.2
+  - AmxxModularEcosystem/CommandAliases@1.0.1
+  - repo: rehlds/ReAPI
+    ref: 5.29.0.358
+    source: release
+    include_path: addons/amxmodx/scripting/include
+
+plugins_ini_postfix: vipm
+
+output:
+  dir: ./
+  archive_name: "{name}.zip"
+  amxmodx_path: "{name}/addons/amxmodx"
+  readme: true
+  generate_ini: true
+
+deploy:
+  exclude:
+    - addons/amxmodx/configs/

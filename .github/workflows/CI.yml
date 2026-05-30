@@ -5,132 +5,38 @@ on:
     branches: [master, feature/**, fix/**]
     paths-ignore:
       - "**.md"
-
   pull_request:
     types: [opened, reopened, synchronize]
   release:
     types: [published]
 
-env:
-  PACKAGE_NAME: VipModular
-  STORE_README: 0
-  PLUGINS_INI_GENERATE: 1
-  PLUGINS_INI_POSTFIX: vipm
-  DEPS_LIST: |
-    AmxxModularEcosystem/ParamsController@1.4.0
-    AmxxModularEcosystem/CommandAliases@1.0.1
-
 jobs:
   build:
-    name: "Build"
+    name: Build
     runs-on: ubuntu-latest
     outputs:
-      COMMIT_SHA: ${{ steps.declare_sha.outputs.COMMIT_SHA }}
-      SEMVER: ${{ steps.declare_sha.outputs.SEMVER }}
+      sha:  ${{ steps.sha.outputs.SHORT }}
+      name: ${{ steps.build.outputs.name }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v4
+
+      - id: sha
+        run: echo "SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - id: build
+        uses: AmxxModularEcosystem/amxx-builder@v1
         with:
-          fetch-depth: 0
+          set: |
+            output.pack=false
+            output.dir=./artifact
 
-      - name: Parse SemVer string (release)
-        id: semver_parser
-        if: |
-          github.event_name == 'release' &&
-          github.event.action == 'published' &&
-          startsWith(github.ref, 'refs/tags/')
-        uses: booxmedialtd/ws-action-parse-semver@v1.4.7
+      - uses: actions/upload-artifact@v4
         with:
-          input_string: ${{ github.ref }}
-          version_extractor_regex: 'refs\/tags\/(.*)$'
-
-      - name: Declare SHA & package name
-        id: declare_sha
-        shell: bash
-        run: |
-          SHA=$(git rev-parse --short HEAD)
-          echo "COMMIT_SHA=$SHA" >> $GITHUB_OUTPUT        
-          echo "SEMVER=${{ steps.semver_parser.outputs.fullversion }}" >> $GITHUB_OUTPUT
-
-      - name: Setup latest ReAPI includes
-        env:
-          REPO: "rehlds/ReAPI"
-          OUTPUT_VAR_NAME: REAPI_INCLUDE_PATH
-        run: |
-          mkdir -p dep/reapi
-          cd dep/reapi
-
-          curl \
-            --silent \
-            https://api.github.com/repos/$REPO/releases/latest | \
-            jq .assets[0].browser_download_url -r | \
-            xargs wget
-
-          7z x *.zip
-
-          echo "${OUTPUT_VAR_NAME}=$(pwd)/addons/amxmodx/scripting/include" >> $GITHUB_ENV
-
-      - uses: AmxxModularEcosystem/install-amxmodx-deps@v1
-        with:
-          deps_list: ${{ env.DEPS_LIST }}
-          output_var_name: DEPS_COMPILER_ARGS
-
-      - name: Setup AMXXPawn Compiler
-        uses: wopox1337/setup-amxxpawn@v1.1.0
-        with:
-          version: "1.10.5428"
-
-      - name: Compile plugins
-        working-directory: amxmodx/scripting/
-        env:
-          REAPI_INCLUDE: ${{ env.REAPI_INCLUDE_PATH }}
-          PLUGINS_INI_GENERATE: ${{ env.PLUGINS_INI_GENERATE }}
-          PLUGINS_INI_POSTFIX: ${{ env.PLUGINS_INI_POSTFIX }}
-          DEPS_COMPILER_ARGS: ${{ env.DEPS_COMPILER_ARGS }}
-        run: |
-          compile() {
-            sourcefile=$1
-            amxxfile="$(echo $sourcefile | sed -e 's/\.sma$/.amxx/')"
-            output_path="../plugins/$amxxfile"
-
-            mkdir -p $(dirname $output_path)
-
-            echo "Compiling $sourcefile... "
-            amxxpc $sourcefile -o"$output_path" \
-              -i"include" \
-              -i"$REAPI_INCLUDE" \
-              $DEPS_COMPILER_ARGS \
-              GITHUB_ACTIONS_USED=1
-              
-            if [ ! -z "${PLUGINS_INI_GENERATE}" ]; then
-              plugin_ini_path="../configs/plugins-${PLUGINS_INI_POSTFIX}.ini"
-              touch $plugin_ini_path
-              echo $amxxfile >> $plugin_ini_path
-            fi
-          }
-          export -f compile
-
-          find . -type f -name "*.sma" -exec bash -c 'compile "$0"' {} \;
-
-      - name: Move files
-        env:
-          STORE_README: ${{ env.STORE_README }}
-        run: |
-          mkdir -p publish/${{ env.PACKAGE_NAME }}/addons
-          mv amxmodx/ publish/${{ env.PACKAGE_NAME }}/addons
-
-          if [ ! -z "${STORE_README}" ]; then
-            mv README.md publish/
-          fi
-
-      - name: Deploy artifact
-        uses: actions/upload-artifact@v4.3.1
-        with:
-          name: ${{ env.PACKAGE_NAME }}-${{ steps.declare_sha.outputs.COMMIT_SHA }}-dev
-          path: publish/*
+          name: ${{ steps.build.outputs.name }}-${{ steps.sha.outputs.SHORT }}-dev
+          path: artifact/
 
   publish:
-    name: "Publish release"
+    name: Publish release
     runs-on: ubuntu-latest
     needs: [build]
     if: |
@@ -138,21 +44,16 @@ jobs:
       github.event.action == 'published' &&
       startsWith(github.ref, 'refs/tags/')
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4.1.4
+      - uses: actions/download-artifact@v4
         with:
-          name: ${{ env.PACKAGE_NAME }}-${{ needs.build.outputs.COMMIT_SHA }}-dev
+          name: ${{ needs.build.outputs.name }}-${{ needs.build.outputs.sha }}-dev
+          path: artifact/
 
-      - name: Packaging binaries
-        id: packaging
-        run: 7z a -mm=Deflate -mfb=258 -mpass=15 -r ${{ env.PACKAGE_NAME }}-${{ needs.build.outputs.SEMVER }}.zip
+      - name: Package for release
+        run: |
+          cd artifact
+          zip -r "../${{ needs.build.outputs.name }}-${{ github.ref_name }}.zip" .
 
-      - name: Publish artifacts
-        uses: softprops/action-gh-release@v2.0.4
-        id: publish-job
-        if: |
-          startsWith(github.ref, 'refs/tags/') &&
-          steps.packaging.outcome == 'success'
+      - uses: softprops/action-gh-release@v2
         with:
-          files: |
-            *.zip
+          files: "${{ needs.build.outputs.name }}-*.zip"
