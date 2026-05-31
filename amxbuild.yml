@@ -16,10 +16,6 @@ deps:
 plugins_ini_postfix: vipm
 
 output:
-  dir: ./
-  archive_name: "{name}.zip"
-  amxmodx_path: "{name}/addons/amxmodx"
-  readme: true
   generate_ini: true
 
 deploy:
