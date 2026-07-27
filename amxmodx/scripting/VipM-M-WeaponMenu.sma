@@ -23,7 +23,6 @@ enum {
 }
 
 new bool:gUserShouldResetCounters[MAX_PLAYERS + 1] = {true, ...};
-new gUserLeftItems[MAX_PLAYERS + 1] = {0, ...};
 new Trie:g_tUserMenuItemsCounter[MAX_PLAYERS + 1] = {Invalid_Trie, ...};
 
 new bool:gUserAutoOpen[MAX_PLAYERS + 1] = {true, ...};
@@ -83,9 +82,6 @@ public VipM_Modules_OnInited() {
 }
 
 ResetUserMenuCounters(const playerIndex) {
-    new Trie:Params = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
-
-    gUserLeftItems[playerIndex] = PCGet_Int(Params, "Count", -1);
     g_tUserMenuItemsCounter[playerIndex] = KeyValueCounter_Reset(g_tUserMenuItemsCounter[playerIndex]);
 
     gUserShouldResetCounters[playerIndex] = false;
