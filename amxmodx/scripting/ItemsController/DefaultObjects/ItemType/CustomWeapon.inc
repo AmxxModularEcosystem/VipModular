@@ -29,12 +29,17 @@ native __auw__native__auw_give_weapon(iPlayer, const sWeaponName[], const bool: 
 native weapons_give_user_ultimate(id, uid=-1, buy_name[]="", replace=0, ammo=-1, bpammo=-1);
 #endif
 
+#if !defined _wss_included
+native wss_give_weapon(const pPlayer, const szWssClassname[], const GiveType:iGiveType = GT_APPEND);
+#endif
+
 enum E_ItemType_CustomWeapon_Controller {
     ItemType_CustomWeapon_Controller_None,
 
     ItemType_CustomWeapon_Controller_Cwapi,
     ItemType_CustomWeapon_Controller_Auw,
     ItemType_CustomWeapon_Controller_Uw,
+    ItemType_CustomWeapon_Controller_Wss,
 }
 
 enum E_ItemType_CustomWeapon_GiveType {
@@ -47,7 +52,7 @@ enum E_ItemType_CustomWeapon_GiveType {
 static E_ItemType_CustomWeapon_Controller:UsingController = ItemType_CustomWeapon_Controller_None;
 
 // Почему-то через {true, ...} всё кроме первой ячейки ставится в false.
-static bool:AvailableControllers[E_ItemType_CustomWeapon_Controller] = {true, true, true, true};
+static bool:AvailableControllers[E_ItemType_CustomWeapon_Controller] = {true, true, true, true, true};
 
 bool:DefaultObjects_ItemType_CustomWeapon_NativeFilter(const name[], const trap) {
     if (equal(name, "CWAPI_Weapons_Give")) {
@@ -66,6 +71,11 @@ bool:DefaultObjects_ItemType_CustomWeapon_NativeFilter(const name[], const trap)
 
     if (equal(name, "weapons_give_user_ultimate")) {
         AvailableControllers[ItemType_CustomWeapon_Controller_Uw] = !!trap;
+        return true;
+    }
+
+    if (equal(name, "wss_give_weapon")) {
+        AvailableControllers[ItemType_CustomWeapon_Controller_Wss] = !!trap;
         return true;
     }
 
@@ -99,11 +109,28 @@ DefaultObjects_ItemType_CustomWeapon_Register() {
 
     TrieSetCell(p, "GiveType", _:ItemType_CustomWeapon_ReadGiveTypeFromJsonObject(instanceJson, "GiveType"));
 
+    new controllerStr[16];
+    json_object_get_string(instanceJson, "Controller", controllerStr, charsmax(controllerStr));
+    if (controllerStr[0]) {
+        TrieSetCell(p, "Controller", _:ItemType_CustomWeapon_ParseController(controllerStr));
+    }
+
     return IC_RET_READ_SUCCESS;
 }
 
 @ItemType_CustomWeapon_OnGive(const playerIndex, const Trie:p) {
-    if (UsingController == ItemType_CustomWeapon_Controller_None) {
+    new E_ItemType_CustomWeapon_Controller:actualController = UsingController;
+
+    new E_ItemType_CustomWeapon_Controller:specifiedController = E_ItemType_CustomWeapon_Controller:PCGet_Int(p, "Controller", _:ItemType_CustomWeapon_Controller_None);
+    if (specifiedController != ItemType_CustomWeapon_Controller_None) {
+        if (AvailableControllers[specifiedController]) {
+            actualController = specifiedController;
+        } else {
+            log_amx("[WARNING] Specified controller is not available. Using auto-detected.");
+        }
+    }
+
+    if (actualController == ItemType_CustomWeapon_Controller_None) {
         log_amx("[ERROR] Custom weapons controller is not set.");
         return IC_RET_GIVE_FAIL;
     }
@@ -118,13 +145,15 @@ DefaultObjects_ItemType_CustomWeapon_Register() {
     new E_ItemType_CustomWeapon_GiveType:giveType = E_ItemType_CustomWeapon_GiveType:PCGet_Int(p, "GiveType", _:ItemType_CustomWeapon_GiveType_Default);
 
     new bool:res = false;
-    switch (UsingController) {
+    switch (actualController) {
         case ItemType_CustomWeapon_Controller_Cwapi:
             res = ItemType_CustomWeapon_GiveViaCwapi(playerIndex, name, giveType);
         case ItemType_CustomWeapon_Controller_Auw:
             res = ItemType_CustomWeapon_GiveViaAuw(playerIndex, name);
         case ItemType_CustomWeapon_Controller_Uw:
             res = ItemType_CustomWeapon_GiveViaUw(playerIndex, name, giveType);
+        case ItemType_CustomWeapon_Controller_Wss:
+            res = ItemType_CustomWeapon_GiveViaWss(playerIndex, name, giveType);
         default:
             log_amx("[WARNING] Unknown custom weapons controller.");
     }
@@ -193,6 +222,43 @@ static bool:ItemType_CustomWeapon_GiveViaUw(
     );
 
     return true;
+}
+
+static bool:ItemType_CustomWeapon_GiveViaWss(
+    const playerIndex,
+    const weaponName[],
+    const E_ItemType_CustomWeapon_GiveType:giveType = ItemType_CustomWeapon_GiveType_Default
+) {
+    new GiveType:gtype;
+    switch (giveType) {
+        case ItemType_CustomWeapon_GiveType_Append:
+            gtype = GT_APPEND;
+        case ItemType_CustomWeapon_GiveType_Replace:
+            gtype = GT_REPLACE;
+        case ItemType_CustomWeapon_GiveType_DropAndReplace:
+            gtype = GT_DROP_AND_REPLACE;
+        default:
+            gtype = GT_APPEND;
+    }
+
+    return wss_give_weapon(playerIndex, weaponName, gtype) > 0;
+}
+
+static E_ItemType_CustomWeapon_Controller:ItemType_CustomWeapon_ParseController(const str[]) {
+    if (equali(str, "WSS")) {
+        return ItemType_CustomWeapon_Controller_Wss;
+    }
+    if (equali(str, "CWAPI")) {
+        return ItemType_CustomWeapon_Controller_Cwapi;
+    }
+    if (equali(str, "AUW")) {
+        return ItemType_CustomWeapon_Controller_Auw;
+    }
+    if (equali(str, "UW")) {
+        return ItemType_CustomWeapon_Controller_Uw;
+    }
+
+    return ItemType_CustomWeapon_Controller_None;
 }
 
 static E_ItemType_CustomWeapon_GiveType:ItemType_CustomWeapon_ReadGiveTypeFromJsonObject(const JSON:Obj, const Key[], const bool:DotNot = false) {
