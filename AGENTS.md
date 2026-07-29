@@ -1,4 +1,4 @@
-# VipModular — Complete Agent Reference
+# VipModular — Agent Reference
 
 > Modular VIP/privilege system for **Counter-Strike 1.6** (AMX Mod X, Pawn).  
 > Version: `5.0.0-rc4f2` | Author: ArKaNeMaN  
@@ -6,27 +6,22 @@
 
 ---
 
-## 1. Overview & Architecture
+## 1. Architecture Overview
 
-### What it does
+Система построена вокруг JSON-конфигов привилегий. Каждая привилегия (VipUnit) состоит из двух частей:
 
-Server admins define privilege tiers in JSON configs. Each privilege has:
-- **`Access`** — conditions (Limits) that determine which players qualify
-- **`Modules`** — features (Modules) that qualified players receive
+- **`Access`** — массив условий (Limits), определяющих, подходит ли игрок
+- **`Modules`** — массив фич (Modules), которые игрок получает
 
-The system has **3 extensible registries**:
-| Registry | What it registers | Forward to use |
-|----------|------------------|----------------|
-| **Module types** | Named game features | `VipM_Modules_OnInited()` |
-| **Limit types** | Boolean conditions | `VipM_Limits_OnInited()` |
-| **Item types** | Effect objects (IC) | `IC_ItemType_OnInited()` |
+Три расширяемых реестра типов:
 
-### Core principle
+| Реестр | Что регистрирует | Форвард для регистрации |
+|--------|-----------------|------------------------|
+| **Module types** | Именованные игровые фичи | `VipM_Modules_OnInited()` |
+| **Limit types** | Булевы условия доступа | `VipM_Limits_OnInited()` |
+| **Item types** | Эффекты-предметы (ItemsController) | `IC_ItemType_OnInited()` |
 
-Privileges are checked **top-to-bottom** in `Vips.json`. For each VIP unit:
-- If the player **passes** any Access limit → all modules in that unit are merged into the player
-- Modules of the **same name** from multiple VIPs get merged (via `Module_OnMergeParams`)
-- First match wins for each module (if no merge handler)
+Привилегии проверяются **сверху вниз** в [`Vips.json`](amxmodx/configs/plugins/VipModular/Vips.json). Если игрок **проходит** любой лимит Access — все модули этой привилегии мержатся в набор игрока. Одноимённые модули из нескольких привилегий мержатся через хук `Module_OnMergeParams` (если модуль зарегистрирован с `Once = false`). По умолчанию `Once = true` — первый совпавший модуль выигрывает.
 
 ---
 
@@ -34,874 +29,319 @@ Privileges are checked **top-to-bottom** in `Vips.json`. For each VIP unit:
 
 ```
 amxmodx/scripting/
-├── VipModular.sma                          ← Core: init, config loading, lifecycle
-├── ItemsController.sma                     ← Standalone item-effects framework
-├── VipM-Misc.sma                           ← Reload helper (spawn/round triggers)
-├── VipM-ModulesLimiter.sma                 ← Map-based module enable/disable
+├── VipModular.sma                         ← Ядро: инициализация, загрузка конфигов, жизненный цикл
+├── ItemsController.sma                    ← Фреймворк эффектов-предметов (независимый от ядра)
+├── VipM-Misc.sma                          ← Вспомогательный плагин (релоад, спавн/раунд триггеры)
+├── VipM-ModulesLimiter.sma                ← Покартное включение/отключение модулей
 │
-├── VipM-M-WeaponMenu.sma                   ← Module: weapon selection menu
-├── VipM-M-SpawnItems.sma                   ← Module: give items on spawn
-├── VipM-M-SpawnHealth.sma                  ← Module: set health/armor on spawn
-├── VipM-M-Vampire.sma                      ← Module: heal on kill
-├── VipM-M-VipInTab.sma                     ← Module: VIP label in scoreboard
+├── VipM-M-WeaponMenu.sma                  ← Модуль: меню выбора оружия
+├── VipM-M-SpawnItems.sma                  ← Модуль: выдача предметов при спавне
+├── VipM-M-SpawnHealth.sma                 ← Модуль: установка здоровья/брони при спавне
+├── VipM-M-Vampire.sma                     ← Модуль: вампиризм (хил за убийства)
+├── VipM-M-VipInTab.sma                    ← Модуль: метка VIP в таблице счёта
 │
 ├── include/
-│   ├── VipModular.inc                      ← Public API (main header, include this)
+│   ├── VipModular.inc                     ← Публичное API (главный инклуд)
 │   ├── VipM/
-│   │   ├── Modules.inc                     ← Module system API (natives, forwards, events)
-│   │   ├── Limits.inc                      ← Limits system API
-│   │   └── Params.inc                      ← Deprecated param helpers (use PCGet_* instead)
+│   │   ├── Modules.inc                    ← API системы модулей (нативы, форварды, события)
+│   │   ├── Limits.inc                     ← API системы лимитов
+│   │   ├── Params.inc                     ← Устаревшие хелперы (используйте PCGet_*)
+│   │   ├── L/
+│   │   │   └── Counter.inc               ← API счётчиков (нативы, енум, хелперы)
+│   │   ├── ItemsController.inc           ← Тонкая обёртка-редирект на <ItemsController>
 │   │   └── M/
-│   │       └── WeaponMenu.inc              ← WeaponMenu module native API
-│   ├── ItemsController.inc                 ← Items system API
+│   │       └── WeaponMenu.inc            ← Native API модуля WeaponMenu
+│   ├── ItemsController.inc               ← API системы предметов
 │
-├── VipM/
-│   ├── Core/
-│   │   ├── VipsManager.inc                 ← Loads Vips.json, manages g_tUserModules[]
-│   │   ├── SrvCmds.inc                     ← Server commands (vipm_info, vipm_modules, vipm_limits)
-│   │   ├── Objects/
-│   │   │   ├── VipUnit.inc                 ← Deserializes one privilege from JSON
-│   │   │   ├── Modules/
-│   │   │   │   ├── Type.inc                ← Module type registry (ArrayMap-based)
-│   │   │   │   └── Unit.inc                ← Module instance (params per VIP entry)
-│   │   │   ├── Limits/
-│   │   │   │   ├── Type.inc                ← Limit type registry
-│   │   │   │   └── Unit.inc                ← Limit instance
-│   │   │   └── Param.inc                   ← Param parsing helpers
-│   │   └── API/
-│   │       ├── Main.inc                    ← Native: VipM_UserUpdate, VipM_Json_LogForFile
-│   │       ├── Modules.inc                 ← Native implementations for module API
-│   │       └── Limits.inc                  ← Native implementations for limit API
-│   ├── DefaultObjects/
-│   │   ├── Registrar.inc                   ← Registers all built-in limits/params/natives
-│   │   ├── ParamType/                      ← Custom param type registrations
-│   │   │   ├── Limit.inc
-│   │   │   ├── Limits.inc
-│   │   │   ├── LimitType.inc
-│   │   │   ├── ModuleType.inc
-│   │   │   └── CounterType.inc
-│   │   ├── Limit/                          ← 22 built-in limit types
-│   │   │   ├── Always.inc, Never.inc       ← Static, no params
-│   │   │   ├── Alive.inc, Bot.inc, Steam.inc  ← Static, per-player
-│   │   │   ├── Flags.inc, Map.inc, Time.inc → Dynamic with params
-│   │   │   ├── Logic.inc                   ← AND/OR/NOT combinator
-│   │   │   └── ... (22 total)
-│   ├── Forwards.inc                        ← Thin macros over CreateMultiForward
-│   ├── ArrayMap.inc                        ← String-keyed array map (used for type registries)
-│   ├── ArrayTrieUtils.inc                  ← Iteration macros & safe array wrappers
-│   ├── Utils.inc                           ← Bit ops, CallOnce, JSON helpers, lang macros
-│   ├── DebugMode.inc                       ← Debug logging support
-│   └── WeaponMenu/                         ← WeaponMenu subsystem
-│       ├── Menus.inc                       ← Menu rendering logic
-│       ├── Natives.inc                     ← Native implementations for WeaponMenu
-│       ├── KeyValueCounter.inc             ← Counter for weapon menu limits
-│       └── Objects/                        ← Weapon menu object definitions
+├── VipM/                                   ← Исходники ядра (не инклудятся, см. #include link)
+│   ├── Core/                               ← Загрузка конфигов, управление привилегиями, серверные команды
+│   ├── DefaultObjects/                     ← Встроенные лимиты, типы параметров, их регистратор
+│   ├── Forwards.inc                        ← Тонкая обёртка над CreateMultiForward / ExecuteForward
+│   ├── ArrayMap.inc                        ← Ассоциативный массив (Array + Trie)
+│   ├── ArrayTrieUtils.inc                 ← Макросы итерации и безопасные врапперы
+│   ├── Utils.inc                          ← Битовые операции, CallOnce, JSON-хелперы, языковые макросы
+│   ├── DebugMode.inc                      ← Дебаг-логирование
+│   └── WeaponMenu/                        ← Подсистема меню оружия (логика меню, нативы, счётчики)
 │
-└── ItemsController/
-    ├── Objects/
-    │   └── Items/
-    │       ├── Type.inc                    ← Item type registry
-    │       └── Instance.inc                ← Item instance management
-    ├── API/
-    │   ├── ItemType.inc                    ← ItemType registration natives
-    │   ├── Item.inc                        ← Item read/give/free natives
-    │   └── Compat.inc                      ← Deprecated compatibility layer
-    └── DefaultObjects/
-        └── ItemType/                       ← 16 built-in item types
-            ├── Weapon.inc, Health.inc, Armor.inc
-            ├── Money.inc, Speed.inc, DefuseKit.inc
-            ├── Command.inc, Function.inc
-            ├── If.inc, ItemsList.inc, Random.inc
-            ├── DamageMult.inc, InstantReload.inc
-            ├── InstantReloadAllWeapons.inc
-            ├── RefillBpAmmo.inc, CustomWeapon.inc
+└── ItemsController/                        ← Исходники ItemsController (не инклудятся)
+    ├── Objects/Items/                      ← Реестр типов предметов и управление инстансами
+    ├── API/                                ← Реализация нативов регистрации/чтения/выдачи
+    └── DefaultObjects/ItemType/            ← 16 встроенных типов предметов
 ```
 
 ---
 
 ## 3. Config File Format
 
-All configs are in `amxmodx/configs/plugins/VipModular/`.  
-Paths prefixed with `File:` resolve relative to that folder.  
-`/` at the start → resolves relative to `amxmodx/configs/`.
+**Корневая директория конфигов:** `amxmodx/configs/plugins/VipModular/`
 
-### Vips.json
+- Пути с префиксом `File:` разрешаются относительно этой папки
+- Пути, начинающиеся с `/`, разрешаются относительно `amxmodx/configs/`
 
-```json
-[
-    {
-        "Access": [
-            { "Type": "Flags", "Flags": "t" }
-        ],
-        "Modules": [
-            {
-                "Type": "SpawnItems",
-                "Items": [
-                    { "Type": "Weapon", "Name": "weapon_awp" },
-                    { "Type": "Health", "Value": 150 }
-                ]
-            },
-            {
-                "Type": "WeaponMenu",
-                "File:Config": "WeaponMenu/Premium"
-            }
-        ]
-    }
-]
-```
+**Основные конфиги:**
+- [`Vips.json`](amxmodx/configs/plugins/VipModular/Vips.json) — массив привилегий. Каждая содержит `Access` (лимиты) и `Modules` (модули). Дополнительные файлы загружаются из `Vips/` (все `*.json`).
+- [`Modules.json`](amxmodx/configs/plugins/VipModular/Modules.json) — конфиг `VipM-ModulesLimiter` для покартного включения/отключения модулей.
+- `configs/plugins/VipModular/WeaponMenu/*.json` — конфиги меню оружия.
 
-- **`Access`**: array of limit objects, evaluated with **OR** by default
-- **`Modules`**: array of module config objects; `"Type"` matches the registered module name
-- **`File:Config`**: loads external JSON and merges it via `PCJson_ParseFile`
-- Privileges can also be individual files in `Vips/` folder (all `*.json` loaded)
-
-### Modules.json (for VipM-ModulesLimiter)
-
-```json
-[
-    {
-        "Limits": [{ "Type": "Map", "Prefix": "cs_" }],
-        "Disable": ["WeaponMenu"]
-    },
-    {
-        "Limits": [{ "Type": "Always" }],
-        "Enable": ["SpawnItems", "SpawnHealth"]
-    }
-]
-```
-
-Checked at `VipM_Modules_OnActivate` forward to block/enable modules per-map.
-
-### Param type names (for `AddParamsEx`)
-
-| Name | Type | Used for |
-|------|------|----------|
-| `"Integer"` | int | Whole numbers |
-| `"Float"` | float | Decimal numbers |
-| `"Bool"` | bool | true/false |
-| `"String"` | string | Text values |
-| `"VipM-Limit"` | `T_LimitUnit` | Single limit |
-| `"VipM-Limits"` | `Array:T_LimitUnit` | List of limits |
-| `"VipM-LimitType"` | `T_LimitType` | Limit type reference |
-| `"VipM-ModuleType"` | `T_ModuleType` | Module type reference |
-| `"IC-Item"` | `T_IC_Item` | Single item |
-| `"IC-Items"` | `Array:T_IC_Item` | List of items |
-
-For parameter definitions, use `PCParam()` macros:
-```pawn
-PCParam("Name", DEFAULT_PARAMS_STR_NAME)        // "String"
-PCParam("Name", DEFAULT_PARAMS_INT_NAME)         // "Integer"
-PCParam("Name", DEFAULT_PARAMS_FLOAT_NAME)       // "Float"
-PCParam("Name", DEFAULT_PARAMS_BOOL_NAME)        // "Bool"
-PCParam("Name", VIPM_PARAM_TYPE_LIMITS_NAME)     // "VipM-Limits"
-PCParam("Name", IC_PARAM_TYPE_ITEMS_NAME)        // "IC-Items"
-```
-The 3rd argument is `required` (default: `false`):
-```pawn
-PCParam("Name", "Integer", true)                 // required param
-```
-
-### File reference syntax
-
-- `"File:Path/Name"` → `configs/plugins/VipModular/Path/Name.json`
-- `"File:/configs/Path/Name"` → `amxmodx/configs/Path/Name.json`
-
-ParamsController resolves these transparently.
+**Параметры модулей/лимитов** определяются через `PCParam()` макросы из библиотеки ParamsController. Типы параметров:
+- `Integer`, `Float`, `Bool`, `String` — примитивные
+- `VipM-Limit` / `VipM-Limits` — ссылка на один или список лимитов
+- `VipM-LimitType` / `VipM-ModuleType` — ссылка на тип лимита/модуля
+- `IC-Item` / `IC-Items` — один предмет или список предметов
+- `VipM-L-CounterType` — тип сброса счётчика (PerLife/PerRound/PerSession/PerGame/PerMap)
 
 ---
 
 ## 4. Core Data Flow (Lifecycle)
 
-### Startup (`plugin_precache`)
+### Инициализация (`plugin_precache`)
 
-```
-VipModular.sma::plugin_precache()
-  ├── register_plugin, register_library, PCCvar_Const
-  ├── ParamsController_Init()
-  ├── Forwards_Init()                        ← Init forward system
-  ├── VipsManager_Init()                     ← Init Vips array
-  ├── ModuleType_Init()                      ← Init module registry
-  ├── SrvCmds_Init()                         ← Register server commands
-  │
-  ├── Forwards_RegAndCall("VipM_OnInitModules")  ← DEPRECATED
-  │
-  ├── VipsManager_LoadFromFile("Vips.json")  ← Parse and load VIP units
-  ├── VipsManager_LoadFromFolder("Vips/")    ← Load VIP units from folder
-  │
-  ├── ModuleType_ActivateUsed()              ← Activate all used modules
-  │   ├── Forwards_Call("VipM_Modules_OnActivate")  ← Each module → can be blocked
-  │   └── each module's Module_OnActivated event     ← Register game hooks
-  │
-  └── Forwards_RegAndCall("VipM_OnLoaded")   ← System fully loaded
-```
+1. **Регистрация** — `register_plugin`, `register_library`, инициализация `ParamsController`
+2. **Инициализация реестров** — создаются ArrayMap для типов лимитов, модулей, подсистема форвардов
+3. **Форварды инициализации** — `VipM_Limits_OnInited()`, `VipM_Modules_OnInited()`, `IC_ItemType_OnInited()` — плагины регистрируют свои типы
+4. **Загрузка конфигов** — `VipM/Core/VipsManager.inc` парсит `Vips.json` и папку `Vips/`, создаёт объекты привилегий (VipUnit), отмечает используемые типы модулей
+5. **Активация модулей** — `ModuleType_ActivateUsed()` вызывает `VipM_Modules_OnActivate()` (тут `VipM-ModulesLimiter` может заблокировать модуль для карты) и `Module_OnActivated` для каждого модуля
 
-### Initialization order is CRITICAL:
+### Подключение игрока
 
-```
-1. LimitUnit_Init()
-   ├── LimitType_Init()              ← Creates ArrayMap for limit types
-   └── Forwards_RegAndCall("VipM_Limits_OnInited")  ← Limits register here
+- `client_authorized` — устанавливаются статические лимиты (Steam, SteamId, IP, Bot)
+- `client_putinserver` — устанавливаются состояния Alive, Counter; через `RequestFrame` запускается `VipsManager_UserReload`
+- **VipsManager_UserReload**: перебирает все VipUnit, проверяет Access лимиты через `VipUnit_CheckUserAccess`, при прохождении сохраняет параметры модуля в `g_tUserModules[playerIndex]`. Если модуль уже был — мержит (`Module_OnMergeParams`). В конце вызывает `VipM_OnUserUpdated()`, где модули могут кешировать параметры
+- `client_disconnected` — `VipsManager_UserReset()` очищает `g_tUserModules[playerIndex]`
 
-2. ModuleUnit_Init()
-   ├── ModuleType_Init()             ← Creates ArrayMap for module types
-   └── Forwards_RegAndCall("VipM_Modules_OnInited") ← Modules register here
-
-3. IC_ItemType_OnInited() forward    ← Item types register here (called from ItemsController)
-
-4. VipsManager_LoadFromFile / VipsManager_LoadFromFolder
-   └── VipUnit_ReadList              ← Parses JSON → creates VipUnit objects
-       ├── PCSingle_ObjVipmLimits    ← Reads Access limits
-       └── JsonObject_GetModuleUnits ← Reads Modules, marks types as "Used"
-
-5. ModuleType_ActivateUsed()
-   ├── Forwards_Call("VipM_Modules_OnActivate")  ← VipM-ModulesLimiter can block
-   └── ExecuteForward(Module_OnActivated)         ← Module registers hooks
-```
-
-### Player connection
-
-```
-client_authorized(playerIndex)
-  └── DefaultObjects_OnClientAuth()   ← Sets static limits (Steam, SteamId, IP, Bot)
-
-client_putinserver(playerIndex)
-  ├── DefaultObjects_OnClientPutInServer()  ← Sets per-player state (Alive, Counter)
-  └── RequestFrame → VipsManager_UserReload(playerIndex)
-       ├── TrieCreate() for g_tUserModules[playerIndex]
-       ├── For each VipUnit:
-       │   ├── VipUnit_CheckUserAccess()    ← Checks Access limits
-       │   └── On pass: store module params in Trie
-       │       ├── First occurrence: store as-is
-       │       └── Duplicate module: ModuleUnit_Merge (calls Module_OnMergeParams)
-       └── Forwards_CallP("VipM_OnUserUpdated", playerIndex)
-            ← Module can cache params here (e.g., VipInTab)
-
-client_disconnected(playerIndex)
-  └── VipsManager_UserReset(playerIndex)
-       └── Frees all Tries in g_tUserModules[playerIndex]
-```
+Детали реализации каждого шага — в исходниках `VipM/Core/` и `VipM/Core/Objects/`.
 
 ---
 
 ## 5. Module System
 
-### What is a module?
+Модуль — это именованная игровая фича. Плагин регистрирует тип модуля, ядро активирует его, если он упомянут в любом VIP-конфиге, после чего модуль вешает хуки на игровые события.
 
-A module is a named game feature. Register a type, the core activates it if referenced in any VIP config, then it hooks into game events.
+**Жизненный цикл модуля:**
+1. Регистрация в `VipM_Modules_OnInited()` через `VipM_Modules_Register()`, указание параметров через `VipM_Modules_AddParamsEx()`, подписка на события (`Module_OnActivated`, `Module_OnRead`, `Module_OnMergeParams`)
+2. Активация — в `Module_OnActivated` модуль вешает хуки
+3. Во время игры — проверяет `VipM_Modules_HasModule(MODULE_NAME, playerIndex)`, получает параметры через `VipM_Modules_GetParams()` и применяет эффект
 
-### Module Plugin Template
+**Параметр `Once`:** если `true` (по умолчанию) — первый VIP, давший модуль, выигрывает. Если `false` — при совпадении вызывается `Module_OnMergeParams`, который может объединить параметры.
 
-```pawn
-#include <amxmodx>
-#include <reapi>
-#include <VipModular>
+**Нейминг:**
+- Файл плагина: `VipM-M-ModuleName.sma`
+- Константа имени: `new const MODULE_NAME[] = "ModuleName"`
+- Имя плагина: `[VipM-M] ModuleName`
 
-public stock const PluginName[] = "[VipM-M] MyModule";
-public stock const PluginVersion[] = _VIPM_VERSION;
-public stock const PluginAuthor[] = "AuthorName";
-public stock const PluginURL[] = _VIPM_PLUGIN_URL;
-public stock const PluginDescription[] = "Description";
-
-new const MODULE_NAME[] = "MyModule";
-
-public VipM_Modules_OnInited() {
-    register_plugin(PluginName, PluginVersion, PluginAuthor);
-
-    VipM_Modules_Register(MODULE_NAME);
-    VipM_Modules_AddParamsEx(MODULE_NAME,
-        PCParam("SomeValue", DEFAULT_PARAMS_INT_NAME, true),
-        PCParam("Limits", VIPM_PARAM_TYPE_LIMITS_NAME)
-    );
-    VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@OnActivate");
-}
-
-@OnActivate() {
-    RegisterHookChain(RG_CBasePlayer_Spawn, "@OnSpawn", true);
-}
-
-@OnSpawn(const playerIndex) {
-    if (!VipM_Modules_HasModule(MODULE_NAME, playerIndex))
-        return;
-
-    new Trie:p = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
-    new val = PCGet_Int(p, "SomeValue", 100);
-    // apply effect...
-}
-```
-
-### VipM_Modules_Register(name, Once = true)
-
-- `Once = true` (default): first VIP tier that grants this module wins, later ones are ignored
-- `Once = false`: the system calls `Module_OnMergeParams` when the same module comes from multiple tiers
-
-### Module Events
-
-| Event | Signature | When | Notes |
-|-------|-----------|------|-------|
-| `Module_OnActivated` | `()` | After config load, `plugin_precache` | Register game hooks. Return `VIPM_STOP` to cancel. |
-| `Module_OnRead` | `(JSON:jCfg, Trie:p)` | While parsing config, `plugin_precache` | Modify/validate params. Return `VIPM_STOP` to skip this module unit. |
-| `Module_OnMergeParams` | `(Trie:p1, Trie:p2) → Trie` | When 2+ tiers grant same module | Return `p1`, `p2`, or new Trie. New Trie auto-freed. |
-
-### Reading module params in handlers
-
-```pawn
-// Check if player has module
-if (!VipM_Modules_HasModule(MODULE_NAME, playerIndex))
-    return;
-
-// Get params Trie
-new Trie:p = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
-
-// Read values using PCGet_* helpers
-new intVal = PCGet_Int(p, "SomeInt", 0);
-new bool:boolVal = PCGet_Bool(p, "SomeBool", false);
-new Float:floatVal = PCGet_Float(p, "SomeFloat", 0.0);
-new strVal[32]; PCGet_Str(p, "SomeStr", strVal, charsmax(strVal));
-
-// Execute embedded limits
-if (!PCGet_VipmLimitsCheck(p, "Limits", playerIndex, Limit_Exec_AND))
-    return;
-
-// Give items
-PCGet_IcItemsGive(p, "Items", playerIndex);
-```
-
-### Caching module params (VipInTab pattern)
-
-```pawn
-public VipM_OnUserUpdated(const playerIndex) {
-    new Trie:Params = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
-    PlayerSettings[playerIndex][Param_Enabled] = PCGet_Bool(Params, "Enabled", false);
-    PlayerSettings[playerIndex][Param_Override] = PCGet_Bool(Params, "Override", false);
-}
-```
-
-### Module naming convention
-
-- Plugin file: `VipM-M-ModuleName.sma`
-- Module name constant: `new const MODULE_NAME[] = "ModuleName"`
-- Plugin name: `[VipM-M] ModuleName`
+Детали API — в [`include/VipM/Modules.inc`](amxmodx/scripting/include/VipM/Modules.inc).  
+Пример реализации — [`VipM-M-VipInTab.sma`](amxmodx/scripting/VipM-M-VipInTab.sma).
 
 ---
 
 ## 6. Limits System
 
-### What is a limit?
+Лимит — булево условие, определяющее, имеет ли игрок доступ к привилегии.
 
-A boolean condition that gates access. Two kinds:
+**Два вида:**
 
-| Kind | Params | Callbacks | Use cases |
-|------|--------|-----------|-----------|
-| **Dynamic** | Has params | `Limit_OnRead`, `Limit_OnCheck` | Map, Flags, Time, Frags... |
-| **Static** | No params | No callbacks | Fast per-player flags (Steam, Alive, Bot) |
+| Вид | Параметры | Колбэки | Применение |
+|-----|-----------|---------|------------|
+| **Dynamic** | Есть | `Limit_OnRead`, `Limit_OnCheck` | Flags, Map, Time, Frags... |
+| **Static** | Нет | Нет | Быстрые флаги на игрока (Steam, Alive, Bot) |
 
-Static limits store their result in a **bitmask** per player — no forward called on check, very fast.
+Статические лимиты хранят результат в битмаске на игрока — никакой форвард при проверке не вызывается.
 
-### Limit Plugin Template (Dynamic)
+**API регистрации:** в `VipM_Limits_OnInited()` вызвать `VipM_Limits_RegisterType()`, добавить параметры через `VipM_Limits_AddParamsEx()`, подписаться на `Limit_OnCheck`.
 
-```pawn
-#include <amxmodx>
-#include <ParamsController>
-#include <VipModular>
+**Выполнение:** `VipM_Limits_ExecuteList(limits, playerIndex, E_LimitsExecType)` — поддерживает `OR`, `AND`, `XOR`. По умолчанию лимиты в Access выполняются через OR.
 
-DefaultObjects_Limit_MyLimit_Register() {
-    VipM_Limits_RegisterType("MyLimit", true, false);
-    VipM_Limits_AddParamsEx("MyLimit",
-        PCParam("MinFrags", DEFAULT_PARAMS_INT_NAME, true)
-    );
-    VipM_Limits_RegisterTypeEvent("MyLimit", Limit_OnCheck, "@OnCheck");
-}
+**Система счётчиков** (Counter limit): позволяет ограничить количество использований. API в [`include/VipM/L/Counter.inc`](amxmodx/scripting/include/VipM/L/Counter.inc) — `VipM_L_Counter_Get/Set/Inc` с типами сброса PerLife/PerRound/PerSession/PerGame/PerMap.
 
-@OnCheck(const Trie:p, const playerIndex) {
-    new minFrags = PCGet_Int(p, "MinFrags", 0);
-    return get_user_frags(playerIndex) >= minFrags;
-}
-```
+**Встроенные лимиты (24 типа):** Always, Never, Alive, Bot, Steam, Flags, SteamId, Ip, Map, Time, RoundTime, Round, GameTime, Frags, WasKilled, InBuyZone, InFreezyTime, HasPrimaryWeapon, LifeTime, WeekDay, Name, Counter, OncePer, Logic. Реализации — в `VipM/DefaultObjects/Limit/`.
 
-### Limit Plugin Template (Static)
-
-```pawn
-#include <amxmodx>
-#include <ParamsController>
-#include <VipModular>
-
-DefaultObjects_Limit_HasPremium_Register() {
-    VipM_Limits_RegisterType("HasPremium", true, true);  // bForPlayer=true, bStatic=true
-    VipM_Limits_SetStaticValue("HasPremium", false);     // default for all
-}
-
-// Somewhere else, set the value:
-// VipM_Limits_SetStaticValue("HasPremium", true, playerIndex);
-```
-
-### Limit Events
-
-| Event | Signature | Purpose |
-|-------|-----------|---------|
-| `Limit_OnRead` | `(JSON:jUnit, Trie:tParams)` | Post-parse hook — return `VIPM_STOP` to abort |
-| `Limit_OnCheck` | `(Trie:tParams, playerIndex) → bool` | Evaluate condition. Not called for static limits. |
-
-### Logical Execution
-
-```pawn
-VipM_Limits_Execute(T_LimitUnit:limit, UserId = 0);
-VipM_Limits_ExecuteList(Array:limits, UserId = 0, E_LimitsExecType:type = Limit_Exec_OR);
-```
-
-`E_LimitsExecType`: `Limit_Exec_OR`, `Limit_Exec_AND`, `Limit_Exec_XOR`
-
-### Built-in Limits (22 types)
-
-| Type | File | Dynamic/Static | Description |
-|------|------|---------------|-------------|
-| `Flags` | Flags.inc | Dynamic | Admin flags bitmask |
-| `Steam` | Steam.inc | Static | Steam validation status |
-| `SteamId` | SteamId.inc | Dynamic | Specific Steam IDs |
-| `Ip` | Ip.inc | Dynamic | IP address match |
-| `Map` | Map.inc | Dynamic | Map name (prefix/exact/regex) |
-| `Time` | Time.inc | Dynamic | Server clock range |
-| `RoundTime` | RoundTime.inc | Dynamic | Time elapsed in round |
-| `Round` | Round.inc | Dynamic | Round number range |
-| `GameTime` | GameTime.inc | Dynamic | Total game time |
-| `Alive` | Alive.inc | Static | Player alive state |
-| `Frags` | Frags.inc | Dynamic | Kill count range |
-| `WasKilled` | WasKilled.inc | Dynamic | Death state this round |
-| `InBuyZone` | InBuyZone.inc | Dynamic | Buy zone presence |
-| `InFreezyTime` | InFreezyTime.inc | Dynamic | Freeze time active |
-| `HasPrimaryWeapon` | HasPrimaryWeapon.inc | Dynamic | Primary weapon check |
-| `LifeTime` | LifeTime.inc | Dynamic | Time connected |
-| `WeekDay` | WeekDay.inc | Dynamic | Day of week |
-| `Bot` | Bot.inc | Static | Is bot |
-| `Name` | Name.inc | Dynamic | Player name match |
-| `Counter` | Counter.inc | Dynamic | Max uses counter |
-| `OncePer` | OncePer.inc | Dynamic | One-time per period |
-| `Logic` | Logic.inc | Dynamic | AND/OR/NOT combinator |
-| `Always` | Always.inc | Static | Always true |
-| `Never` | Never.inc | Static | Always false |
-
-(Note: the source lists ~22 but 24 entries including some noted. Always + Never are separate.)
-
-### Setting static limit values in client callbacks
-
-```pawn
-// In DefaultObjects_OnClientAuth:
-VipM_Limits_SetStaticValue("Steam", is_user_steam(playerIndex), playerIndex);
-
-// In DefaultObjects_OnClientPutInServer:
-VipM_Limits_SetStaticValue("Alive", true, playerIndex);
-```
+Детали API — в [`include/VipM/Limits.inc`](amxmodx/scripting/include/VipM/Limits.inc).
 
 ---
 
 ## 7. ItemsController System
 
-### What is ItemsController?
+**ItemsController** — независимый фреймворк для применения эффектов ("предметов") к игрокам. Используется модулями SpawnItems, Vampire, WeaponMenu.
 
-Standalone framework for applying effects ("items") to players. Independent from VipModular core but tightly integrated. Used by SpawnItems, Vampire, WeaponMenu modules.
+**Основные понятия:**
+- **Item Type** (`T_IC_ItemType`) — класс эффекта, регистрируется плагином
+- **Item Instance** (`T_IC_Item`) — конкретный предмет с распарсенными параметрами
 
-### Concepts
+**Жизненный цикл:** JSON → `IC_Item_ReadFromJson()` → `IC_Item_Give(playerIndex, item)` → `ItemType_OnGive` → `IC_Item_Free()`
 
-- **Item Type** (`T_IC_ItemType`) — named effect class, registered by a plugin
-- **Item Instance** (`T_IC_Item`) — one concrete item with parsed params, created from JSON
-- Give an item: `IC_Item_Give(playerIndex, item)` → fires `ItemType_OnGive`
+**Регистрация типа предмета:** через `IC_ItemType_SimpleRegister()` или `IC_ItemType_Register()` + `IC_ItemType_SetEventListener()`. Параметры добавляются через `IC_ItemType_AddParams()`.
 
-### Item Type Registration Template
+**Использование в модуле:** в параметрах модуля указать `PCParam("Items", IC_PARAM_TYPE_ITEMS_NAME)`, в хендлере читать через `PCGet_IcItemsGive(p, "Items", playerIndex)`. **Важно:** перед регистрацией таких параметров вызвать `IC_Init()`.
 
-```pawn
-#include <amxmodx>
-#include <ItemsController>
-#include <ParamsController>
+**Встроенные типы (16):** Weapon, Health, Armor, DefuseKit, Money, Speed, DamageMult, InstantReload, InstantReloadAllWeapons, RefillBpAmmo, Command, Function, If, ItemsList, Random, CustomWeapon.
 
-DefaultObjects_ItemType_MyEffect_Register() {
-    new T_IC_ItemType:type = IC_ItemType_SimpleRegister(
-        .name = "MyEffect",
-        .onGive = "@OnMyEffectGive"
-    );
-    IC_ItemType_AddParams(type,
-        PCParam("Value", DEFAULT_PARAMS_INT_NAME, true),
-        PCParam("SomeBool", DEFAULT_PARAMS_BOOL_NAME)
-    );
-}
-
-@OnMyEffectGive(const playerIndex, const Trie:p) {
-    new val = PCGet_Int(p, "Value", 0);
-    // apply effect to player...
-    return IC_RET_GIVE_SUCCESS;  // or IC_RET_GIVE_FAIL
-}
-```
-
-### Item Type Events
-
-| Event | Signature | Return |
-|-------|-----------|--------|
-| `ItemType_OnRead` | `(JSON:jCfg, Trie:params)` | `IC_RET_READ_SUCCESS` or `IC_RET_READ_FAIL` |
-| `ItemType_OnGive` | `(playerIndex, Trie:params)` | `IC_RET_GIVE_SUCCESS` or `IC_RET_GIVE_FAIL` |
-| `ItemType_OnFree` | `(Trie:params)` | void — cleanup custom allocations |
-
-### API: Reading & giving items
-
-```pawn
-// From JSON
-new T_IC_Item:item = IC_Item_ReadFromJson(jsonObject);
-IC_Item_Give(playerIndex, item);
-IC_Item_Free(item);
-
-// From array
-new Array:items = IC_Items_ReadFromJson(jsonArray);
-IC_Items_Give(playerIndex, items);
-IC_Items_Free(items);
-
-// Convenience from module params
-PCGet_IcItemGive(p, "Item", playerIndex);      // single
-PCGet_IcItemsGive(p, "Items", playerIndex);    // list
-
-// From JSON via ParamsController
-new Array:items = PCSingle_ObjIcItems(jsonObj, "Items");
-```
-
-### Built-in Item Types (16 types)
-
-| Type | Effect |
-|------|--------|
-| `Weapon` | Give weapon (strips old if needed) |
-| `Health` | Set / add health |
-| `Armor` | Set / add armor |
-| `DefuseKit` | Give defuse kit |
-| `Money` | Give / set money |
-| `Speed` | Modify movement speed |
-| `DamageMult` | Damage multiplier |
-| `InstantReload` | Reload current weapon instantly |
-| `InstantReloadAllWeapons` | Reload all weapons |
-| `RefillBpAmmo` | Refill backpack ammo |
-| `Command` | Execute server command |
-| `Function` | Call a plugin function |
-| `If` | Conditional (check limit → give item) |
-| `ItemsList` | Ordered list of items |
-| `Random` | Random item from a list |
-| `CustomWeapon` | Spawn a custom weapon entity |
-
-### Using ItemsController in a module
-
-```pawn
-// Register params:
-VipM_Modules_AddParamsEx(MODULE_NAME,
-    PCParam("Items", IC_PARAM_TYPE_ITEMS_NAME, true),
-    PCParam("Limits", VIPM_PARAM_TYPE_LIMITS_NAME)
-);
-
-// In game event handler:
-new Trie:p = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
-if (!PCGet_VipmLimitsCheck(p, "Limits", playerIndex, Limit_Exec_AND))
-    return;
-PCGet_IcItemsGive(p, "Items", playerIndex);
-```
-
-**Important**: Call `IC_Init()` in the plugin that uses items (before registering item params):
-```pawn
-public VipM_Modules_OnInited() {
-    register_plugin(...);
-    IC_Init();
-    // ... register module with IC params
-}
-```
+Детали API — в [`include/ItemsController.inc`](amxmodx/scripting/include/ItemsController.inc).
 
 ---
 
 ## 8. WeaponMenu System
 
-### How it works
+Модуль [`VipM-M-WeaponMenu.sma`](amxmodx/scripting/VipM-M-WeaponMenu.sma) предоставляет меню выбора оружия.
 
-The WeaponMenu module (`VipM-M-WeaponMenu`) provides a weapon selection menu. It uses:
-- Config-based weapon lists from JSON files
-- Access limits per weapon
-- Optional auto-open on spawn
-- Expire status display via `VipM_WeaponMenu_SetExpireStatus()`
+**Фичи:**
+- Конфиги списков оружия в JSON (директория `configs/plugins/VipModular/WeaponMenu/`)
+- Лимиты доступа к конкретному оружию
+- Авто-открытие при спавне
+- Отображение статуса истечения через `VipM_WeaponMenu_SetExpireStatus()`
+- Команды: `say /weapons`, `say /ws`, `say /w` и авто-открытие тоггл
 
-### Config structure
-
-WeaponMenu configs are in `amxmodx/configs/plugins/VipModular/WeaponMenu/`.  
-Referenced as `"File:WeaponMenu/Name"` in Vips.json.
-
-### Native API
-
-```pawn
-// Set expire status text shown in weapon menu
-native VipM_WeaponMenu_SetExpireStatus(const UserId, const sNewStatus[]);
-
-// Menu commands
-register_clcmd(VIPM_M_WEAPONMENU_CMD_MENU, "@CmdMenu");
-register_clcmd(VIPM_M_WEAPONMENU_CMD_MENU_SILENT, "@CmdMenuSilent");
-register_clcmd(VIPM_M_WEAPONMENU_CMD_AUTOOPEN_TOGGLE, "@CmdAutoOpenToggle");
-```
-
-### Keys (for Counter limits)
-
-```pawn
-VIPM_M_WEAPONMENU_PLAYER_COUNTER_KEY[]       // "VipM-M-WeaponMenu-Player"
-VIPM_M_WEAPONMENU_MENU_COUNTER_KEY_PREFIX[]  // "VipM-M-WeaponMenu-Menu"
-```
+Детали API — в [`include/VipM/M/WeaponMenu.inc`](amxmodx/scripting/include/VipM/M/WeaponMenu.inc).  
+Исходники подсистемы — в [`VipM/WeaponMenu/`](amxmodx/scripting/VipM/WeaponMenu/).
 
 ---
 
 ## 9. Forward System
 
-The project uses a custom thin wrapper over AMXX `CreateMultiForward` / `ExecuteForward`:
+Проект использует тонкую обёртку над AMXX `CreateMultiForward` / `ExecuteForward`, определённую в [`VipM/Forwards.inc`](amxmodx/scripting/VipM/Forwards.inc).
 
-```pawn
-// In VipM/Forwards.inc:
+**Два режима:**
+- **Registered** — форвард живёт постоянно, используется для событий, которые могут сработать много раз (например, `VipM_OnUserUpdated`)
+- **RegAndCall** — форвард создаётся, выполняется и сразу уничтожается; используется для однократных хуков инициализации (`VipM_Modules_OnInited`, `VipM_Limits_OnInited`, `VipM_OnLoaded`, `IC_ItemType_OnInited`)
 
-Forwards_Init()                                    ← Must call first
-Forwards_Reg(name, stopType)                       ← Register a multi-forward
-Forwards_RegAndCall(name, stopType)                ← Register + execute immediately (destroy after)
-Forwards_Call(name)                                ← Execute forward (no params)
-Forwards_CallP(name, ...params)                    ← Execute forward with params
-Forwards_DefaultReturn(val)                        ← Set default return value
-Forwards_GetReturn()                               ← Get last call's return value
-```
-
-Key pattern: **Registered forwards** (persist across calls) vs **RegAndCall** (used for initialization hooks that fire once).
-
-### All Forwards in the system
-
-| Forward | When | Registered at init | Purpose |
-|---------|------|-------------------|---------|
-| `VipM_OnInitModules` (deprecated) | `plugin_precache` | RegAndCall | Init modules/limits (deprecated) |
-| `VipM_Modules_OnInited` | `plugin_precache` | RegAndCall | Modules register here |
-| `VipM_Limits_OnInited` | `plugin_precache` | RegAndCall | Limits register here |
-| `VipM_Modules_OnActivate` | `plugin_precache` | Registered | Can block module activation |
-| `VipM_OnLoaded` | `plugin_precache` | RegAndCall | System fully loaded |
-| `VipM_OnUserUpdated` | `VipsManager_UserReload` | Registered | Player modules loaded/updated |
-| `IC_ItemType_OnInited` | ItemsController init | RegAndCall | Item types register here |
-| `IC_Item_OnInited` | ItemsController init | RegAndCall | Items initialized |
-| `ParamsController_OnRegisterTypes` | PC init | PC internal | Custom param types register |
+**Полный список форвардов** — в [`VipM/Core/SrvCmds.inc`](amxmodx/scripting/VipM/Core/SrvCmds.inc) (команда `vipm_info`).
 
 ---
 
 ## 10. Public API Summary
 
-### Main natives (`VipModular.inc`)
+Все нативы и форварды объявлены в .inc файлах директории `include/`. **Не копируйте сигнатуры в документацию** — актуальная информация всегда в исходниках:
 
-```pawn
-native VipM_UserUpdate(const UserId);
-forward VipM_OnLoaded();
-forward VipM_OnUserUpdated(const UserId);
-```
-
-### Module API natives (`VipM/Modules.inc`)
-
-```pawn
-native VipM_Modules_Register(const moduleName[], const bool:Once = true);
-native VipM_Modules_AddParamsEx(const moduleName[], any:...);
-native VipM_Modules_RegisterEvent(const moduleName[], const E_ModuleEvent:event, const func[]);
-native bool:VipM_Modules_IsActive(const moduleName[]);
-native Trie:VipM_Modules_GetParams(const moduleName[], const playerIndex);
-stock bool:VipM_Modules_HasModule(const moduleName[], const playerIndex);
-forward VipM_Modules_OnInited();
-forward VipM_Modules_OnActivate(const moduleName[]);
-```
-
-### Limits API natives (`VipM/Limits.inc`)
-
-```pawn
-native VipM_Limits_RegisterType(const sName[], const bool:bForPlayer = true, const bool:bStatic = false);
-native VipM_Limits_AddParamsEx(const limitName[], any:...);
-native VipM_Limits_RegisterTypeEvent(const sName[], const E_LimitEvent:iEvent, const sFunc[]);
-native VipM_Limits_SetStaticValue(const sName[], const bool:bNewValue, const UserId = 0);
-native T_LimitUnit:VipM_Limits_ReadFromJson(const JSON:jLimit);
-native Array:VipM_Limits_ReadListFromJson(const JSON:jLimits, Array:aLimits = Invalid_Array);
-native bool:VipM_Limits_Execute(const T_LimitUnit:iLimit, const UserId = 0);
-native bool:VipM_Limits_ExecuteList(const Array:aLimits, const UserId = 0, const E_LimitsExecType:iType = Limit_Exec_OR);
-forward VipM_Limits_OnInited();
-```
-
-### Items Controller API (`ItemsController.inc`)
-
-```pawn
-native IC_Init();
-native T_IC_ItemType:IC_ItemType_Register(const name[]);
-native IC_ItemType_SetEventListener(const T_IC_ItemType:type, const E_ItemTypeEvent:event, const functionName[]);
-native IC_ItemType_AddParams(const T_IC_ItemType:type, any:...);
-stock T_IC_ItemType:IC_ItemType_SimpleRegister(const name[], const onRead[] = "", const onGive[] = "");
-native T_IC_Item:IC_Item_ReadFromJson(const JSON:instanceJson);
-native Array:IC_Item_ReadArrayFromJson(const JSON:instancesJson, &Array:array = Invalid_Array);
-native bool:IC_Item_Give(const playerIndex, const T_IC_Item:item);
-native T_IC_Item:IC_Item_Free(&T_IC_Item:item);
-stock bool:IC_Item_GiveArray(const playerIndex, const Array:array);
-forward IC_ItemType_OnInited();
-forward IC_Item_OnInited();
-```
-
-### WeaponMenu API (`VipM/M/WeaponMenu.inc`)
-
-```pawn
-native VipM_WeaponMenu_SetExpireStatus(const UserId, const sNewStatus[]);
-```
+| Файл | Содержит |
+|------|----------|
+| [`include/VipModular.inc`](amxmodx/scripting/include/VipModular.inc) | `VipM_UserUpdate()`, `VipM_OnLoaded()`, `VipM_OnUserUpdated()` |
+| [`include/VipM/Modules.inc`](amxmodx/scripting/include/VipM/Modules.inc) | API модулей: регистрация, параметры, события, проверка наличия |
+| [`include/VipM/Limits.inc`](amxmodx/scripting/include/VipM/Limits.inc) | API лимитов: регистрация типов, параметры, выполнение |
+| [`include/VipM/L/Counter.inc`](amxmodx/scripting/include/VipM/L/Counter.inc) | API счётчиков: Get/Set/Inc |
+| [`include/ItemsController.inc`](amxmodx/scripting/include/ItemsController.inc) | API предметов: регистрация, чтение, выдача |
+| [`include/VipM/M/WeaponMenu.inc`](amxmodx/scripting/include/VipM/M/WeaponMenu.inc) | API WeaponMenu: SetExpireStatus |
+| [`include/VipM/Params.inc`](amxmodx/scripting/include/VipM/Params.inc) | (Deprecated) Устаревшие хелперы, используйте `PCGet_*` |
 
 ---
 
 ## 11. Code Conventions
 
-### Naming
+### Нейминг
 
-| Kind | Convention | Example |
-|------|-----------|---------|
-| Local variables | `camelCase` | `playerIndex`, `menuIndex`, `params` |
-| Global variables | `PascalCase` | `UserAutoOpen`, `UserLeftItems`, `Vips` |
-| Public functions / API | `Namespace_PascalCase` | `VipM_Limits_RegisterType`, `ModuleType_Find` |
-| Static (private) functions | `DefaultObjects_*` (prefix from file) + `static` | `static DefaultObjects_Limit_Map_GetCurrentName(...)` |
-| Internal helpers | `_PascalCase` | `_Cmd_Menu`, `@OnModuleActivate` |
-| Native/forward callbacks | `@FullName` (public is `@FunctionName`) | `@RG_CBasePlayer_Spawn`, `@Event_ModuleActivate` |
-| Enum handle types | `T_Name` | `T_ModuleType`, `T_VipUnit`, `T_IC_ItemType` |
+| Вид | Соглашение | Пример |
+|-----|-----------|--------|
+| Локальные переменные | `camelCase` | `playerIndex`, `menuIndex` |
+| Глобальные переменные | `PascalCase` | `UserAutoOpen`, `Vips` |
+| Публичные функции | `Namespace_PascalCase` | `VipM_Limits_RegisterType` |
+| Приватные функции | `DefaultObjects_*` + `static` | `static DefaultObjects_Limit_Map_GetCurrentName(...)` |
+| Внутренние хелперы | `_PascalCase` или `@PascalCase` | `_Cmd_Menu`, `@OnModuleActivate` |
+| Enum-handle types | `T_Name` | `T_ModuleType`, `T_IC_Item` |
 | Enum struct layouts | `S_Name` | `S_ModuleType`, `S_WeaponMenu` |
-| Enum fields | `StructName_FieldName` | `ModuleType_Name`, `VipUnit_Access` |
-| Constants / macros | `SCREAMING_SNAKE_CASE` | `MODULE_NAME`, `VIPM_MODULES_TYPE_NAME_MAX_LEN` |
-| Enum (actual enumerations) | `E_Name` | `E_ModuleEvent`, `E_LimitEvent`, `E_LimitsExecType` |
+| Enum поля | `StructName_FieldName` | `ModuleType_Name`, `VipUnit_Access` |
+| Константы и макросы | `SCREAMING_SNAKE_CASE` | `MODULE_NAME`, `VIPM_MODULES_TYPE_NAME_MAX_LEN` |
+| Enum (перечисления) | `E_Name` | `E_ModuleEvent`, `E_LimitsExecType` |
 
-**No Hungarian notation** — no `i`, `s`, `f`, `b`, `g`, `g_` prefixes on any variables. Legacy code has some (`g_aVips`, `gUserAutoOpen`, `iRet`, `sName`) — don't copy that into new code.
+**Без венгерской нотации:** никаких `i`, `s`, `f`, `b`, `g`, `g_` префиксов.
 
-### Formatting
+### Форматирование
 
-- 4-space indentation (no tabs)
-- Braces on same line: `if (...) {`
-- Single blank line between logical blocks; **two** blank lines between top-level functions
-- Long argument lists: one per line, aligned to opening paren
-- Multi-line conditions: each sub-condition on its own line, **operator at start**
+- Отступ — 4 пробела (без табуляции)
+- Открывающая скобка на той же строке: `if (x) {`
+- Одна пустая строка между логическими блоками; **две** между функциями верхнего уровня
+- Длинные аргументы — один на строку с выравниванием по открывающей скобке
+- Многострочные условия — каждый под-уcловие на своей строке, оператор **в начале**
 
-### Conventions
+### Соглашения
 
-- Use `PCGet_*` / `PCSingle_*` helpers from ParamsController — don't read Tries directly
-- Prefer `Invalid_*` sentinel checks over magic `-1`
-- Don't add error handling for cases the framework already guards against
-- Use `CallOnce()` macro for init functions that must run once
-- Use `plugin_precache` for all initialization (it's the earliest AMXX forward that runs)
-- Module/Limit registration **must** happen in their respective `OnInited` forwards
+- Использовать `PCGet_*` / `PCSingle_*` хелперы из ParamsController, не читать Trie напрямую
+- Предпочитать `Invalid_*` сентинелы вместо `-1`
+- `CallOnce()` макрос для функций инициализации
+- Вся инициализация — в `plugin_precache`
+- Регистрация модулей/лимитов — только в соответствующих `OnInited` форвардах
 
-### File structure conventions
+### Файловая структура
 
-- **Module plugins**: `VipM-M-ModuleName.sma`
-- **Limit implementations**: `VipM/DefaultObjects/Limit/LimitName.inc`
-- **Item Type implementations**: `ItemsController/DefaultObjects/ItemType/TypeName.inc`
-- Built-in registrations in `VipM/DefaultObjects/Registrar.inc` (limits + param types)
-- Built-in item types registered in `ItemsController.sma` main file
+- Модули: `VipM-M-ModuleName.sma`
+- Лимиты: `VipM/DefaultObjects/Limit/LimitName.inc`
+- Типы предметов: `ItemsController/DefaultObjects/ItemType/TypeName.inc`
+- Регистрация встроенных лимитов/параметров: `VipM/DefaultObjects/Registrar.inc`
 
 ---
 
 ## 12. Creating a New Extension
 
-### A. New Module
+### A. Новый модуль
 
-1. Create `amxmodx/scripting/VipM-M-YourModule.sma`
-2. Use the template from Section 5
-3. Register in `VipM_Modules_OnInited()`
-4. The module is automatically activated when referenced in any VIP's `Modules` array
-5. Update `docs/agents/module-system.md`
+1. Создать `amxmodx/scripting/VipM-M-YourModule.sma`
+2. Зарегистрировать в `VipM_Modules_OnInited()` — `VipM_Modules_Register()`, `VipM_Modules_AddParamsEx()`, `VipM_Modules_RegisterEvent()`
+3. Модуль активируется автоматически при упоминании в любом VIP
+4. API модулей — в [`include/VipM/Modules.inc`](amxmodx/scripting/include/VipM/Modules.inc)
 
-### B. New Limit Type
+### B. Новый тип лимита
 
-1. Create `amxmodx/scripting/VipM/DefaultObjects/Limit/YourLimit.inc`
-2. Define a `DefaultObjects_Limit_YourLimit_Register()` function
-3. Use `VipM_Limits_RegisterType()`, add params with `VipM_Limits_AddParamsEx()`, register event with `VipM_Limits_RegisterTypeEvent()`
-4. Add `#include` and call in `VipM/DefaultObjects/Registrar.inc`
-5. Update `docs/agents/limits-system.md`
+1. Создать `amxmodx/scripting/VipM/DefaultObjects/Limit/YourLimit.inc`
+2. Определить `DefaultObjects_Limit_YourLimit_Register()`, использовать `VipM_Limits_RegisterType()`, `VipM_Limits_AddParamsEx()`, `VipM_Limits_RegisterTypeEvent()`
+3. Добавить `#include` и вызов в [`VipM/DefaultObjects/Registrar.inc`](amxmodx/scripting/VipM/DefaultObjects/Registrar.inc)
+4. API лимитов — в [`include/VipM/Limits.inc`](amxmodx/scripting/include/VipM/Limits.inc)
 
-### C. New Item Type (ItemsController)
+### C. Новый тип предмета (ItemsController)
 
-1. Create `amxmodx/scripting/ItemsController/DefaultObjects/ItemType/YourType.inc`
-2. Define a `DefaultObjects_ItemType_YourType_Register()` function
-3. Use `IC_ItemType_SimpleRegister()` or `IC_ItemType_Register()` + `IC_ItemType_SetEventListener()`
-4. Add params with `IC_ItemType_AddParams()`
-5. Register in the `ItemsController.sma` init chain (see how other types are registered)
-6. Update `docs/agents/items-system.md`
+1. Создать `amxmodx/scripting/ItemsController/DefaultObjects/ItemType/YourType.inc`
+2. Определить `DefaultObjects_ItemType_YourType_Register()`, использовать `IC_ItemType_SimpleRegister()` или `IC_ItemType_Register()` + `IC_ItemType_SetEventListener()`
+3. Зарегистрировать в `ItemsController.sma` (смотреть как регистрируются другие типы)
+4. API предметов — в [`include/ItemsController.inc`](amxmodx/scripting/include/ItemsController.inc)
 
-### D. New Config format
+### D. Новый формат конфига
 
-If you add new JSON keys or change how configs are read/merged, update `docs/agents/config-format.md`.
+Если добавляются новые JSON-ключи или меняется мерж конфигов — обновить описание формата.
 
 ---
 
 ## 13. Build System
 
-Defined in [`amxbuild.yml`](amxbuild.yml) (project root). Dependencies: ParamsController 1.4.2, CommandAliases 1.0.1, ReAPI 5.29.0.358. Build via GitHub Actions CI or the `amxx-builder` toolchain.
+Определён в [`amxbuild.yml`](amxbuild.yml) в корне проекта. Сборка через GitHub Actions CI или `amxx-builder`. Зависимости: ParamsController 1.4.2, CommandAliases 1.0.1, ReAPI 5.29.0.358.
 
 ---
 
 ## 14. Internal Data Structures
 
-### ArrayMap (custom)
+Детали реализации — в исходниках:
 
-String-keyed array map combining `Array` (sequential storage) + `Trie` (key→index lookup):
-
-```pawn
-enum ArrayMap { Array:AM_Arr, Trie:AM_Map }
-#define ArrayMap(%1) %1[ArrayMap]
-
-ArrayMapCreate(ArrayMap(am), cellSize, reserved);
-ArrayMapPushCell/String/Array(am, value, key);
-ArrayMapGetCell/String/Array(am, index);
-ArrayMapGetCellByKey/StringByKey/ArrayByKey(am, key);
-ArrayMapForeachArray(ArrayMap:idx => arr[S_Type]) { ... }
-```
-
-Used for: module type registry, limit type registry.
-
-### g_tUserModules[playerIndex]
-
-```pawn
-static Trie:g_tUserModules[MAX_PLAYERS + 1] = {Invalid_Trie, ...};
-// Structure: Trie<moduleName → Trie<params>>
-// Created per-player on VipsManager_UserReload()
-// Destroyed on VipsManager_UserReset()
-```
-
-### Handle types with Invalid sentinels
-
-```pawn
-enum T_VipUnit     { Invalid_VipUnit = -1 }
-enum T_ModuleType  { Invalid_ModuleType = -1 }
-enum T_ModuleUnit  { Invalid_ModuleUnit = -1 }
-enum T_LimitType   { Invalid_LimitType = -1 }
-enum T_LimitUnit   { Invalid_LimitUnit = -1 }
-enum T_IC_ItemType { Invalid_IC_ItemType = -1 }
-enum T_IC_Item     { Invalid_IC_Item = -1 }
-```
-
-All handles are array indices cast to enum types. `Invalid_*` sentinel is always `-1`.
+- **ArrayMap** (ассоциативный массив Array+Trie) — [`VipM/ArrayMap.inc`](amxmodx/scripting/VipM/ArrayMap.inc). Используется для реестров типов модулей и лимитов.
+- **g_tUserModules[playerIndex]** — пер-игроковый `Trie<moduleName → Trie<params>>`, создаётся в `VipsManager_UserReload()`, очищается в `VipsManager_UserReset()`.
+- **Handle types** (`T_VipUnit`, `T_ModuleType`, `T_LimitType`, `T_IC_Item`, etc.) — все являются индексами массива, кастованными к enum-типу. Сентинел `Invalid_*` всегда `-1`.
 
 ---
 
 ## 15. Server Commands
 
-| Command | Description |
-|---------|-------------|
-| `vipm_update_users` | Refresh privileges for all players (native: `VipM_UserUpdate`) |
-| `vipm_info` | System info — modules, limits, vips count, versions |
-| `vipm_modules` | Table of all registered modules and their active status |
-| `vipm_limits` | Table of all registered limit types with properties |
-| `ic_item_types` | Table of registered item types |
+| Команда | Описание |
+|---------|----------|
+| `vipm_update_users` | Обновить привилегии всех игроков |
+| `vipm_info` | Информация о системе (модули, лимиты, версии) |
+| `vipm_modules` | Таблица зарегистрированных модулей и их статусов |
+| `vipm_limits` | Таблица зарегистрированных типов лимитов |
+| `ic_item_types` | Таблица зарегистрированных типов предметов |
 
-(Defined in `VipM/Core/SrvCmds.inc`)
+Исходники — [`VipM/Core/SrvCmds.inc`](amxmodx/scripting/VipM/Core/SrvCmds.inc).
 
 ---
 
 ## 16. Debugging
 
-Project has a `VipM/DebugMode.inc` with `Dbg_*` macros:
-- `Dbg_Log(...)` — conditional logging when debug is enabled
-- `Dbg_PrintServer(...)` — server_print in debug mode
-
-Enable by defining debug constant before compilation.
+В [`VipM/DebugMode.inc`](amxmodx/scripting/VipM/DebugMode.inc) определён макрос `Dbg_Log(...)` (условное логирование) и `Dbg_PrintServer(...)`. Включается дефайном при компиляции.
 
 ---
 
 ## 17. Documentation Maintenance Rules
 
-After EVERY code change:
-- New module → update `docs/agents/module-system.md`
-- New/changed limit type → update `docs/agents/limits-system.md`
-- New/changed item type → update `docs/agents/items-system.md`
-- Config format change → update `docs/agents/config-format.md`
-- Structural change → update affected sub-docs
-- If change doesn't fit any sub-doc → create new one in `docs/agents/`
+После каждого изменения кода:
+
+- Новый модуль → обновить этот файл (секция 5 или 12)
+- Новый/изменённый тип лимита → обновить секцию 6
+- Новый/изменённый тип предмета → обновить секцию 7
+- Изменение формата конфигов → обновить секцию 3
+- Структурные изменения → обновить секцию 2
+- **Не копируйте сигнатуры нативов в AGENTS.md** — читайте .inc файлы напрямую
 
 ---
 
@@ -913,5 +353,3 @@ After EVERY code change:
 | CommandAliases | 1.0.1 | 1.0.1 | [GitHub](https://github.com/AmxxModularEcosystem/CommandAliases) |
 | ReAPI | 5.24.0.300 | 5.29.0.358 | [GitHub](https://github.com/rehlds/ReAPI) |
 | AMXX | 1.10 | 1.10.5428 | — |
-
-For ParamsController API details (param types, `PCGet_*` helpers, `PCSingle_*` helpers, `PCJson_*` functions), fetch its `README.md` or wiki from the repo above when needed.

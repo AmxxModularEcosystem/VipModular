@@ -3,7 +3,7 @@
   "mcp": {
     "amxx-dep-resolver": {
       "type": "local",
-      "command": ["amxx-dep-resolver"],
+      "command": ["amxb", "mcp"],
       "enabled": true
     }
   }
