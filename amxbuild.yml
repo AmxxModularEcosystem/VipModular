@@ -6,14 +6,31 @@ amxmodx:
   version: "1.10.5428"
 
 deps:
-  - AmxxModularEcosystem/ParamsController@1.4.2
+  - AmxxModularEcosystem/ParamsController@1.4.3
   - AmxxModularEcosystem/CommandAliases@1.0.1
   - repo: rehlds/ReAPI
-    ref: 5.29.0.358
+    ref: 5.24.0.300
     source: release
     include_path: addons/amxmodx/scripting/include
 
 plugins_ini_postfix: vipm
+
+skills:
+  - dir: skills/vipm-config-common
+    name: vipm-config-common
+    description: "Configure shared VipModular settings (Vips.json, Access, Modules, File refs, Modules.json)"
+  - dir: skills/vipm-config-items
+    name: vipm-config-items
+    description: "Configure ItemsController item objects and built-in item type params"
+  - dir: skills/vipm-config-limits
+    name: vipm-config-limits
+    description: "Configure VipModular limit (Access condition) objects and built-in limit types"
+  - dir: skills/vipm-config-modules
+    name: vipm-config-modules
+    description: "Configure VipModular modules (object shape, built-in modules, WeaponMenu nesting)"
+  - dir: skills/vipm-config-type-lookup
+    name: vipm-config-type-lookup
+    description: "Find object type names/params for configs across skills, docs, deps and repos"
 
 output:
   generate_ini: true
