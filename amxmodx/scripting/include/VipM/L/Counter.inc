@@ -77,8 +77,8 @@ stock VipM_L_Counter_Type:PCGet_VipmCounterType(const Trie:p, const key[], const
     return PCGet_Cell(p, key, def);
 }
 
-stock VipM_L_Counter_Type:PCSingle_VipmCounterType(const JSON:valueJson, const key[], const VipM_L_Counter_Type:def = VipM_L_Counter_PerLife, const orFailKey[] = "") {
-    return PCSingle_Cell(valueJson, key, VIPM_L_COUNTER_PARAM_TYPE, def, orFailKey);
+stock VipM_L_Counter_Type:PCSingle_VipmCounterType(const JSON:valueJson, const VipM_L_Counter_Type:def = VipM_L_Counter_PerLife, const orFailKey[] = "") {
+    return PCSingle_Cell(valueJson, VIPM_L_COUNTER_PARAM_TYPE, def, orFailKey);
 }
 
 stock VipM_L_Counter_Type:PCSingle_ObjVipmCounterType(const JSON:objectJson, const key[], const VipM_L_Counter_Type:def = VipM_L_Counter_PerLife, const bool:dotNot = false, const bool:orFail = false) {

@@ -20,7 +20,8 @@ description: >-
   глобальную активацию модулей (`Modules.json`).
 - **НЕ для этого скилла:** тело лимита → `vipm-config-limits`; тело модуля →
   `vipm-config-modules`; предмет → `vipm-config-items`; поиск имён типов/параметров в
-  исходниках → `vipm-config-type-lookup`.
+  исходниках → `vipm-config-type-lookup`; типы параметров → `param-types` /
+  `vipm-core-param-types` / `vipm-ic-param-types`.
 
 ## Расположение и правила
 
@@ -46,10 +47,6 @@ amxmodx/configs/plugins/VipModular/
   | Лимит (проверка) | `"Limit"` | `{ "Limit": "Flags", "Flags": "t" }` |
   | Модуль | `"Module"` | `{ "Module": "VipInTab", "Enabled": true }` |
   | Предмет | `"Item"` | `{ "Item": "Weapon", "Name": "weapon_ak47" }` |
-
-> ⚠️ Файл `docs/agents/config-format.md` в этом репозитории **недостоверен**:
-> он использует несуществующий ключ `"Type"` и выдуманные параметры. Всегда
-> сверяйтесь с этим скиллом, `readme/configs.md` и исходниками.
 
 ## Ссылки на файлы: `"File:<path>/<file>"`
 
@@ -139,42 +136,19 @@ amxmodx/configs/plugins/VipModular/
 
 ## Типы параметров (ParamsController)
 
-Начиная с VipModular **5.0.0-rc.\*** система использует **ParamsController**, где
-список типов параметров **расширяемый**: тип — это строковое имя, которое
-регистрирует библиотека или плагин-расширение. Старый enum `E_ParamType`
-(`ptInteger`, `ptBoolean`, `ptLimit`, `ptCustom`, …) **устарел** — не используйте
-его в новых конфигах/плагинах.
+Параметры модулей, лимитов и предметов описываются типами ParamsController.
+Их описания здесь намеренно не дублируются:
 
-Встроенные имена типов (ParamsController):
-
-| Имя | Значение |
-|---|---|
-| `Integer` | целое число |
-| `Float` | дробное число |
-| `Boolean` | `true`/`false` |
-| `String` | строка |
-| `ShortString` / `LongString` | короткая / длинная строка |
-| `RGB` | цвет |
-| `Model` / `PlayerModel` | модель |
-| `Sound` / `Resource` | звук / ресурс |
-| `File` / `Dir` | файл / путь |
-| `ChatMessage` | сообщение в чат |
-| `Time` / `TimeInterval` | время / интервал |
-| `WeekDay` | день недели |
-| `Flags` | флаги |
-| `Regexp` | регулярное выражение |
-
-Дополнительные типы, регистрируемые VipModular / ItemsController:
-
-| Имя | Значение |
-|---|---|
-| `VipM-Limit` / `VipM-Limits` | один лимит / список лимитов |
-| `VipM-LimitType` / `VipM-ModuleType` | ссылка на тип лимита / модуля |
-| `VipM-L-CounterType` | тип сброса счётчика (`PerLife`/`PerRound`/…) |
-| `IC-Item` / `IC-Items` | один предмет / список предметов |
-
-Плагины-расширения могут добавлять собственные типы — список не закрытый.
-Актуальные имена всегда можно найти в исходниках (`vipm-config-type-lookup`).
+- **Встроенные типы** (`Integer`, `Boolean`, `Float`, `String`, `ShortString`,
+  `LongString`, `Flags`, `Time`, `TimeInterval`, `WeekDay`, `Regexp`, `Model`,
+  `Sound`, `RGB`, `ChatMessage`, …) → скилл `param-types`.
+- **Типы ядра VipModular** (`VipM-Limit`, `VipM-Limits`, `VipM-LimitType`,
+  `VipM-ModuleType`, `VipM-L-CounterType`) → скилл `vipm-core-param-types`.
+- **Типы предметов ItemsController** (`IC-Item`, `IC-Items`) → скилл
+  `vipm-ic-param-types`.
+- **Как регистрировать свои типы и читать значения кодом** → скиллы
+  `param-type-registration`, `params-usage`.
+- **Поиск точного имени типа/параметра в исходниках** → `vipm-config-type-lookup`.
 
 ## Рабочий процесс / Workflow
 

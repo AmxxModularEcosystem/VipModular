@@ -74,8 +74,9 @@ description: >-
 | `InFreezyTime` | нет | `Reverse` : Boolean |
 | `Logic-OR`, `Logic-AND`, `Logic-XOR`, `Logic-NOT` | нет | `Limits` : `VipM-Limits` * |
 
-> `Type` у `Counter` — тип сброса счётчика: `PerLife`, `PerRound`, `PerSession`,
-> `PerGame`, `PerMap`.
+> Типы параметров в таблице (`Flags`, `Time`, `TimeInterval`, `WeekDay`,
+> `Regexp`, …) описаны в скилле `param-types`; тип `VipM-L-CounterType` —
+> в скилле `vipm-core-param-types`.
 
 ## Композиция условий: `Logic-*`
 

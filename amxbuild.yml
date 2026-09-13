@@ -6,7 +6,7 @@ amxmodx:
   version: "1.10.5428"
 
 deps:
-  - AmxxModularEcosystem/ParamsController@1.4.3
+  - AmxxModularEcosystem/ParamsController@1.4.4
   - AmxxModularEcosystem/CommandAliases@1.0.1
   - repo: rehlds/ReAPI
     ref: 5.24.0.300
@@ -31,6 +31,12 @@ skills:
   - dir: skills/vipm-config-type-lookup
     name: vipm-config-type-lookup
     description: "Find object type names/params for configs across skills, docs, deps and repos"
+  - dir: skills/vipm-core-param-types
+    name: vipm-core-param-types
+    description: "Core VipModular custom param types (VipM-Limit, VipM-Limits, VipM-LimitType, VipM-ModuleType, VipM-L-CounterType)"
+  - dir: skills/vipm-ic-param-types
+    name: vipm-ic-param-types
+    description: "ItemsController custom param types (IC-Item, IC-Items)"
 
 output:
   generate_ini: true

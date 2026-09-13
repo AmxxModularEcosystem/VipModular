@@ -36,9 +36,7 @@ description: >-
    скиллы (в т.ч. объявленные зависимостями) через MCP:
    `list_agent_skills` / `get_agent_skills`.
 2. **Доки текущего проекта**: `readme/configs.md`, `readme/extensions/**`,
-   `docs/agents/**`, `AGENTS.md`.
-   - ⚠️ `docs/agents/config-format.md` **недостоверен** (ключ `"Type"`,
-     выдуманные параметры) — не используйте его.
+   `AGENTS.md`.
 3. **Доки зависимостей/репозиториев**, объявленные автором — через MCP:
    `list_agent_docs` → `get_agent_docs` (`dep="owner/repo@ref"`).
 4. **Публичное API зависимостей (`.inc`)** — MCP `list_dep_incs`,
@@ -60,9 +58,9 @@ MCP `build_plan` (или `resolve_manifest`) → поля `globalDeps` и `repos
 `get_dep_tree` — рекурсивно, включая подзависимости.
 
 Например, текущий `amxbuild.yml` подключает:
-- `AmxxModularEcosystem/ParamsController@1.4.3` — типы параметров и геттеры;
+- `AmxxModularEcosystem/ParamsController@1.4.4` — типы параметров и геттеры;
 - `AmxxModularEcosystem/CommandAliases@1.0.1` — алиасы команд;
-- `rehlds/ReAPI@5.29.0.358` (release, `include_path`).
+- `rehlds/ReAPI@5.24.0.300` (release, `include_path`).
 
 Тип или параметр вполне может поставляться **зависимостью**, а не проектом —
 поэтому поиск всегда идёт и по deps/repos.
@@ -88,7 +86,7 @@ MCP `build_plan` (или `resolve_manifest`) → поля `globalDeps` и `repos
 | Лимиты | `amxmodx/scripting/VipM/DefaultObjects/Limit/*.inc`, сторонние `VipM-L-*.sma` | `search_symbol`, `list_repo_files` |
 | Модули | `amxmodx/scripting/VipM-M-*.sma` | `search_symbol`, `list_repo_files` |
 | Предметы | `amxmodx/scripting/ItemsController/DefaultObjects/ItemType/*.inc` | `search_symbol` |
-| Типы параметров | `build/_includes/.../ParamsController.inc` | `get_dep_interface(dep=ParamsController)` |
+| Типы параметров | скиллы `param-types`, `vipm-core-param-types`, `vipm-ic-param-types`; в коде — `ParamsController_OnRegisterTypes` / `RegSimpleType` | `get_dep_interface(dep=ParamsController)` |
 | Публичный API | `amxmodx/scripting/include/VipM/Limits.inc`, `VipM/Modules.inc`, `ItemsController.inc` | `get_dep_interface` / `list_dep_incs` |
 
 ## Рецепты
@@ -117,11 +115,11 @@ search_symbol("VipM_Limits_AddParamsEx", scope="all")
 search_symbol("DEFAULT_PARAMS_INT_NAME", scope="all")   # -> ParamsController
 
 # Полное API конкретного депа
-get_dep_interface(dep="AmxxModularEcosystem/ParamsController@1.4.3", grep="DEFAULT_PARAMS_")
-list_dep_incs(dep="rehlds/ReAPI@5.29.0.358")
+get_dep_interface(dep="AmxxModularEcosystem/ParamsController@1.4.4", grep="DEFAULT_PARAMS_")
+list_dep_incs(dep="rehlds/ReAPI@5.24.0.300")
 
 # Доки депа (если объявлены автором)
-list_agent_docs(dep="AmxxModularEcosystem/ParamsController@1.4.3")
+list_agent_docs(dep="AmxxModularEcosystem/ParamsController@1.4.4")
 get_agent_docs(dep="...", grep="param type")
 ```
 
@@ -147,28 +145,18 @@ ls ~/.cache/amxx-builder/repos/*/amxmodx/scripting/include/
 
 ## Имена типов параметров (ParamsController)
 
-Тип параметра — строковое имя; список **расширяемый** (enum `E_ParamType`
-устарел). Встроенные имена и константы:
+Тип параметра — строковое имя; набор типов расширяемый (enum `E_ParamType`
+устарел). Таблицы имён и значений в этом скилле не дублируются:
 
-| Константа | Имя | Значение в JSON |
-|---|---|---|
-| `DEFAULT_PARAMS_INT_NAME` | `"Integer"` | число |
-| `DEFAULT_PARAMS_FLOAT_NAME` | `"Float"` | дробное число |
-| `DEFAULT_PARAMS_BOOL_NAME` | `"Boolean"` | `true`/`false` |
-| `DEFAULT_PARAMS_STR_NAME` | `"String"` | строка |
-| `DEFAULT_PARAMS_SHORT_STR_NAME` / `_LONG_STR_NAME` | `"ShortString"` / `"LongString"` | строка |
-| `DEFAULT_PARAMS_RGB_NAME` | `"RGB"` | цвет |
-| `DEFAULT_PARAMS_MODEL_NAME` / `_PLAYER_MODEL_NAME` | `"Model"` / `"PlayerModel"` | модель |
-| `DEFAULT_PARAMS_SOUND_NAME` / `_RESOURCE_NAME` | `"Sound"` / `"Resource"` | звук / ресурс |
-| `DEFAULT_PARAMS_FILE_NAME` / `_DIR_NAME` | `"File"` / `"Dir"` | файл / путь |
-| `DEFAULT_PARAMS_CHAT_MESSAGE_NAME` | `"ChatMessage"` | сообщение |
-| `DEFAULT_PARAMS_TIME_NAME` / `_TIME_INTERVAL_NAME` | `"Time"` / `"TimeInterval"` | время / интервал |
-| `DEFAULT_PARAMS_WEEK_DAY_NAME` | `"WeekDay"` | день недели |
-| `DEFAULT_PARAMS_FLAGS_NAME` | `"Flags"` | флаги (`"t"`) |
-| `DEFAULT_PARAMS_REGEXP_NAME` | `"Regexp"` | regex |
-| `IC_PARAM_TYPE_ITEMS_NAME` / `_ITEM_NAME` | `"IC-Items"` / `"IC-Item"` | предмет(ы) |
-| `VIPM_PARAM_TYPE_LIMITS_NAME` / `_LIMIT_NAME` | `"VipM-Limits"` / `"VipM-Limit"` | лимит(ы) |
-| `VIPM_L_COUNTER_PARAM_TYPE` | `"VipM-L-CounterType"` | `PerLife`/`PerRound`/… |
+- встроенные типы контроллера → скилл `param-types`;
+- типы ядра VipModular (`VipM-Limit`, `VipM-Limits`, `VipM-LimitType`,
+  `VipM-ModuleType`, `VipM-L-CounterType`) → скилл `vipm-core-param-types`;
+- типы предметов ItemsController (`IC-Item`, `IC-Items`) → скилл
+  `vipm-ic-param-types`.
+
+В коде регистрации ищутся через `ParamsController_OnRegisterTypes` /
+`ParamsController_RegSimpleType` / `ParamsController_ParamType_Register`
+(см. скилл `param-type-registration`).
 
 ## Проверка на запущенном сервере
 
@@ -185,7 +173,6 @@ ls ~/.cache/amxx-builder/repos/*/amxmodx/scripting/include/
   проекта, доки депов, `.inc`, затем код.
 - Искать **и в проекте, и во всех deps/repos** из манифеста — тип может прийти
   из зависимости (например, типы параметров — из ParamsController).
-- Не доверять `docs/agents/config-format.md`.
 - Список типов и типов параметров не закрытый: ищите `AddParams*`/`PCParam` в
   расширении, которое регистрирует тип.
 - В репозитории 24 файла лимитов, но они регистрируют **31 именованный тип**
@@ -199,5 +186,6 @@ ls ~/.cache/amxx-builder/repos/*/amxmodx/scripting/include/
 - [ ] Имя типа найдено (`Register...`); при отсутствии локально — через
       `search_symbol` по deps.
 - [ ] Параметры найдены (`AddParams...`/`PCParam`); обязательные отмечены.
-- [ ] Тип параметра сопоставлен таблицей выше.
+- [ ] Тип параметра сопоставлен по скиллам `param-types` /
+      `vipm-core-param-types` / `vipm-ic-param-types`.
 - [ ] Для `Modules.json` учтена зависимость лимита от игрока.

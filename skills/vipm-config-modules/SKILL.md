@@ -38,6 +38,8 @@ description: >-
 - Строка `"File:WeaponMenu/Vip"` — допустимая альтернатива объекту.
 - `"Menus"` и `"Items"` внутри модулей принимают вложенные объекты и ссылки.
 
+> Типы параметров в таблицах (`Integer`, `Boolean`, `String`, `VipM-Limits`, `VipM-L-CounterType`, `IC-Items`, …) описаны в скиллах `param-types`, `vipm-core-param-types`, `vipm-ic-param-types`.
+
 ### Приоритет и слияние (Once)
 
 - Привилегии идут **сверху вниз**; первый модуль с данным именем выигрывает.

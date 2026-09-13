@@ -408,7 +408,7 @@ stock Array:PCGet_IcItems(const Trie:p, const key[], const Array:def = Invalid_A
 
 stock bool:PCGet_IcItemGive(const Trie:p, const key[], const playerIndex) {
     new T_IC_Item:item = PCGet_IcItem(p, key);
-    return item != Invalid_IC_Item && IC_Item_Give(0playerIndex, item);
+    return item != Invalid_IC_Item && IC_Item_Give(playerIndex, item);
 }
 
 stock bool:PCGet_IcItemsGive(const Trie:p, const key[], const playerIndex) {
