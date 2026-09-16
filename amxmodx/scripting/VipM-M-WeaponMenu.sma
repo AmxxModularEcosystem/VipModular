@@ -29,6 +29,7 @@ new bool:gUserAutoOpen[MAX_PLAYERS + 1] = {true, ...};
 new gUserExpireStatus[MAX_PLAYERS + 1][VIPM_M_WEAPONMENU_EXPIRE_STATUS_MAX_LEN];
 
 #include "VipM/WeaponMenu/KeyValueCounter"
+#include "VipM/WeaponMenu/Placeholders"
 #include "VipM/WeaponMenu/Menus"
 
 public VipM_Modules_OnInited() {
@@ -226,7 +227,10 @@ _Cmd_Menu(const playerIndex, const bool:bSilent = false) {
     }
     
     if (Menu[WeaponMenu_FakeMessage][0]) {
-        ChatPrint(playerIndex, Menu[WeaponMenu_FakeMessage]);
+        static sMessage[sizeof(Menu[WeaponMenu_FakeMessage])];
+        Menu_FormatPlaceholders(playerIndex, sMessage, charsmax(sMessage), Menu[WeaponMenu_FakeMessage]);
+
+        ChatPrint(playerIndex, sMessage);
         return;
     }
 

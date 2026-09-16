@@ -12,10 +12,16 @@ Menu_GetUserMenusCount(const playerIndex) {
 }
 
 Menu_MainMenu(const playerIndex, const MainMenuTitle[], const Array:menus) {
-    new menuHandler = menu_create(MainMenuTitle, "@MenuHandler_Command");
+    static sTitle[256];
+    Menu_FormatPlaceholders(playerIndex, sTitle, charsmax(sTitle), MainMenuTitle);
+
+    new menuHandler = menu_create(sTitle, "@MenuHandler_Command");
 
     ArrayForeachArray2 (menus: i => menuObject[S_WeaponMenu]) {
-        menu_additem(menuHandler, menuObject[WeaponMenu_Name], fmt("%s %d", VIPM_M_WEAPONMENU_CMD_MENU, i));
+        static sMenuName[128];
+        Menu_FormatPlaceholders(playerIndex, sMenuName, charsmax(sMenuName), menuObject[WeaponMenu_Name]);
+
+        menu_additem(menuHandler, sMenuName, fmt("%s %d", VIPM_M_WEAPONMENU_CMD_MENU, i));
     }
 
     menu_setprop(menuHandler, MPROP_BACKNAME, Lang("VIPM_M_WM_MENU_BACK"));
@@ -44,7 +50,9 @@ Menu_WeaponsMenu(const playerIndex, const menuIndex, const menuObject[S_WeaponMe
     }
 
     static sMenu[512];
-    formatex(sMenu, charsmax(sMenu), "%s^n%s%s", menuObject[WeaponMenu_Title], sExpireStatus, sItemsLeft);
+    static sTitle[256];
+    Menu_FormatPlaceholders(playerIndex, sTitle, charsmax(sTitle), menuObject[WeaponMenu_Title]);
+    formatex(sMenu, charsmax(sMenu), "%s^n%s%s", sTitle, sExpireStatus, sItemsLeft);
 
     new menuHandler = menu_create(sMenu, "@MenuHandler_Command");
 
@@ -81,11 +89,11 @@ Menu_WeaponsMenu(const playerIndex, const menuIndex, const menuObject[S_WeaponMe
             || VipM_Limits_ExecuteList(itemObject[MenuItem_ActiveLimits], playerIndex, Limit_Exec_AND)
         );
 
-        static title[64];
+        static title[256];
         if (isItemActive) {
-            copy(title, charsmax(title), itemObject[MenuItem_Title]);
+            Menu_FormatPlaceholders(playerIndex, title, charsmax(title), itemObject[MenuItem_Title]);
         } else {
-            copy(title, charsmax(title), itemObject[MenuItem_InactiveTitle]);
+            Menu_FormatPlaceholders(playerIndex, title, charsmax(title), itemObject[MenuItem_InactiveTitle]);
         }
 
         switch (itemObject[MenuItem_Type]) {
@@ -104,7 +112,9 @@ Menu_WeaponsMenu(const playerIndex, const menuIndex, const menuObject[S_WeaponMe
             }
             
             case MenuItemType_Text: {
-                menu_addtext2(menuHandler, itemObject[MenuItem_Title]);
+                static sText[256];
+                Menu_FormatPlaceholders(playerIndex, sText, charsmax(sText), itemObject[MenuItem_Title]);
+                menu_addtext2(menuHandler, sText);
             }
 
             case MenuItemType_Blank: {

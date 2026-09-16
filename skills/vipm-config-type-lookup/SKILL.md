@@ -58,7 +58,7 @@ MCP `build_plan` (или `resolve_manifest`) → поля `globalDeps` и `repos
 `get_dep_tree` — рекурсивно, включая подзависимости.
 
 Например, текущий `amxbuild.yml` подключает:
-- `AmxxModularEcosystem/ParamsController@1.4.4` — типы параметров и геттеры;
+- `AmxxModularEcosystem/ParamsController@1.5.0` — типы параметров и геттеры;
 - `AmxxModularEcosystem/CommandAliases@1.0.1` — алиасы команд;
 - `rehlds/ReAPI@5.24.0.300` (release, `include_path`).
 
@@ -115,11 +115,11 @@ search_symbol("VipM_Limits_AddParamsEx", scope="all")
 search_symbol("DEFAULT_PARAMS_INT_NAME", scope="all")   # -> ParamsController
 
 # Полное API конкретного депа
-get_dep_interface(dep="AmxxModularEcosystem/ParamsController@1.4.4", grep="DEFAULT_PARAMS_")
+get_dep_interface(dep="AmxxModularEcosystem/ParamsController@1.5.0", grep="DEFAULT_PARAMS_")
 list_dep_incs(dep="rehlds/ReAPI@5.24.0.300")
 
 # Доки депа (если объявлены автором)
-list_agent_docs(dep="AmxxModularEcosystem/ParamsController@1.4.4")
+list_agent_docs(dep="AmxxModularEcosystem/ParamsController@1.5.0")
 get_agent_docs(dep="...", grep="param type")
 ```
 
