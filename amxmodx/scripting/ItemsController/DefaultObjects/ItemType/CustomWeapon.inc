@@ -241,7 +241,14 @@ static bool:ItemType_CustomWeapon_GiveViaWss(
             gtype = GT_APPEND;
     }
 
-    return wss_give_weapon(playerIndex, weaponName, gtype) > 0;
+    new itemIndex = wss_give_weapon(playerIndex, weaponName, gtype);
+    if (itemIndex <= 0) {
+        return false;
+    }
+    
+    rg_set_user_bpammo(playerIndex, WeaponIdType:get_member(itemIndex, m_iId), rg_get_iteminfo(itemIndex, ItemInfo_iMaxAmmo1));
+
+    return true;
 }
 
 static E_ItemType_CustomWeapon_Controller:ItemType_CustomWeapon_ParseController(const str[]) {
