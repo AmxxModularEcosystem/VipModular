@@ -47,6 +47,11 @@ Trie:LoadModulesLimitsFromFile(const filePath[], &Trie:modules = Invalid_Trie) {
         modules = TrieCreate();
     }
 
+    if (!file_exists(filePath)) {
+        log_amx("Config file `%s` not found. Modules limiter is disabled.", filePath);
+        return modules;
+    }
+
     new JSON:fileJson = PCJson_ParseFile(filePath);
     if (fileJson == Invalid_JSON) {
         log_error(0, "Invalid JSON syntax. File `%s`.", filePath);
