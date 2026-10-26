@@ -19,63 +19,9 @@
         "Limits": {
             "Limit": "Logic-NOT",
             "Limits": {
-                "Limit": "Logic-OR",
-                "Limits": [
-                    {
-                        "Limit": "Map",
-                        "Map": "$",
-                        "Prefix": true,
-                        "Real": true
-                    },
-                    {
-                        "Limit": "Map",
-                        "Map": "aim_",
-                        "Prefix": true,
-                        "Real": true
-                    },
-                    {
-                        "Limit": "Map",
-                        "Map": "awp_",
-                        "Prefix": true,
-                        "Real": true
-                    },
-                    {
-                        "Limit": "Map",
-                        "Map": "fy_",
-                        "Prefix": true,
-                        "Real": true
-                    },
-                    {
-                        "Limit": "Map",
-                        "Map": "35hp_",
-                        "Prefix": true,
-                        "Real": true
-                    },
-                    {
-                        "Limit": "Map",
-                        "Map": "1hp_",
-                        "Prefix": true,
-                        "Real": true
-                    },
-                    {
-                        "Limit": "Map",
-                        "Map": "100hp_",
-                        "Prefix": true,
-                        "Real": true
-                    },
-                    {
-                        "Limit": "Map",
-                        "Map": "he_",
-                        "Prefix": true,
-                        "Real": true
-                    },
-                    {
-                        "Limit": "Map",
-                        "Map": "ka_",
-                        "Prefix": true,
-                        "Real": true
-                    }
-                ]
+                "Limit": "Map",
+                "Regexp": "^(\\$|aim_|awp_|fy_|35hp_|1hp_|100hp_|he_|ka_)",
+                "Real": true
             }
         }
     }

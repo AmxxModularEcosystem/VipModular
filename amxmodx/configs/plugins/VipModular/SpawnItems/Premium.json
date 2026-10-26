@@ -9,16 +9,16 @@
 
     "Items": [
         { // Дигл
-            "Type": "Weapon",
+            "Item": "Weapon",
             "Name": "weapon_deagle",
             "GiveType": "Replace"
         },
         { // Осколочная граната
-            "Type": "Weapon",
+            "Item": "Weapon",
             "Name": "weapon_hegrenade"
         },
         {
-            "Type": "Money",
+            "Item": "Money",
             "Amount": 500
         },
         // Набор сапёра

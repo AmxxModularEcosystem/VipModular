@@ -21,7 +21,7 @@
             /* Предметы, выдаваемые при выборе этого пункта */
             "Items": [
                 {
-                    "Type": "Weapon",
+                    "Item": "Weapon",
                     "Name": "weapon_ak47"
                 }
             ]
@@ -31,7 +31,7 @@
 
             "Items": [
                 {
-                    "Type": "Weapon",
+                    "Item": "Weapon",
                     "Name": "weapon_m4a1"
                 }
             ]
@@ -46,7 +46,7 @@
 
             "Items": [
                 {
-                    "Type": "Weapon",
+                    "Item": "Weapon",
                     "Name": "weapon_awp"
                 }
             ]

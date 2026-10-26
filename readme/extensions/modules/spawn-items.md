@@ -26,12 +26,12 @@ _\* - если указано "-", то параметр является обя
 
   "Items": [
     {
-      "Type": "Weapon",
+      "Item": "Weapon",
       "Name": "weapon_deagle",
       "GiveType": "Replace"
     },
     {
-      "Type": "Weapon",
+      "Item": "Weapon",
       "Name": "weapon_hegrenade",
       "GiveType": "Add"
     }

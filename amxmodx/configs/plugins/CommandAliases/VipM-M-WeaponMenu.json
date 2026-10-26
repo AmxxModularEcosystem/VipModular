@@ -1,0 +1,34 @@
+[
+    {
+        "Command": "vipm_m_weaponmenu_menu",
+        "Alias": [
+            "vm",
+            "say /vm",
+            "say_team /vm",
+            "vipmenu",
+            "say /vipmenu",
+            "say_team /vipmenu"
+        ]
+    },
+    {
+        "Command": "vipm_m_weaponmenu_menu_silent",
+        "Alias": [
+            "vm_silent",
+            "vipmenu_silent"
+        ]
+    },
+    {
+        "Command": "vipm_m_weaponmenu_autoopen_toggle",
+        "Alias": [
+            "vm_autoopen",
+            "say /vm_autoopen",
+            "say_team /vm_autoopen",
+            "vm_ao",
+            "say /vm_ao",
+            "say_team /vm_ao",
+            "vipmenu_autoopen",
+            "say /vipmenu_autoopen",
+            "say_team /vipmenu_autoopen"
+        ]
+    }
+]

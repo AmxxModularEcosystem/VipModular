@@ -7,7 +7,7 @@
             "Title": "АК-47",
             "Items": [
                 {
-                    "Type": "Weapon",
+                    "Item": "Weapon",
                     "Name": "weapon_ak47"
                 }
             ]
@@ -16,7 +16,7 @@
             "Title": "M4A1",
             "Items": [
                 {
-                    "Type": "Weapon",
+                    "Item": "Weapon",
                     "Name": "weapon_m4a1"
                 }
             ]
@@ -25,7 +25,7 @@
             "Title": "AUG",
             "Items": [
                 {
-                    "Type": "Weapon",
+                    "Item": "Weapon",
                     "Name": "weapon_aug"
                 }
             ]
@@ -34,7 +34,7 @@
             "Title": "SG552",
             "Items": [
                 {
-                    "Type": "Weapon",
+                    "Item": "Weapon",
                     "Name": "weapon_sg552"
                 }
             ]
@@ -45,7 +45,7 @@
             "FakeInactive": true,
             "Items": [
                 {
-                    "Type": "Weapon",
+                    "Item": "Weapon",
                     "Name": "weapon_awp"
                 }
             ]

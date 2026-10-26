@@ -1,6 +1,12 @@
-# Modular Vip System
+# Vip Modular
 
 Модульная система привилегий.
+
+## Требования
+
+- [ParamsController](https://github.com/AmxxModularEcosystem/ParamsController) версии [1.5.0](https://github.com/AmxxModularEcosystem/ParamsController/releases/tag/1.5.0) или [выше](https://github.com/AmxxModularEcosystem/ParamsController/releases/latest).
+- [CommandAliases](https://github.com/AmxxModularEcosystem/CommandAliases) версии [1.0.1](https://github.com/AmxxModularEcosystem/CommandAliases/releases/tag/1.0.1-fix1) или [выше](https://github.com/AmxxModularEcosystem/CommandAliases/releases/latest).
+- [ReAPI](https://github.com/rehlds/ReAPI) версии [5.24.0.300](https://github.com/rehlds/ReAPI/releases/tag/5.24.0.300) или [выше](https://github.com/rehlds/ReAPI/releases/latest).
 
 ## Инструкции по настройке
 
@@ -15,18 +21,12 @@
 | :-------------------------------- | :---------------------------------------------------------- |
 | `vipm_update_users`               | Обновляет привилегии у всех игроков                         |
 | `vipm_info`                       | Выводит информацию о системе привилегий                     |
-|                                   |                                                             |
 | `vipm_modules`                    | Выводит таблицу модулей и их статусов                       |
-| `vipm_module_params <ModuleName>` | Выводит таблицу параметров указанного модуля                |
-|                                   |                                                             |
 | `vipm_limits`                     | Выводит таблицу типов проверок и некоторую информацию о них |
-| `vipm_limit_params <LimitType>`   | Выводит таблицу параметров указанного типа проверки         |
-|                                   |                                                             |
-| `vipm_ic_types`                   | Выводит таблицу типов предметов                             |
+| `ic_item_types`                   | Выводит таблицу типов предметов                             |
 
 ## Идеи
 
 - _\[Configs\]_ Добавить глобальные настройки типа ключ-значение, на которые можно ссылаться из основных конфигов как на файлы, только с префиксом Var:
 - _\[Modules\]_ Переработать обьедининение параметров модулей
-- _\[ReadMe\]_ Нарисовать схему взаимодействия компонентов системы
-- _\[IC\]_ Придумать как норм отвязать IC от ядра и, возможно, вынести его в отдельный репо
+- _\[IC\]_ Придумать как норм отвязать IC от ядра и, возможно, вынести его в отдельный репо (WIP)

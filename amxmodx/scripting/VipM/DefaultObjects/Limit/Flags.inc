@@ -1,0 +1,23 @@
+#include <amxmodx>
+#include <ParamsController>
+#include <VipModular>
+
+DefaultObjects_Limit_Flags_Register() {
+    VipM_Limits_RegisterType("Flags", true, false);
+    VipM_Limits_AddParamsEx("Flags",
+        PCParam("Flags", DEFAULT_PARAMS_FLAGS_NAME, true),
+        PCParam("Strict", DEFAULT_PARAMS_BOOL_NAME)
+    );
+    VipM_Limits_RegisterTypeEvent("Flags", Limit_OnCheck, "@DefaultObjects_Limit_Flags_OnCheck");
+}
+
+@DefaultObjects_Limit_Flags_OnCheck(const Trie:p, const playerIndex) {
+    new playerFlags = get_user_flags(playerIndex);
+    new flags = PCGet_Int(p, "Flags");
+
+    if (PCGet_Bool(p, "Strict", false)) {
+        return (playerFlags & flags) == flags;
+    } else {
+        return playerFlags & flags;
+    }
+}

@@ -1,12 +1,8 @@
 #include <amxmodx>
 #include <reapi>
 #include <VipModular>
-#include "VipM/Utils"
 
-#pragma semicolon 1
-#pragma compress 1
-
-public stock const PluginName[] = "[VipM][M] Vampire";
+public stock const PluginName[] = "[VipM-M] Vampire";
 public stock const PluginVersion[] = _VIPM_VERSION;
 public stock const PluginAuthor[] = "ArKaNeMaN";
 public stock const PluginURL[] = _VIPM_PLUGIN_URL;
@@ -14,74 +10,76 @@ public stock const PluginDescription[] = "Vip modular`s module - Vampire";
 
 new const MODULE_NAME[] = "Vampire";
 
-public VipM_OnInitModules(){
-    RegisterPluginByVars();
+public VipM_Modules_OnInited() {
+    register_plugin(PluginName, PluginVersion, PluginAuthor);
     register_dictionary("VipM-Vampire.ini");
 
-    VipM_Modules_Register(MODULE_NAME, true);
-    VipM_Modules_AddParams(MODULE_NAME,
-        "MaxHealth", ptInteger, false,
-        "ByKill", ptInteger, false,
-        "ByHead", ptInteger, false,
-        "ByKnife", ptInteger, false,
-        "ByGrenade", ptInteger, false
+    VipM_Modules_Register(MODULE_NAME);
+    VipM_Modules_AddParamsEx(MODULE_NAME,
+        PCParam("ByKill", DEFAULT_PARAMS_INT_NAME),
+        PCParam("ByHead", DEFAULT_PARAMS_INT_NAME),
+        PCParam("ByKnife", DEFAULT_PARAMS_INT_NAME),
+        PCParam("ByGrenade", DEFAULT_PARAMS_INT_NAME)
     );
-    VipM_Modules_AddParams(MODULE_NAME,
-        "Limits", ptLimits, false
+    VipM_Modules_AddParamsEx(MODULE_NAME,
+        PCParam("MaxHealth", DEFAULT_PARAMS_INT_NAME),
+        PCParam("Limits", VIPM_PARAM_TYPE_LIMITS_NAME)
     );
     VipM_Modules_RegisterEvent(MODULE_NAME, Module_OnActivated, "@Event_ModuleActivate");
 }
 
-@Event_ModuleActivate(){
+@Event_ModuleActivate() {
     RegisterHookChain(RG_CBasePlayer_Killed, "@Event_PlayerKilled", true);
 }
 
-@Event_PlayerKilled(const VictimId, UserId, InflictorId){
+@Event_PlayerKilled(const victimIndex, playerIndex, inflictorIndex) {
     if (
-        UserId == VictimId
-        || !is_user_alive(UserId)
-        || !is_user_connected(VictimId)
+        playerIndex == victimIndex
+        || !is_user_alive(playerIndex)
+        || !is_user_connected(victimIndex)
     ) {
         return;
     }
 
-    new Trie:Params = VipM_Modules_GetParams(MODULE_NAME, UserId);
-    if (Params == Invalid_Trie) {
+    new Trie:p = VipM_Modules_GetParams(MODULE_NAME, playerIndex);
+    if (p == Invalid_Trie) {
         return;
     }
 
-    if (!VipM_Limits_ExecuteList(VipM_Params_GetCell(Params, "Limits", Invalid_Array), UserId)) {
+    if (!PCGet_VipmLimitsCheck(p, "Limits", playerIndex, Limit_Exec_AND)) {
         return;
     }
 
-    new MaxHealth = VipM_Params_GetInt(Params, "MaxHealth", 100);
-    new Health = floatround(get_entvar(UserId, var_health));
-    if (Health >= MaxHealth) {
+    new maxHealth = PCGet_Int(p, "MaxHealth", floatround(get_entvar(playerIndex, var_max_health)));
+    new currentHealth = floatround(get_entvar(playerIndex, var_health));
+    if (currentHealth >= maxHealth) {
         return;
     }
     
-    new ByKill = VipM_Params_GetInt(Params, "ByKill", 0);
-    new VampHealth = 0;
-    new ActiveItem; ActiveItem = get_member(UserId, m_pActiveItem);
+    new healthByKill = PCGet_Int(p, "ByKill", 0);
+    new addHealth = 0;
+    new activeItem = get_member(playerIndex, m_pActiveItem);
+
     if (
-        !(get_member(VictimId, m_bitsDamageType) & DMG_SLASH)
-        && is_entity(ActiveItem)
-        && rg_get_iteminfo(ActiveItem, ItemInfo_iId) == CSW_KNIFE
+        !(get_member(victimIndex, m_bitsDamageType) & DMG_SLASH)
+        && is_entity(activeItem)
+        && rg_get_iteminfo(activeItem, ItemInfo_iId) == CSW_KNIFE
     ) {
-        VampHealth = VipM_Params_GetInt(Params, "ByKnife", ByKill);
-    } else if(get_member(VictimId, m_bHeadshotKilled)) {
-        VampHealth = VipM_Params_GetInt(Params, "ByHead", ByKill);
-    } else if (get_member(VictimId, m_bKilledByGrenade)) {
-        VampHealth = VipM_Params_GetInt(Params, "ByGrenade", ByKill);
+        addHealth = PCGet_Int(p, "ByKnife", healthByKill);
+    } else if(get_member(victimIndex, m_bHeadshotKilled)) {
+        addHealth = PCGet_Int(p, "ByHead", healthByKill);
+    } else if (get_member(victimIndex, m_bKilledByGrenade)) {
+        addHealth = PCGet_Int(p, "ByGrenade", healthByKill);
     } else {
-        VampHealth = ByKill;
+        addHealth = healthByKill;
     }
 
-    if (ByKill <= 0) {
+    if (addHealth <= 0) {
         return;
     }
 
-    client_print(UserId, print_center, "%L", UserId, "VAMPIRE_HEALTH_MESSAGE", VampHealth);
-    Health = clamp(Health + VampHealth, 1, MaxHealth < 1 ? cellmax : MaxHealth);
-    set_entvar(UserId, var_health, float(Health));
+    new newHealth = clamp(currentHealth + addHealth, 1, maxHealth < 1 ? cellmax : maxHealth);
+    set_entvar(playerIndex, var_health, float(newHealth));
+    
+    client_print(playerIndex, print_center, "%L", playerIndex, "VAMPIRE_HEALTH_MESSAGE", addHealth);
 }

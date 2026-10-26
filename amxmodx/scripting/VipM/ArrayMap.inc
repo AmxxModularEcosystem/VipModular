@@ -3,103 +3,125 @@
 #endif
 #define _vipmodular_src_ArrayMap_included
 
-#include amxmodx
+#include <amxmodx>
 
-enum ArrayMap{
+enum ArrayMap {
     Array:AM_Arr,
     Trie:AM_Map,
 }
-#define ArrayMap(%1) \
-    %1[ArrayMap]
+#define ArrayMap(%1) %1[ArrayMap]
 
-#define DefineArrayMap(%1) \
-    new ArrayMap(%1)
-    
-#define DefineStaticArrayMap(%1) \
-    static ArrayMap(%1)
-
-stock InitArrayMap(AM[ArrayMap], const CellSize = 1, const Reserved = 32){
-    AM[AM_Arr] = ArrayCreate(CellSize, Reserved);
-    AM[AM_Map] = TrieCreate();
+stock ArrayMapCreate(ArrayMap(am), const CellSize = 1, const Reserved = 1) {
+    am[AM_Arr] = ArrayCreate(CellSize, Reserved);
+    am[AM_Map] = TrieCreate();
 }
 
-stock ArrayMapPushArray(AM[ArrayMap], const any:Input[], const Key[], Size = -1){
-    new Id = ArrayPushArray(AM[AM_Arr], Input, Size);
-    TrieSetCell(AM[AM_Map], Key, Id, true);
-    return Id;
+stock bool:ArrayMapCreated(const ArrayMap(am)) {
+    return am[AM_Arr] != Invalid_Array;
 }
 
-stock ArrayMapPushString(AM[ArrayMap], const Input[], const Key[]){
-    new Id = ArrayPushString(AM[AM_Arr], Input);
-    TrieSetCell(AM[AM_Map], Key, Id, true);
-    return Id;
+stock ArrayMapDestroy(ArrayMap(am)) {
+    if (ArrayMapCreated(am)) {
+        ArrayDestroy(am[AM_Arr]);
+        TrieDestroy(am[AM_Map]);
+    }
 }
 
-stock ArrayMapPushCell(AM[ArrayMap], any:Input, const Key[]){
-    new Id = ArrayPushCell(AM[AM_Arr], Input);
-    TrieSetCell(AM[AM_Map], Key, Id, true);
-    return Id;
-}
-
-stock ArrayMapGetIndex(AM[ArrayMap], const Key[]){
-    new Id = -1;
-    TrieGetCell(AM[AM_Map], Key, Id);
-    return Id;
-}
-
-
-#define ArrayMapForeach(%1,%2) \
-    if(ArrayMapCreated(%1))\
-        for(new %2 = 0; %2 < ArrayMapSize(%1); %2++)
-
-#define ArrayMapForeachArray(%1=>%2[%3]) \
-    ArrayMapForeachArrayEx(%1=>%2[%3], __i__)
-
-#define ArrayMapForeachArrayEx(%1=>%2[%3],%4) \
-    if(ArrayMapCreated(%1))\
-        for(new %2[%3], %4 = 0; %4 < ArrayMapSize(%1); %4++)\
-            if(ArrayMapGetiArray(%1, %4, %2))
-
-#define ArrayMapForeachArray2(%1:%4=>%2[%3]) \
-    if(ArrayMapCreated(%1)) \
-        for(new %2[%3], %4 = 0; %4 < ArrayMapSize(%1); %4++) \
-            if(ArrayMapGetiArray(%1, %4, %2))
-
-
-#define ArrayMapCreated(%1) \
-    (%1[AM_Arr] != Invalid_Array)
-
-#define ArrayMapDestroy(%1) \
-    if(ArrayMapCreated(%1)){\
-        ArrayDestroy(%1[AM_Arr]); TrieDestroy(%1[AM_Map]);\
+stock ArrayMapSize(const ArrayMap(am)) {
+    if (ArrayMapCreated(am)) {
+        return ArraySize(am[AM_Arr]);
     }
 
-#define ArrayMapSize(%1) \
-    (ArrayMapCreated(%1) ? ArraySize(%1[AM_Arr]) : 0)
+    return 0;
+}
 
-#define ArrayMapHasKey(%1,%2) \
-    (%2[0] && TrieKeyExists(%1[AM_Map], %2))
-    
+stock bool:ArrayMapKeyExists(const ArrayMap(am), const key[]) {
+    return TrieKeyExists(am[AM_Map], key);
+}
 
-#define ArrayMapGetiArray(%1,%2,%3) \
-    ArrayGetArray(%1[AM_Arr], %2, %3)
+stock ArrayMapGetIndex(const ArrayMap(am), const key[]) {
+    new index = -1;
+    TrieGetCell(am[AM_Map], key, index);
 
-#define ArrayMapGetArray(%1,%2,%3) \
-    ArrayMapGetiArray(%1, ArrayMapGetIndex(%1, %2), %3)
+    return index;
+}
 
-#define ArrayMapSetArray(%1,%2,%3) \
-    ArraySetArray(%1[AM_Arr], ArrayMapGetIndex(%1, %2), %3)
-    
+// cell
 
-#define ArrayMapGetCell(%1,%2) \
-    ArrayGetCell(%1[AM_Arr], ArrayMapGetIndex(%1, %2))
+stock ArrayMapPushCell(const ArrayMap(am), any:index, const key[]) {
+    new index = ArrayPushCell(am[AM_Arr], index);
+    TrieSetCell(am[AM_Map], key, index, .replace = false);
 
-#define ArrayMapSetCell(%1,%2) \
-    ArraySetCell(%1[AM_Arr], ArrayMapGetIndex(%1, %2), %3)
+    return index;
+}
 
+stock ArrayMapGetCell(const ArrayMap(am), const any:index, const block = 0, const bool:asChar = false) {
+    return ArrayGetCell(am[AM_Arr], index, block, asChar);
+}
 
-#define ArrayMapGetString(%1,%2,%3) \
-    ArrayGetString(%1[AM_Arr], ArrayMapGetIndex(%1, %2), %3)
+stock ArrayMapGetCellByKey(const ArrayMap(am), const key[], const block = 0, const bool:asChar = false) {
+    return ArrayGetCell(am[AM_Arr], ArrayMapGetIndex(am, key), block, asChar);
+}
 
-#define ArrayMapSetString(%1,%2,%3) \
-    ArraySetString(%1[AM_Arr], ArrayMapGetIndex(%1, %2), %3)
+stock ArrayMapSetCell(const ArrayMap(am), const any:index, const in, const block = 0, const bool:asChar = false) {
+    return ArraySetCell(am[AM_Arr], index, in, block, asChar);
+}
+
+stock ArrayMapSetCellByKey(const ArrayMap(am), const key[], const in, const block = 0, const bool:asChar = false) {
+    return ArraySetCell(am[AM_Arr], ArrayMapGetIndex(am, key), in, block, asChar);
+}
+
+// string
+
+stock ArrayMapPushString(const ArrayMap(am), const Input[], const sKey[]) {
+    new index = ArrayPushString(am[AM_Arr], Input);
+    TrieSetCell(am[AM_Map], sKey, index, .replace = false);
+
+    return index;
+}
+
+stock ArrayMapGetString(const ArrayMap(am), const any:index, out[], const outLen) {
+    return ArrayGetString(am[AM_Arr], index, out, outLen);
+}
+
+stock ArrayMapGetStringByKey(const ArrayMap(am), const key[], out[], const outLen) {
+    return ArrayGetString(am[AM_Arr], ArrayMapGetIndex(am, key), out, outLen);
+}
+
+stock ArrayMapSetString(const ArrayMap(am), const any:index, const in[]) {
+    return ArraySetString(am[AM_Arr], index, in);
+}
+
+stock ArrayMapSetStringByKey(const ArrayMap(am), const key[], const in[]) {
+    return ArraySetString(am[AM_Arr], ArrayMapGetIndex(am, key), in);
+}
+
+// array
+
+stock ArrayMapPushArray(const ArrayMap(am), const any:Input[], const sKey[], size = -1) {
+    new index = ArrayPushArray(am[AM_Arr], Input, size);
+    TrieSetCell(am[AM_Map], sKey, index, .replace = false);
+
+    return index;
+}
+
+stock ArrayMapGetArray(const ArrayMap(am), const any:index, out[], const size = -1) {
+    return ArrayGetArray(am[AM_Arr], index, out, size);
+}
+
+stock ArrayMapGetArrayByKey(const ArrayMap(am), const key[], out[], const size = -1) {
+    return ArrayGetArray(am[AM_Arr], ArrayMapGetIndex(am, key), out, size);
+}
+
+stock ArrayMapSetArray(const ArrayMap(am), const any:index, const in[], const size = -1) {
+    return ArraySetArray(am[AM_Arr], index, in, size);
+}
+
+stock ArrayMapSetArrayByKey(const ArrayMap(am), const key[], const in[], const size = -1) {
+    return ArraySetArray(am[AM_Arr], ArrayMapGetIndex(am, key), in, size);
+}
+
+#define ArrayMapForeachArray(%1:%4=>%2[%3]) \
+    if (ArrayMapCreated(%1)) \
+        for (new %2[%3], any:%4 = 0; %4 < ArrayMapSize(%1); %4++) \
+            if (ArrayMapGetArray(%1, %4, %2))

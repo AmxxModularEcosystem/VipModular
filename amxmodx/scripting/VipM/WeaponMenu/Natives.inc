@@ -1,10 +1,7 @@
 #include <amxmodx>
-#include "VipM/Natives"
 
 public plugin_natives() {
-    Natives_Init("VipM_WeaponMenu");
-
-    Natives_Reg("SetExpireStatus");
+    register_native("VipM_WeaponMenu_SetExpireStatus", "@_SetExpireStatus");
 }
 
 @_SetExpireStatus() {

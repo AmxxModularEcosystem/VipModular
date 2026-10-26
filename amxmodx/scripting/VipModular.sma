@@ -1,12 +1,10 @@
 #include <amxmodx>
 #include <VipModular>
+#include <ParamsController>
 #include "VipM/DebugMode"
 #include "VipM/ArrayTrieUtils"
 #include "VipM/Utils"
 #include "VipM/Forwards"
-
-#pragma semicolon 1
-#pragma compress 1
 
 public stock const PluginName[] = "Vip Modular";
 public stock const PluginVersion[] = _VIPM_VERSION;
@@ -14,66 +12,74 @@ public stock const PluginAuthor[] = "ArKaNeMaN";
 public stock const PluginURL[] = _VIPM_PLUGIN_URL;
 public stock const PluginDescription[] = "Modular vip system";
 
-new Array:Vips; // S_CfgUnit
-new Trie:gUserVip[MAX_PLAYERS + 1] = {Invalid_Trie, ...}; // ModuleName => Trie:Params
-
-#include "VipM/Core/Utils"
-
-#include "VipM/Core/Structs"
-#include "VipM/Core/Modules/Main"
-#include "VipM/Core/Limits/Main"
-#include "VipM/Core/Configs/Main"
-#include "VipM/Core/Vips"
-
+#include "VipM/Core/Objects/Modules/Type"
+#include "VipM/Core/Objects/Limits/Type"
+#include "VipM/Core/VipsManager"
 #include "VipM/Core/SrvCmds"
-#include "VipM/Core/Natives"
+#include "VipM/DefaultObjects/Registrar"
 
 public plugin_precache() {
-    RegisterPluginByVars();
+    register_plugin(PluginName, PluginVersion, PluginAuthor);
     register_library(VIPM_LIBRARY);
-    CreateConstCvar("vipm_version", VIPM_VERSION);
+    PCCvar_Const("vipm_version", PluginVersion);
+    ParamsController_Init();
 
-    RegisterForwards();
+    Forwards_Init();
+
+    VipsManager_Init();
+    ModuleType_Init();
     SrvCmds_Init();
-    Limits_Init();
-    Modules_Init();
-    Forwards_RegAndCall("InitModules", ET_IGNORE);
+    Forwards_RegAndCall("VipM_OnInitModules", ET_IGNORE); // deprecated
+    
+    VipsManager_SetRootDir(PCPath_iMakePath(VIPM_CONFIGS_FOLDER_NAME));
+    VipsManager_LoadFromFile(PCPath_iMakePath(fmt("%s/%s", VIPM_CONFIGS_FOLDER_NAME, VIPM_VIPS_CONFIG_FILE_PATH)));
+    VipsManager_LoadFromFolder(PCPath_iMakePath(fmt("%s/%s", VIPM_CONFIGS_FOLDER_NAME, VIPM_VIPS_CONFIG_DIR_PATH)));
 
-    Vips = Cfg_LoadVipsConfigs();
+    ModuleType_ActivateUsed();
 
-    server_print("[%s v%s] Loaded %d config units.", PluginName, VIPM_VERSION, ArraySizeSafe(Vips));
-    Forwards_RegAndCall("Loaded", ET_IGNORE);
-
-    Modules_EnableAllUsed();
-
+    Forwards_RegAndCall("VipM_OnLoaded", ET_IGNORE);
+    server_print("[%s v%s] Loaded %d config units.", PluginName, PluginVersion, VipsManager_VipsCount());
     Dbg_PrintServer("Vip Modular run in debug mode!");
 }
 
-RegisterForwards() {
-    Forwards_Init("VipM");
-    Forwards_Reg("UserUpdated", ET_IGNORE, FP_CELL);
-    Forwards_Reg("ReadUnit", ET_IGNORE, FP_CELL, FP_CELL);
-    Forwards_Reg("ActivateModule", ET_STOP, FP_STRING);
-    Forwards_Reg("ReadModuleUnit", ET_IGNORE, FP_CELL, FP_CELL);
-    Forwards_Reg("ReadLimitUnit", ET_IGNORE, FP_CELL, FP_CELL);
+public client_authorized(playerIndex, const steamId[]) {
+    DefaultObjects_OnClientAuth(playerIndex, steamId);
 }
 
-public client_disconnected(UserId) {
-    Vips_Reset(UserId);
+public client_putinserver(playerIndex) {
+    DefaultObjects_OnClientPutInServer(playerIndex);
+    RequestFrame("@CallUserUpdate", playerIndex);
 }
 
-public client_putinserver(UserId) {
-    if (is_user_bot(UserId)) {
-        return;
+@CallUserUpdate(const playerIndex) {
+    if (is_user_connected(playerIndex)) {
+        VipsManager_UserReload(playerIndex);
+    }
+}
+
+public client_disconnected(playerIndex) {
+    VipsManager_UserReset(playerIndex);
+}
+
+#include "VipM/Core/API/Main"
+#include "VipM/Core/API/Limits"
+#include "VipM/Core/API/Modules"
+public plugin_natives() {
+    API_Main_Init();
+    API_Limits_Init();
+    API_Modules_Init();
+
+    DefaultObjects_RegsiterNatives();
+
+    set_native_filter("@NativeFilter");
+}
+
+@NativeFilter(const name[], const index, const trap) {
+    new ret = PLUGIN_CONTINUE;
+
+    if (DefaultObjects_NativeFilter(name, !!trap)) {
+        ret = PLUGIN_HANDLED;
     }
 
-    RequestFrame("@CallUserUpdate", UserId);
-}
-
-@CallUserUpdate(UserId) {
-    if (!is_user_connected(UserId)) {
-        return;
-    }
-
-    Vips_UserUpdate(UserId);
+    return ret;
 }

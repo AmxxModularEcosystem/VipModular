@@ -6,11 +6,11 @@ TODO: Переписать
 
 ## Структура обьекта предмета
 
-*[Памятка по JSON](/readme/json.md)*
+*[Памятка по JSON](/wiki/Памятка-по-JSON)*
 
 ```jsonc
 {
-    "Type": "<ItemType>",
+    "Item": "<ItemType>",
 
     "<ParamKey1>": "<ParamValue1>",
     // ...
