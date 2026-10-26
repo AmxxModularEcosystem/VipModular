@@ -32,6 +32,7 @@ public ParamsController_OnRegisterTypes() {
 #include "VipM/DefaultObjects/Limit/WeekDay"
 #include "VipM/DefaultObjects/Limit/Counter"
 #include "VipM/DefaultObjects/Limit/Alive"
+#include "VipM/DefaultObjects/Limit/WasKilled"
 #include "VipM/DefaultObjects/Limit/LifeTime"
 #include "VipM/DefaultObjects/Limit/Bot"
 #include "VipM/DefaultObjects/Limit/Flags"
@@ -57,6 +58,7 @@ public VipM_Limits_OnInited() {
     DefaultObjects_Limit_WeekDay_Register();
     DefaultObjects_Limit_Counter_Register();
     DefaultObjects_Limit_Alive_Register();
+    DefaultObjects_Limit_WasAlive_Register();
     DefaultObjects_Limit_LifeTime_Register();
     DefaultObjects_Limit_Bot_Register();
     DefaultObjects_Limit_Flags_Register();
@@ -86,6 +88,7 @@ DefaultObjects_OnClientAuth(const playerIndex, const steamId[]) {
 DefaultObjects_OnClientPutInServer(const playerIndex) {
     DefaultObjects_Limit_Counter_OnClientPutInServer(playerIndex);
     DefaultObjects_Limit_Alive_OnClientPutInServer(playerIndex);
+    DefaultObjects_Limit_WasAlive_OnClientPutInServer(playerIndex);
 }
 
 DefaultObjects_RegsiterNatives() {
